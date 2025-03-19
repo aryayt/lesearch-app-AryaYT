@@ -14,24 +14,28 @@ import Footer from "./_components/Footer";
 const LandingPage = () => {
   useEffect(() => {
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("animate-in")
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("animate-in")
+            }
           }
-        })
-      },
-      {
-        threshold: 0.1,
-        rootMargin: "0px 0px -100px 0px",
-      },
-    )
+        },
+        {
+          threshold: 0.1,
+          rootMargin: "0px 0px -100px 0px",
+        },
+      )
 
     const hiddenElements = document.querySelectorAll(".animate-hidden")
-    hiddenElements.forEach((el) => observer.observe(el))
+    for (const el of hiddenElements) {
+        observer.unobserve(el)
+      }
 
     return () => {
-      hiddenElements.forEach((el) => observer.unobserve(el))
+        for (const el of hiddenElements) {
+            observer.unobserve(el)
+          }
     }
   }, [])
   return (

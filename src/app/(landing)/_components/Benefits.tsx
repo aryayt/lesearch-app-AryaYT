@@ -44,7 +44,7 @@ export default function Benefits() {
 
   return (
     <section id="benefits" className="py-20 sm:py-28 relative">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"/>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-16 animate-hidden">
           <TextEffect preset="fade-in-blur" as="h2" className="text-3xl sm:text-4xl font-bold mb-6 tracking-normal whitespace-pre-wrap">
@@ -71,6 +71,7 @@ export default function Benefits() {
         >
           {(["students", "professors", "professionals"] as const).map((type) => (
             <button
+            type="button"
               key={type}
               onClick={() => setActiveTab(type)}
               className={`flex items-center justify-center py-4 px-8 text-lg font-medium transition-all duration-300 relative ${
@@ -103,7 +104,7 @@ export default function Benefits() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
                 <ul className="space-y-6">
                   {benefitsData[activeTab].slice(0, 2).map((benefit, index) => (
-                    <li key={index}>
+                    <li key={`${index}_${benefit}`}>
                       <motion.div
                         className="flex items-start"
                         initial={{ opacity: 0, x: -20 }}
@@ -120,7 +121,7 @@ export default function Benefits() {
                 </ul>
                 <ul className="space-y-6">
                   {benefitsData[activeTab].slice(2).map((benefit, index) => (
-                    <li key={index}>
+                    <li key={`${index}_${benefit}`}>
                       <motion.div
                         className="flex items-start"
                         initial={{ opacity: 0, x: -20 }}

@@ -46,22 +46,22 @@ export default function LandingPageFooter() {
             <h3 className="font-semibold mb-4">Product</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="/features" className="text-muted-foreground hover:text-primary transition-colors">
                   Features
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="/pricing" className="text-muted-foreground hover:text-primary transition-colors">
                   Pricing
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="/security" className="text-muted-foreground hover:text-primary transition-colors">
                   Security
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="/roadmap" className="text-muted-foreground hover:text-primary transition-colors">
                   Roadmap
                 </a>
               </li>
@@ -76,22 +76,22 @@ export default function LandingPageFooter() {
             <h3 className="font-semibold mb-4">Resources</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="/blog" className="text-muted-foreground hover:text-primary transition-colors">
                   Blog
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="/docs" className="text-muted-foreground hover:text-primary transition-colors">
                   Documentation
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="/guides" className="text-muted-foreground hover:text-primary transition-colors">
                   Guides
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="/support" className="text-muted-foreground hover:text-primary transition-colors">
                   Support
                 </a>
               </li>
@@ -106,22 +106,22 @@ export default function LandingPageFooter() {
             <h3 className="font-semibold mb-4">Company</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="/about" className="text-muted-foreground hover:text-primary transition-colors">
                   About
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="/careers" className="text-muted-foreground hover:text-primary transition-colors">
                   Careers
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="/contact" className="text-muted-foreground hover:text-primary transition-colors">
                   Contact
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="/partners" className="text-muted-foreground hover:text-primary transition-colors">
                   Partners
                 </a>
               </li>
@@ -136,22 +136,22 @@ export default function LandingPageFooter() {
             <h3 className="font-semibold mb-4">Legal</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="/privacy" className="text-muted-foreground hover:text-primary transition-colors">
                   Privacy
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="/terms" className="text-muted-foreground hover:text-primary transition-colors">
                   Terms
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="/cookie-policy" className="text-muted-foreground hover:text-primary transition-colors">
                   Cookie Policy
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="/licenses" className="text-muted-foreground hover:text-primary transition-colors">
                   Licenses
                 </a>
               </li>
@@ -180,16 +180,16 @@ export default function LandingPageFooter() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <a title="LinkedIn" href="#" className="text-muted-foreground hover:text-primary transition-colors">
+            <a title="LinkedIn" href="https://www.linkedin.com" className="text-muted-foreground hover:text-primary transition-colors">
               <Linkedin className="h-5 w-5" />
             </a>
-            <a title="Twitter" href="#" className="text-muted-foreground hover:text-primary transition-colors">
+            <a title="Twitter" href="https://www.twitter.com" className="text-muted-foreground hover:text-primary transition-colors">
               <Twitter className="h-5 w-5" />
             </a>
-            <a title="Github" href="#" className="text-muted-foreground hover:text-primary transition-colors">
+            <a title="Github" href="https://www.github.com" className="text-muted-foreground hover:text-primary transition-colors">
               <Github className="h-5 w-5" />
             </a>
-            <a title="Facebook" href="#" className="text-muted-foreground hover:text-primary transition-colors">
+            <a title="Facebook" href="https://www.facebook.com" className="text-muted-foreground hover:text-primary transition-colors">
               <Facebook className="h-5 w-5" />
             </a>
           </motion.div>
@@ -200,7 +200,7 @@ export default function LandingPageFooter() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            © 2025 LeSearch. All rights reserved.
+            &copy; 2025 LeSearch. All rights reserved.
           </motion.div>
         </div>
       </div>

@@ -10,12 +10,12 @@ export default function Hero() {
   return (
     <div className="relative overflow-hidden pt-20">
       {/* Background gradients */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-destructive/10 opacity-30"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-destructive/10 opacity-30"/>
 
       {/* Animated background elements */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-destructive/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl"/>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-destructive/20 rounded-full blur-3xl"/>
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32">
@@ -107,9 +107,9 @@ export default function Hero() {
               <div className="bg-card rounded-lg shadow-xl overflow-hidden border border-border">
                 <div className="p-1 bg-muted">
                   <div className="flex space-x-1.5">
-                    <div className="w-3 h-3 rounded-full bg-muted-foreground/50"></div>
-                    <div className="w-3 h-3 rounded-full bg-muted-foreground/50"></div>
-                    <div className="w-3 h-3 rounded-full bg-muted-foreground/50"></div>
+                    <div className="w-3 h-3 rounded-full bg-muted-foreground/50"/>
+                    <div className="w-3 h-3 rounded-full bg-muted-foreground/50"/>
+                    <div className="w-3 h-3 rounded-full bg-muted-foreground/50"/>
                   </div>
                 </div>
                 <div className="p-4 sm:p-6">
@@ -119,30 +119,36 @@ export default function Hero() {
                     </h3>
                     <div className="flex space-x-3">
                       <Button
-                        title="btn"
+                        title="Chat about quantum computing"
                         type="button"
                         className="text-muted-foreground bg-transparent hover:text-primary"
+                        aria-label="Chat about quantum computing"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           className="h-5 w-5"
                           viewBox="0 0 20 20"
                           fill="currentColor"
+                          role="img"
                         >
+                          <title>Chat icon</title>
                           <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
                         </svg>
                       </Button>
                       <Button
-                        title="btn"
+                        title="Save quantum computing article"
                         type="button"
                         className="text-muted-foreground bg-transparent hover:text-primary"
+                        aria-label="Save quantum computing article"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           className="h-5 w-5"
                           viewBox="0 0 20 20"
                           fill="currentColor"
+                          role="img"
                         >
+                          <title>Save article icon</title>
                           <path d="M5 4a1 1 0 011-1h8a1 1 0 011 1v1H5V4zM4 6a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1V7a1 1 0 00-1-1H4z" />
                         </svg>
                       </Button>

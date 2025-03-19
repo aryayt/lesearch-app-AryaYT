@@ -30,7 +30,7 @@ const challenges = [
 export default function ResearchChallenge() {
   return (
     <section id="challenges" className="py-20 sm:py-28 relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background"/>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-16">
@@ -53,7 +53,7 @@ export default function ResearchChallenge() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {challenges.map((challenge, index) => (
             <motion.div
-              key={index}
+              key={challenge.title}
               className="bg-card rounded-xl p-6 shadow-lg border border-border"
               initial={{ opacity: 0, y: 50, scale: 0.9 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}

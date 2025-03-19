@@ -49,7 +49,7 @@ const FAQItem = ({ question, answer, isOpen, toggleOpen, index }: FAQItemProps) 
     viewport={{ once: true, margin: "-100px" }}
     transition={{ duration: 0.5, delay: index * 0.1 }}
   >
-    <button className="flex justify-between items-center w-full py-5 text-left focus:outline-none" onClick={toggleOpen}>
+    <button type="button" className="flex justify-between items-center w-full py-5 text-left focus:outline-none" onClick={toggleOpen}>
       <span className="font-medium text-lg">{question}</span>
       <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.3 }}>
         <ChevronDown className="w-5 h-5 text-muted-foreground" />
@@ -85,7 +85,7 @@ export default function FAQ() {
         <div className="max-w-3xl mx-auto bg-card rounded-xl p-8 shadow-lg border border-border">
           {faqs.map((faq, index) => (
             <FAQItem
-              key={index}
+              key={`${index}_${faq}`}
               question={faq.question}
               answer={faq.answer}
               isOpen={openIndex === index}
@@ -103,7 +103,7 @@ export default function FAQ() {
           transition={{ duration: 0.5 }}
         >
           <p className="text-lg mb-2">Have more questions?</p>
-          <a href="#" className="text-primary hover:text-primary/80 font-medium">
+          <a href="/support" className="text-primary hover:text-primary/80 font-medium">
             Contact Support
           </a>
         </motion.div>

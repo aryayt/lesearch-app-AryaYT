@@ -45,7 +45,7 @@ export default function Testimonials() {
 
   return (
     <section id="testimonials" className="py-20 sm:py-28 relative">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10"/>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-16 ">
@@ -57,7 +57,7 @@ export default function Testimonials() {
         <div className="grid md:grid-cols-2 gap-8">
           {testimonials.map((testimonial, index) => (
             <motion.div
-              key={index}
+              key={testimonial.name}
               className="bg-card rounded-xl p-8 shadow-lg border border-border relative overflow-hidden "
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -76,8 +76,8 @@ export default function Testimonials() {
                 transition: { duration: 0.2 },
               }}
             >
-              <div className="absolute top-0 left-0 w-20 h-20 bg-primary/10 rounded-full -ml-10 -mt-10"></div>
-              <div className="absolute bottom-0 right-0 w-20 h-20 bg-primary/50 rounded-full -mr-10 -mb-10"></div>
+              <div className="absolute top-0 left-0 w-20 h-20 bg-primary/10 rounded-full -ml-10 -mt-10"/>
+              <div className="absolute bottom-0 right-0 w-20 h-20 bg-primary/50 rounded-full -mr-10 -mb-10"/>
 
               <div className="relative">
                 <p className="text-lg mb-6 italic">&ldquo;{testimonial.quote}&rdquo;</p>

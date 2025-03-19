@@ -49,7 +49,7 @@ const features = [
 export default function Features() {
   return (
     <section id="features" className="py-20 sm:py-28 relative">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"/>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-16">
@@ -71,7 +71,7 @@ export default function Features() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <motion.div
-              key={index}
+              key={`${index}_${feature}`}
               className="bg-card rounded-xl p-6 shadow-lg border border-border relative overflow-hidden"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -115,7 +115,7 @@ export default function Features() {
               transition: { duration: 0.2 },
             }}
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-destructive/10 rounded-full -mr-16 -mt-16"></div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-destructive/10 rounded-full -mr-16 -mt-16"/>
             <div className="relative">
               <div className="w-12 h-12 bg-destructive/20 rounded-full flex items-center justify-center mb-4">
                 <Zap className="w-6 h-6 text-destructive" />

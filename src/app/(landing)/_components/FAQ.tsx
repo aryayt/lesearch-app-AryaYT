@@ -78,7 +78,7 @@ export default function FAQ() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16 animate-hidden">
           <TextEffect preset="fade-in-blur" as="h2" className="text-3xl sm:text-4xl font-bold mb-6">
-            Frequently Asked Questions
+            FAQ
           </TextEffect>
         </div>
 

@@ -1,9 +1,10 @@
 "use client"
 
-import { Search, Linkedin, Twitter, Github, Facebook } from "lucide-react"
+import {  Linkedin, Twitter, Github, Facebook } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { motion } from "framer-motion"
+import Logo from "@/components/logo"
 
 export default function LandingPageFooter() {
   return (
@@ -167,7 +168,7 @@ export default function LandingPageFooter() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <Search className="h-6 w-6 text-primary mr-2" />
+            <Logo/>
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
               LeSearch
             </span>

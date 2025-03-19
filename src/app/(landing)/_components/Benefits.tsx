@@ -47,7 +47,7 @@ export default function Benefits() {
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"></div>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-16 animate-hidden">
-          <TextEffect preset="fade-in-blur" as="h2" className="text-3xl sm:text-4xl font-bold mb-6">
+          <TextEffect preset="fade-in-blur" as="h2" className="text-3xl sm:text-4xl font-bold mb-6 tracking-normal whitespace-pre-wrap">
             Why Researchers Choose LeSearch
           </TextEffect>
 

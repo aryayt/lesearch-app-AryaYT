@@ -31,9 +31,13 @@ export default function HowLeSearchWorks() {
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-16 animate-hidden">
-          <TextEffect preset="fade-in-blur" as="h2" className="text-3xl sm:text-4xl font-bold mb-6">
-            How LeSearch Works
-          </TextEffect>
+                <TextEffect 
+          preset="fade-in-blur" 
+          as="h2" 
+          className="text-3xl sm:text-4xl font-bold mb-6 tracking-normal whitespace-pre-wrap"
+        >
+          How LeSearch Works
+        </TextEffect>
 
           <TextEffect
             per="line"

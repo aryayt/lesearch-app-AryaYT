@@ -6,14 +6,14 @@ import Link from 'next/link'
 
 export default function LoginPage() {
     return (
-        <section className="flex min-h-screen bg-zinc-50 px-4 py-16 md:py-32 dark:bg-transparent">
+        <section className="flex min-h-screen bg-background/80 px-4 py-8 md:py-16 dark:bg-transparent">
             <form action="" className="max-w-92 m-auto h-fit w-full">
                 <div className="p-6">
-                    <div>
+                    <div className='flex flex-col items-center'>
                         <Link href="/" aria-label="go home">
                             <Logo />
                         </Link>
-                        <h1 className="mb-1 mt-4 text-xl font-semibold">Create a Tailus UI Account</h1>
+                        <h1 className="mb-1 mt-4 text-xl font-semibold">Create a LeSearch Account</h1>
                         <p>Welcome! Create an account to get started</p>
                     </div>
 

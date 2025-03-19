@@ -6,14 +6,14 @@ import Link from 'next/link'
 
 export default function LoginPage() {
     return (
-        <section className="flex min-h-screen bg-zinc-50 px-4 py-16 md:py-32 dark:bg-transparent">
+        <section className="flex min-h-screen bg-background/80 px-4 py-8 md:py-16 dark:bg-transparent">
             <form action="" className="max-w-92 m-auto h-fit w-full">
                 <div className="p-6">
-                    <div>
+                    <div  className='flex flex-col items-center'>
                         <Link href="/" aria-label="go home">
                             <Logo />
                         </Link>
-                        <h1 className="mb-1 mt-4 text-xl font-semibold">Sign In to Tailus UI</h1>
+                        <h1 className="mb-1 mt-4 text-xl font-semibold">Sign In to LeSearch</h1>
                         <p>Welcome back! Sign in to continue</p>
                     </div>
 
@@ -41,6 +41,19 @@ export default function LoginPage() {
                                 Email
                             </Label>
                             <Input type="email" required name="email" id="email" />
+                        </div>
+                        <div className="space-y-0.5">
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="pwd" className="text-title text-sm">
+                                    Password
+                                </Label>
+                                <Button asChild variant="link" size="sm">
+                                    <Link href="#" className="link intent-info variant-ghost text-sm">
+                                        Forgot your Password ?
+                                    </Link>
+                                </Button>
+                            </div>
+                            <Input type="password" required name="pwd" id="pwd" className="input sz-md variant-mixed" />
                         </div>
 
                         <Button className="w-full">Continue</Button>

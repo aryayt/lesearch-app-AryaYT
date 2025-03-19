@@ -58,7 +58,7 @@ export default function Navigation() {
         <div className="flex items-center">
           <Link href="/" className="flex items-center space-x-2 text-2xl font-bold">
             <Logo />
-            <span className="bg-gradient-to-r from-primary to-sidebar-primary bg-clip-text text-transparent">LeSearch</span>
+            <span className="bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">LeSearch</span>
           </Link>
         </div>
 
@@ -81,12 +81,14 @@ export default function Navigation() {
 
         <div className="hidden md:flex items-center space-x-4">
           <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary/10" asChild>
-          <Link href="/login">
-            Log in
+          <Link href="/signup">
+            Sign Up
           </Link>
           </Button>
-          <Button size="sm" className="bg-primary hover:bg-sidebar-primary">
-            Get Started
+          <Button size="sm" className="bg-primary hover:bg-sidebar-primary" asChild>
+            <Link href="/login">
+            Login
+            </Link>
           </Button>
           <ModeToggle />
         </div>
@@ -146,11 +148,14 @@ export default function Navigation() {
           </Link>
           <div className="pt-4 border-t border-border flex flex-col space-y-4">
             <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/10" asChild>
-              <Link href="/login">
-                Log in
+              <Link href="/signup">
+                Sign Up
               </Link>
             </Button>
-            <Button className="w-full bg-primary hover:bg-sidebar-primary">Get Started</Button>
+            <Button className="w-full bg-primary hover:bg-sidebar-primary" asChild>
+              <Link href="/login">
+            Login
+            </Link></Button>
           </div>
         </nav>
       </motion.div>

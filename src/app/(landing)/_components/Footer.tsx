@@ -28,7 +28,7 @@ export default function LandingPageFooter() {
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <Input type="email" placeholder="Enter your email" className="w-full md:w-64 bg-background border-border" />
-            <Button className="ml-2 bg-blue-600 hover:bg-blue-700 text-white">Subscribe</Button>
+            <Button className="ml-2 bg-primary hover:bg-primary/90 text-primary-foreground">Subscribe</Button>
           </motion.div>
         </div>
       </div>
@@ -45,22 +45,22 @@ export default function LandingPageFooter() {
             <h3 className="font-semibold mb-4">Product</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                   Features
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                   Pricing
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                   Security
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                   Roadmap
                 </a>
               </li>
@@ -75,22 +75,22 @@ export default function LandingPageFooter() {
             <h3 className="font-semibold mb-4">Resources</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                   Blog
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                   Documentation
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                   Guides
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                   Support
                 </a>
               </li>
@@ -105,22 +105,22 @@ export default function LandingPageFooter() {
             <h3 className="font-semibold mb-4">Company</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                   About
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                   Careers
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                   Contact
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                   Partners
                 </a>
               </li>
@@ -135,22 +135,22 @@ export default function LandingPageFooter() {
             <h3 className="font-semibold mb-4">Legal</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                   Privacy
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                   Terms
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                   Cookie Policy
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                   Licenses
                 </a>
               </li>
@@ -167,8 +167,8 @@ export default function LandingPageFooter() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <Search className="h-6 w-6 text-blue-500 mr-2" />
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent">
+            <Search className="h-6 w-6 text-primary mr-2" />
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
               LeSearch
             </span>
           </motion.div>
@@ -179,16 +179,16 @@ export default function LandingPageFooter() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <a title="LinkedIn" href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+            <a title="LinkedIn" href="#" className="text-muted-foreground hover:text-primary transition-colors">
               <Linkedin className="h-5 w-5" />
             </a>
-            <a title="Twitter" href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+            <a title="Twitter" href="#" className="text-muted-foreground hover:text-primary transition-colors">
               <Twitter className="h-5 w-5" />
             </a>
-            <a title="Github" href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+            <a title="Github" href="#" className="text-muted-foreground hover:text-primary transition-colors">
               <Github className="h-5 w-5" />
             </a>
-            <a title="Facebook" href="#" className="text-muted-foreground hover:text-blue-400 transition-colors">
+            <a title="Facebook" href="#" className="text-muted-foreground hover:text-primary transition-colors">
               <Facebook className="h-5 w-5" />
             </a>
           </motion.div>
@@ -206,4 +206,3 @@ export default function LandingPageFooter() {
     </footer>
   )
 }
-

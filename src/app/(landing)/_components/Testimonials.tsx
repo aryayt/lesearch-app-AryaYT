@@ -45,7 +45,7 @@ export default function Testimonials() {
 
   return (
     <section id="testimonials" className="py-20 sm:py-28 relative">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-orange-500/5"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10"></div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-16 ">
@@ -76,14 +76,14 @@ export default function Testimonials() {
                 transition: { duration: 0.2 },
               }}
             >
-              <div className="absolute top-0 left-0 w-20 h-20 bg-blue-500/10 rounded-full -ml-10 -mt-10"></div>
-              <div className="absolute bottom-0 right-0 w-20 h-20 bg-orange-500/10 rounded-full -mr-10 -mb-10"></div>
+              <div className="absolute top-0 left-0 w-20 h-20 bg-primary/10 rounded-full -ml-10 -mt-10"></div>
+              <div className="absolute bottom-0 right-0 w-20 h-20 bg-primary/50 rounded-full -mr-10 -mb-10"></div>
 
               <div className="relative">
                 <p className="text-lg mb-6 italic">&ldquo;{testimonial.quote}&rdquo;</p>
                 <div className="flex justify-between items-end">
                   <div>
-                    <h3 className="text-xl font-semibold text-blue-400">{testimonial.name}</h3>
+                    <h3 className="text-xl font-semibold text-primary">{testimonial.name}</h3>
                     <p className="text-muted-foreground">{testimonial.role}</p>
                     <p className="text-muted-foreground">{testimonial.university}</p>
                   </div>
@@ -92,7 +92,7 @@ export default function Testimonials() {
                       href={testimonial.paper}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-400 hover:text-blue-300 transition-colors duration-200 flex items-center"
+                      className="text-primary hover:text-primary/80 transition-colors duration-200 flex items-center"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                     >
@@ -116,7 +116,7 @@ export default function Testimonials() {
             Experience how LeSearch&apos;s reference link parser can transform your research process.
           </p>
           <motion.button
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 px-6 rounded-lg transition duration-200"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -127,4 +127,3 @@ export default function Testimonials() {
     </section>
   )
 }
-

@@ -76,8 +76,8 @@ export default function ResearchChallenge() {
                 },
               }}
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mb-6 shadow-md">
-                <challenge.icon className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center mb-6 shadow-md">
+                <challenge.icon className="w-6 h-6 text-primary-foreground" />
               </div>
               <h3 className="text-xl font-semibold mb-3">{challenge.title}</h3>
               <p className="text-muted-foreground">{challenge.description}</p>

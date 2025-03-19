@@ -4,6 +4,15 @@ import { FileText, BookOpen, MessageSquare, Network, Search, Zap } from "lucide-
 import { motion } from "framer-motion"
 import { TextEffect } from "@/components/motion-primitives/text-effect"
 
+// Mapping colors to design tokens
+const colorTokenMap = {
+  blue: { bg: "bg-blue-500/20", text: "text-blue-500" },
+  indigo: { bg: "bg-indigo-500/20", text: "text-indigo-500" },
+  purple: { bg: "bg-purple-500/20", text: "text-purple-500" },
+  cyan: { bg: "bg-cyan-500/20", text: "text-cyan-500" },
+  green: { bg: "bg-green-500/20", text: "text-green-500" },
+}
+
 const features = [
   {
     title: "One-Click Reference Retrieval",
@@ -40,7 +49,7 @@ const features = [
 export default function Features() {
   return (
     <section id="features" className="py-20 sm:py-28 relative">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"></div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-16">
@@ -80,9 +89,9 @@ export default function Features() {
               }}
             >
               <div
-                className={`w-12 h-12 bg-${feature.color}-500/20 rounded-full flex items-center justify-center mb-4`}
+                className={`w-12 h-12 ${colorTokenMap[feature.color as keyof typeof colorTokenMap].bg} rounded-full flex items-center justify-center mb-4`}
               >
-                <feature.icon className={`w-6 h-6 text-${feature.color}-500`} />
+                <feature.icon className={`w-6 h-6 ${colorTokenMap[feature.color as keyof typeof colorTokenMap].text}`} />
               </div>
               <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
               <p className="text-muted-foreground">{feature.description}</p>
@@ -90,7 +99,7 @@ export default function Features() {
           ))}
 
           <motion.div
-            className="bg-card rounded-xl p-6 shadow-lg border border-orange-500/50 relative overflow-hidden"
+            className="bg-card rounded-xl p-6 shadow-lg border border-destructive/50 relative overflow-hidden"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
@@ -106,10 +115,10 @@ export default function Features() {
               transition: { duration: 0.2 },
             }}
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full -mr-16 -mt-16"></div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-destructive/10 rounded-full -mr-16 -mt-16"></div>
             <div className="relative">
-              <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center mb-4">
-                <Zap className="w-6 h-6 text-orange-500" />
+              <div className="w-12 h-12 bg-destructive/20 rounded-full flex items-center justify-center mb-4">
+                <Zap className="w-6 h-6 text-destructive" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Coming Soon</h3>
               <p className="text-muted-foreground">Exciting new features on the horizon. Stay tuned!</p>
@@ -120,4 +129,3 @@ export default function Features() {
     </section>
   )
 }
-

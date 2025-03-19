@@ -44,8 +44,7 @@ export default function Benefits() {
 
   return (
     <section id="benefits" className="py-20 sm:py-28 relative">
-      <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent"></div>
-
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"></div>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-16 animate-hidden">
           <TextEffect preset="fade-in-blur" as="h2" className="text-3xl sm:text-4xl font-bold mb-6">
@@ -75,14 +74,14 @@ export default function Benefits() {
               key={type}
               onClick={() => setActiveTab(type)}
               className={`flex items-center justify-center py-4 px-8 text-lg font-medium transition-all duration-300 relative ${
-                activeTab === type ? "text-blue-500" : "text-muted-foreground hover:text-foreground"
+                activeTab === type ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <TabIcon type={type} />
               <span className="ml-2 capitalize">{type}</span>
               {activeTab === type && (
                 <motion.div
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
                   layoutId="activeTabIndicator"
                   transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 />
@@ -111,8 +110,8 @@ export default function Benefits() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}
                       >
-                        <div className="mr-4 mt-1 bg-green-500/20 rounded-full p-1">
-                          <Check className="w-5 h-5 text-green-500" />
+                        <div className="mr-4 mt-1 bg-chart-1/20 rounded-full p-1">
+                          <Check className="w-5 h-5 text-chart-1" />
                         </div>
                         <span className="text-lg">{benefit}</span>
                       </motion.div>
@@ -128,8 +127,8 @@ export default function Benefits() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.3, delay: (index + 2) * 0.1 }}
                       >
-                        <div className="mr-4 mt-1 bg-green-500/20 rounded-full p-1">
-                          <Check className="w-5 h-5 text-green-500" />
+                        <div className="mr-4 mt-1 bg-chart-1/20 rounded-full p-1">
+                          <Check className="w-5 h-5 text-chart-1" />
                         </div>
                         <span className="text-lg">{benefit}</span>
                       </motion.div>

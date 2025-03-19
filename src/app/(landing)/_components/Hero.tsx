@@ -10,12 +10,12 @@ export default function Hero() {
   return (
     <div className="relative overflow-hidden pt-20">
       {/* Background gradients */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-orange-500/10 opacity-30"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-destructive/10 opacity-30"></div>
 
       {/* Animated background elements */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-destructive/20 rounded-full blur-3xl"></div>
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32">
@@ -47,7 +47,7 @@ export default function Hero() {
               },
             }}
           >
-            <div className="inline-flex items-center px-3 py-1.5 mb-6 rounded-full text-sm font-medium bg-blue-900/40 text-blue-300 backdrop-blur-sm border border-blue-800/50">
+            <div className="inline-flex items-center px-3 py-1.5 mb-6 rounded-full text-sm font-medium bg-primary/40 text-primary-foreground backdrop-blur-sm border border-primary/50">
               <span className="mr-2">⚡</span> Backed by top AI researchers
             </div>
 
@@ -58,7 +58,7 @@ export default function Hero() {
               className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6"
             >
               <span className="block font-normal">Less searching.</span>
-              <span className="block text-blue-500">More finding.</span>
+              <span className="block text-primary">More finding.</span>
             </TextEffect>
 
             <TextEffect
@@ -78,13 +78,13 @@ export default function Hero() {
             </p>
 
             <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-8">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                 Upload Paper
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                className="border-blue-500/30 hover:border-blue-500/50 hover:bg-blue-500/5"
+                className="border-primary/30 hover:border-primary/50 hover:bg-primary/5"
               >
                 Contact Sales
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -179,28 +179,25 @@ export default function Hero() {
                     </div>
                   </div>
                 </div>
-                         {/* Floating elements */}
-              <motion.div
-                className="absolute -right-6 -top-6 bg-blue-500/80 backdrop-blur-md p-3 rounded-lg shadow-lg text-white text-sm font-medium"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1, duration: 0.5 }}
-              >
-                98% faster research
-              </motion.div>
+                {/* Floating elements */}
+                <motion.div
+                  className="absolute -right-6 -top-6 bg-primary/80 backdrop-blur-md p-3 rounded-lg shadow-lg text-primary-foreground text-sm font-medium"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1, duration: 0.5 }}
+                >
+                  98% faster research
+                </motion.div>
 
-              <motion.div
-                className="absolute -left-6 bottom-24 bg-orange-500/80 backdrop-blur-md p-3 rounded-lg shadow-lg text-white text-sm font-medium"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.2, duration: 0.5 }}
-              >
-                One-click access
-              </motion.div>
+                <motion.div
+                  className="absolute -left-6 bottom-24 bg-accent/80 backdrop-blur-md p-3 rounded-lg shadow-lg text-accent-foreground text-sm font-medium"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.2, duration: 0.5 }}
+                >
+                  One-click access
+                </motion.div>
               </div>
-            {/* </div> */}
-
-     
             </div>
           </motion.div>
         </div>
@@ -208,4 +205,3 @@ export default function Hero() {
     </div>
   )
 }
-

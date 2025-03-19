@@ -27,7 +27,7 @@ const features = [
 export default function HowLeSearchWorks() {
   return (
     <section id="how-it-works" className="py-20 sm:py-28 relative">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"></div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-16 animate-hidden">
@@ -67,10 +67,10 @@ export default function HowLeSearchWorks() {
                 transition: { duration: 0.2 },
               }}
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full -mr-16 -mt-16"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16"></div>
               <div className="relative">
-                <div className="w-14 h-14 bg-blue-500/20 rounded-full flex items-center justify-center mb-6">
-                  <feature.icon className="w-7 h-7 text-blue-500" />
+                <div className="w-14 h-14 bg-primary/20 rounded-full flex items-center justify-center mb-6">
+                  <feature.icon className="w-7 h-7 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
@@ -86,7 +86,7 @@ export default function HowLeSearchWorks() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
             See how it works
           </Button>
         </motion.div>
@@ -94,4 +94,3 @@ export default function HowLeSearchWorks() {
     </section>
   )
 }
-

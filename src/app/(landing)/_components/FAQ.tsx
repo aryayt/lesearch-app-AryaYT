@@ -103,7 +103,7 @@ export default function FAQ() {
           transition={{ duration: 0.5 }}
         >
           <p className="text-lg mb-2">Have more questions?</p>
-          <a href="#" className="text-blue-400 hover:text-blue-300 font-medium">
+          <a href="#" className="text-primary hover:text-primary/80 font-medium">
             Contact Support
           </a>
         </motion.div>

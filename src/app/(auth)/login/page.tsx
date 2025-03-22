@@ -1,15 +1,90 @@
+"use client";
 import Logo from '@/components/logo'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Link from 'next/link'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [googleLoading, setGoogleLoading] = useState(false);
+    const router = useRouter();
+    const supabase = createClient();
+
+    const handleGoogleLogin = async () => {
+        try {
+            setGoogleLoading(true);
+            await signIn("google", { callbackUrl: "/documents", redirect: true });
+        } catch (error: unknown) {
+            let errorMessage = "Failed to sign in with Google";
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+            toast.error(errorMessage);
+        } finally {
+            setTimeout(() => {
+                setGoogleLoading(false);
+            }, 5000);
+        }
+    };
+
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!email || !password) {
+            toast.error("Please enter both email and password");
+            return;
+        }
+        
+        try {
+            setLoading(true);
+            
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (error || !data) {
+                throw error;
+            }
+
+            setTimeout(() => {
+                router.push('/documents');
+            }, 500);
+
+            toast.success("Login Success!Welcome back to LeSearch!");
+        } catch (error: unknown) {
+            let errorMessage = "Failed to sign in";
+            
+            if (error instanceof Error) {
+                // Handle specific Supabase error messages
+                if (error.message.includes("Invalid login")) {
+                    errorMessage = "Invalid email or password";
+                } else if (error.message.includes("Email not confirmed")) {
+                    errorMessage = "Please verify your email before logging in";
+                } else {
+                    errorMessage = error.message;
+                }
+            }
+            
+            toast.error(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <section className="flex min-h-screen bg-background/80 px-4 py-8 md:py-16 dark:bg-transparent">
-            <form action="" className="max-w-92 m-auto h-fit w-full">
+            <form onSubmit={handleLogin} className="max-w-92 m-auto h-fit w-full">
                 <div className="p-6">
-                    <div  className='flex flex-col items-center'>
+                    <div className='flex flex-col items-center'>
                         <Link href="/" aria-label="go home">
                             <Logo />
                         </Link>
@@ -18,7 +93,14 @@ export default function LoginPage() {
                     </div>
 
                     <div className="mt-6">
-                        <Button type="button" variant="outline" className="w-full" aria-label='Sign in with Google'>
+                        <Button 
+                            onClick={handleGoogleLogin} 
+                            type="button" 
+                            variant="outline" 
+                            className="w-full" 
+                            aria-label='Sign in with Google'
+                            disabled={googleLoading}
+                        >
                             <svg xmlns="http://www.w3.org/2000/svg" width="0.98em" height="1em" viewBox="0 0 256 262" role='img'>
                                 <title>Google Logo</title>
                                 <path fill="#4285f4" d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622l38.755 30.023l2.685.268c24.659-22.774 38.875-56.282 38.875-96.027"/>
@@ -41,7 +123,15 @@ export default function LoginPage() {
                             <Label htmlFor="email" className="block text-sm">
                                 Email
                             </Label>
-                            <Input type="email" required name="email" id="email" />
+                            <Input 
+                                type="email" 
+                                required 
+                                name="email" 
+                                id="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                disabled={loading}
+                            />
                         </div>
                         <div className="space-y-0.5">
                             <div className="flex items-center justify-between">
@@ -49,18 +139,28 @@ export default function LoginPage() {
                                     Password
                                 </Label>
                                 <Button asChild variant="link" size="sm">
-                                    <Link href="#" className="link intent-info variant-ghost text-sm">
+                                    <Link href="/forgot-password" className="link intent-info variant-ghost text-sm">
                                         Forgot your Password ?
                                     </Link>
                                 </Button>
                             </div>
-                            <Input type="password" required name="pwd" id="pwd" className="input sz-md variant-mixed" />
+                            <Input 
+                                type="password" 
+                                required 
+                                name="pwd" 
+                                id="pwd" 
+                                className="input sz-md variant-mixed"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)} 
+                                disabled={loading}
+                            />
                         </div>
 
-                        <Button className="w-full">Continue</Button>
+                        <Button className="w-full" type="submit" disabled={loading}>
+                            {loading ? <span className="animate-pulse text-sm">Signing in...</span> : "Continue"}
+                        </Button>
                     </div>
                 </div>
-
                 <p className="text-accent-foreground text-center text-sm">
                     Don&apos;t have an account ?
                     <Button asChild variant="link" className="px-2">

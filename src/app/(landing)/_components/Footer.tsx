@@ -1,6 +1,7 @@
 "use client"
 
-import {  Linkedin, Twitter, Github, Facebook } from "lucide-react"
+import { FaLinkedin, FaTwitter, FaGithub, FaFacebook } from "react-icons/fa"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { motion } from "framer-motion"
@@ -181,16 +182,16 @@ export default function LandingPageFooter() {
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <a title="LinkedIn" href="https://www.linkedin.com" className="text-muted-foreground hover:text-primary transition-colors">
-              <Linkedin className="h-5 w-5" />
+              <FaLinkedin className="h-5 w-5" />
             </a>
             <a title="Twitter" href="https://www.twitter.com" className="text-muted-foreground hover:text-primary transition-colors">
-              <Twitter className="h-5 w-5" />
+              <FaTwitter className="h-5 w-5" />
             </a>
             <a title="Github" href="https://www.github.com" className="text-muted-foreground hover:text-primary transition-colors">
-              <Github className="h-5 w-5" />
+              <FaGithub className="h-5 w-5" />
             </a>
             <a title="Facebook" href="https://www.facebook.com" className="text-muted-foreground hover:text-primary transition-colors">
-              <Facebook className="h-5 w-5" />
+              <FaFacebook className="h-5 w-5" />
             </a>
           </motion.div>
           <motion.div

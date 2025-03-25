@@ -65,3 +65,10 @@ jobs:
             EMAIL_SERVER_USER=${{ secrets.EMAIL_SERVER_USER }}
             EMAIL_SERVER_PASSWORD="${{ secrets.EMAIL_SERVER_PASSWORD }}"
             HOST=0.0.0.0
+          containerAppHealthProbeProtocol: HTTP
+          containerAppHealthProbePath: /api/health
+          containerAppHealthProbePort: 3000
+          containerAppHealthProbeInterval: 10
+          containerAppHealthProbeTimeout: 5
+          containerAppHealthProbeRetries: 3
+          containerAppHealthProbeStartupDelaySeconds: 30

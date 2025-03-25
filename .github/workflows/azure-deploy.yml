@@ -7,7 +7,7 @@ on:
       [ main ]
     paths:
     - '**'
-    - '.github/workflows/nextjs-app-deploy.yml'
+    - '.github/workflows/azure-deploy.yml'
   # Allow manual trigger 
   workflow_dispatch:
       
@@ -47,9 +47,9 @@ jobs:
           registryUrl: ${{ secrets.REGISTRY_LOGIN_SERVER }}
           registryUsername: ${{ secrets.REGISTRY_USERNAME }}
           registryPassword: ${{ secrets.REGISTRY_PASSWORD }}
-          containerAppName: next-app
+          containerAppName: lesearch-frontend
           resourceGroup: Nextjs
-          imageToBuild: ${{ secrets.REGISTRY_LOGIN_SERVER }}/nextjs-app:${{ github.sha }}
+          imageToBuild: ${{ secrets.REGISTRY_LOGIN_SERVER }}/lesearch-frontend:${{ github.sha }}
           environmentVariables: |
             NODE_ENV=production
             NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}

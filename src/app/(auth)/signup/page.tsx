@@ -323,8 +323,8 @@ useEffect(() => {
                 </div>
             ) : (
             <form onSubmit={otpSent ? handleVerifyOtp : handleSendOtp} className="max-w-92 m-auto h-fit w-full">
-                <div className="p-6">
-                    <div className='flex flex-col items-center'>
+                <div className="p-6 ">
+                    <div className='flex flex-col items-center mb-6'>
                         <Link href="/" aria-label="go home">
                             <Logo />
                         </Link>
@@ -332,7 +332,7 @@ useEffect(() => {
                         <p>Welcome! Create an account to get started</p>
                     </div>
                     {!otpSent && <>
-                    <div className="mt-6">
+                    <div>
                         <Button 
                             type="button" 
                             variant="outline" 

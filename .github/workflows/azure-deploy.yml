@@ -1,77 +1,67 @@
-name: Build and Deploy to Azure Container Apps
-
+name: Trigger auto deployment for nextjs-app
+# When this action will be executed
 on:
+  # Automatically trigger it when detected changes in repo
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches: 
+      [ main ]
+    paths:
+    - '**'
+    - '.github/workflows/nextjs-app-deploy.yml'
+  # Allow manual trigger 
   workflow_dispatch:
-
+      
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
     steps:
-    - uses: actions/checkout@v3
-    
-    # Cache node modules for faster builds
-    - name: Cache Node.js modules
-      uses: actions/cache@v3
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-    
-    # Create .env file from GitHub secrets
-    - name: Create .env file
-      run: |
-        touch .env.local
-        echo "NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}" >> .env.local
-        echo "NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}" >> .env.local
-        echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env.local
-        echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env.local
-        echo "NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY }}" >> .env.local
-        echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env.local
-        echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env.local
-        echo "NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}" >> .env.local
-        echo "EMAIL_SERVER_HOST=${{ secrets.EMAIL_SERVER_HOST }}" >> .env.local
-        echo "EMAIL_SERVER_PORT=${{ secrets.EMAIL_SERVER_PORT }}" >> .env.local
-        echo "EMAIL_SERVER_USER=${{ secrets.EMAIL_SERVER_USER }}" >> .env.local
-        echo "EMAIL_SERVER_PASSWORD=${{ secrets.EMAIL_SERVER_PASSWORD }}" >> .env.local
-        cat .env.local
-    
-    # Log in to Azure using service principal
-    - name: Log in to Azure
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-    
-    # Deploy to Azure Container Apps
-    - name: Build and deploy Container App
-      uses: azure/container-apps-deploy-action@v1
-      with:
-        resourceGroup: Nextjs  # Replace with your resource group
-        containerAppName: lesearch  # This will be the app name in the URL
-        imageToBuild: ${{ secrets.REGISTRY_LOGIN_SERVER }}/nextjs-app:${{ github.sha }}
-        targetPort: 3000  # The port your Next.js app listens on
-        location: 'eastus'  # Use your preferred region East US
-        registryUrl: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-        registryUsername: ${{ secrets.REGISTRY_USERNAME }}
-        registryPassword: ${{ secrets.REGISTRY_PASSWORD }}
-        environmentVariables: |
-          NODE_ENV=production
-          NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
-          NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
-          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          HOST=0.0.0.0
-        secureEnvironmentVariables: |
-          NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY }}
-          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-          EMAIL_SERVER_HOST=${{ secrets.EMAIL_SERVER_HOST }}
-          EMAIL_SERVER_PORT=${{ secrets.EMAIL_SERVER_PORT }}
-          EMAIL_SERVER_USER=${{ secrets.EMAIL_SERVER_USER }}
-          EMAIL_SERVER_PASSWORD="${{ secrets.EMAIL_SERVER_PASSWORD }}"
+      - name: Checkout to the branch
+        uses: actions/checkout@v3
+        
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          
+      # Step to create .env.local file
+      - name: Create .env.local file
+        run: |
+          echo "NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}" >> .env.local
+          echo "NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}" >> .env.local
+          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env.local
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env.local
+          echo "NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY }}" >> .env.local
+          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env.local
+          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env.local
+          echo "NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}" >> .env.local
+          echo "EMAIL_SERVER_HOST=${{ secrets.EMAIL_SERVER_HOST }}" >> .env.local
+          echo "EMAIL_SERVER_PORT=${{ secrets.EMAIL_SERVER_PORT }}" >> .env.local
+          echo "EMAIL_SERVER_USER=${{ secrets.EMAIL_SERVER_USER }}" >> .env.local
+          echo "EMAIL_SERVER_PASSWORD=${{ secrets.EMAIL_SERVER_PASSWORD }}" >> .env.local
+          cat .env.local
+          
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }}
+          registryUrl: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          registryUsername: ${{ secrets.REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.REGISTRY_PASSWORD }}
+          containerAppName: next-app
+          resourceGroup: Nextjs
+          imageToBuild: ${{ secrets.REGISTRY_LOGIN_SERVER }}/nextjs-app:${{ github.sha }}
+          environmentVariables: |
+            NODE_ENV=production
+            NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
+            NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+            EMAIL_SERVER_HOST=${{ secrets.EMAIL_SERVER_HOST }}
+            EMAIL_SERVER_PORT=${{ secrets.EMAIL_SERVER_PORT }}
+            EMAIL_SERVER_USER=${{ secrets.EMAIL_SERVER_USER }}
+            EMAIL_SERVER_PASSWORD="${{ secrets.EMAIL_SERVER_PASSWORD }}"
+            HOST=0.0.0.0

@@ -97,7 +97,7 @@ jobs:
           EMAIL_SERVER_HOST=${{ secrets.EMAIL_SERVER_HOST }}
           EMAIL_SERVER_PORT=${{ secrets.EMAIL_SERVER_PORT }}
           EMAIL_SERVER_USER=${{ secrets.EMAIL_SERVER_USER }}
-          EMAIL_SERVER_PASSWORD=${{ secrets.EMAIL_SERVER_PASSWORD }}
+          EMAIL_SERVER_PASSWORD="${{ secrets.EMAIL_SERVER_PASSWORD }}"
 
     # Output the deployed application URL
     - name: Output App URL

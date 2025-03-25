@@ -1,10 +1,11 @@
-name: Build and Deploy to Azure
+name: Build and Deploy to Azure Container Apps
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -38,10 +39,7 @@ jobs:
         echo "EMAIL_SERVER_PORT=${{ secrets.EMAIL_SERVER_PORT }}" >> .env.local
         echo "EMAIL_SERVER_USER=${{ secrets.EMAIL_SERVER_USER }}" >> .env.local
         echo "EMAIL_SERVER_PASSWORD=${{ secrets.EMAIL_SERVER_PASSWORD }}" >> .env.local
-    
-    # Set up Docker Buildx for efficient builds
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+        cat .env.local
     
     # Log in to Azure using service principal
     - name: Log in to Azure
@@ -49,47 +47,26 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     
-    # Log in to Azure Container Registry
-    - name: Log in to container registry
-      uses: docker/login-action@v2
+    # Deploy to Azure Container Apps
+    - name: Build and deploy Container App
+      uses: azure/container-apps-deploy-action@v1
       with:
-        registry: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-        username: ${{ secrets.REGISTRY_USERNAME }}
-        password: ${{ secrets.REGISTRY_PASSWORD }}
-    
-    # Build and push container image with caching
-    - name: Build and push container image
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        push: true
-        tags: ${{ secrets.REGISTRY_LOGIN_SERVER }}/nextjs-app:${{ github.sha }},${{ secrets.REGISTRY_LOGIN_SERVER }}/nextjs-app:latest
-        cache-from: type=registry,ref=${{ secrets.REGISTRY_LOGIN_SERVER }}/nextjs-app:latest
-        cache-to: type=inline
-    
-    # Deploy to Azure Container Instances
-    - name: Deploy to Azure Container Instances
-      uses: azure/aci-deploy@v1
-      with:
-        resource-group: Nextjs  # Replace with your resource group name
-        dns-name-label: nextjs-app-${{ github.run_number }}  # Creates a unique DNS name
-        image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/nextjs-app:${{ github.sha }}
-        registry-login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-        registry-username: ${{ secrets.REGISTRY_USERNAME }}
-        registry-password: ${{ secrets.REGISTRY_PASSWORD }}
-        name: nextjs-app
-        location: 'eastus'  # Replace with your preferred Azure region
-        ports: 3000
-        cpu: 1
-        memory: 1.5
-        environment-variables: |
+        resourceGroup: Nextjs  # Replace with your resource group
+        containerAppName: lesearch  # This will be the app name in the URL
+        imageToBuild: ${{ secrets.REGISTRY_LOGIN_SERVER }}/nextjs-app:${{ github.sha }}
+        targetPort: 3000  # The port your Next.js app listens on
+        location: 'eastus'  # Use your preferred region East US
+        registryUrl: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+        registryUsername: ${{ secrets.REGISTRY_USERNAME }}
+        registryPassword: ${{ secrets.REGISTRY_PASSWORD }}
+        environmentVariables: |
           NODE_ENV=production
           NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
           NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
           NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           HOST=0.0.0.0
-        secure-environment-variables: |
+        secureEnvironmentVariables: |
           NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY }}
           GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
@@ -98,8 +75,3 @@ jobs:
           EMAIL_SERVER_PORT=${{ secrets.EMAIL_SERVER_PORT }}
           EMAIL_SERVER_USER=${{ secrets.EMAIL_SERVER_USER }}
           EMAIL_SERVER_PASSWORD="${{ secrets.EMAIL_SERVER_PASSWORD }}"
-
-    # Output the deployed application URL
-    - name: Output App URL
-      run: |
-        echo "Your app has been deployed to: http://nextjs-app-${{ github.run_number }}.eastus.azurecontainer.io:3000"

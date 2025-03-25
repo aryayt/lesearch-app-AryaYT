@@ -74,7 +74,7 @@ const profileSchema = z.object({
 });
 
 const CompleteProfile = () => {
-  const { user,updateUserData } = useUserStore();
+  const { user,updateUserData, fetchUser } = useUserStore();
   const [activeStep, setActiveStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
@@ -244,28 +244,16 @@ const CompleteProfile = () => {
 
 
       await updateUserData(userUpdateData);
-      // Update user profile in Supabase
-      // const { data, error } = await supabase
-      //   .from('profiles')
-      //   .update({
-      //     first_name: values.firstName,
-      //     last_name: values.lastName,
-      //     age: values.age,
-      //     interests: values.interests,
-      //     current_work: values.currentWork,
-      //     location: values.location,
-      //   })
-      //   .eq('id', user.id);
       
-      // if (error) {
-      //   throw new Error('Failed to update user profile');
-      // }
-      
-      // Here you would typically send the data to your API
-      // await updateUserProfile(user.id, values);
+      // Force a refresh of user data
+      await fetchUser();
       
       toast.success("Profile completed successfully!");
-      router.push('/documents');
+      
+      // Use window.location instead of router to force a full page reload
+      setTimeout(() => {
+        window.location.href = '/documents';
+      }, 500);
       
     } catch (error) {
       // console.error('Error completing profile:', error);

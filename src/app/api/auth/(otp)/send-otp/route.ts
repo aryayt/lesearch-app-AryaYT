@@ -92,26 +92,46 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create reset link (optional, can be used in addition to OTP)
-    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/forgot-password?email=${encodeURIComponent(email)}&otp=${otp}`
+        //  Send OTP via email using Nodemailer
+        const transporter = nodemailer.createTransport({
+          secure: true,
+          host: process.env.EMAIL_SERVER_HOST,
+          port: Number(process.env.EMAIL_SERVER_PORT),
+          auth: {
+            user: process.env.EMAIL_SERVER_USER,
+            pass: process.env.EMAIL_SERVER_PASSWORD,
+          },
+        });
 
-    //  Send OTP via email using Nodemailer
-    const transporter = nodemailer.createTransport({
-      secure: true,
-      host: process.env.EMAIL_SERVER_HOST,
-      port: Number(process.env.EMAIL_SERVER_PORT),
-      auth: {
-        user: process.env.EMAIL_SERVER_USER,
-        pass: process.env.EMAIL_SERVER_PASSWORD,
-      },
-    });
-
-    // Send email with OTP
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Password Reset Request - LeSearch',
-      html: `
+    if(isSignup){
+      const signupLink = `${process.env.NEXT_PUBLIC_APP_URL}/signup?email=${encodeURIComponent(email)}&otp=${otp}`
+      // Send email with OTP
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Sign Up Request - LeSearch',
+        html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Sign Up Request</h2>
+          <p>We received a request to sign up for LeSearch.</p>
+          <p>Your verification code is: <strong style="font-size: 24px;">${otp}</strong></p>
+          <p>This code will expire in 10 minutes.</p>
+          <p>Alternatively, you can click the link below to sign up:</p>
+          <p><a href="${signupLink}" style="display: inline-block; background-color: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Sign Up</a></p>
+          <p>If you didn't request this sign up, please ignore this email.</p>
+          <p>Thank you,<br>The LeSearch Team</p>
+        </div>
+      `,
+      })
+    }else{
+      // Create reset link (optional, can be used in addition to OTP)
+      const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/forgot-password?email=${encodeURIComponent(email)}&otp=${otp}`
+      // Send email with OTP
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Password Reset Request - LeSearch',
+        html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>Reset Your Password</h2>
           <p>We received a request to reset your password for LeSearch.</p>
@@ -124,11 +144,13 @@ export async function POST(req: Request) {
         </div>
       `,
     })
+      }
 
     return NextResponse.json(
       { message: "OTP sent successfully" },
       { status: 200 },
     );
+    
   } catch (error) {
     if(error instanceof Error) {
       return NextResponse.json(

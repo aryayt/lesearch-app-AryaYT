@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Logo from '@/components/logo'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,7 +19,89 @@ export default function SignupPage() {
     const [otpSent, setOtpSent] = useState(false)
     const [otp, setOtp] = useState(["", "", "", "", "", ""])
     const [resendTimer, setResendTimer] = useState(0)
+    const [pageLoading, setPageLoading] = useState(true)
 
+    // Wrap handleVerifyFromUrl in useCallback to prevent unnecessary re-renders
+    const handleVerifyFromUrl = useCallback(async (emailParam: string, otpValue: string) => {
+        if (otpValue.length !== 6) {
+            toast.error("Invalid Code", {
+                description: "Please enter the complete 6-digit code"
+            })
+            setPageLoading(false)
+            return
+        }
+
+        try {
+            setLoading(true)
+            
+            // Call API to verify OTP
+            const response = await fetch('/api/auth/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: emailParam, otp: otpValue })
+            })
+            
+            if (!response.ok) throw new Error('Invalid verification code')
+
+                const newPassword = "Lesearch@123";
+                const supabase = createClient();
+                // Update the user's password using Supabase Auth
+                const { error: createError } = await supabase.auth.signUp({
+                  email: emailParam,
+                  password: newPassword,
+                })
+
+                if (createError) {
+                  console.error("Error during user creation:", createError.message);
+                  setPageLoading(false)
+                  return NextResponse.json(
+                    { message: "Error creating user" },
+                    { status: 500 },
+                  );
+                }
+                
+            // Successfully verified
+            toast.success("Code Verified", {
+                description: "You will be redirected to the complete profile page"
+            })
+            
+            // Redirect to complete profile page
+            setTimeout(() => {
+                router.push('/complete-profile')
+            }, 1000)
+            
+        } catch (err) {
+            toast.error("Verification Failed", {
+                description: (err as Error).message || "Invalid verification code"
+            })
+            setPageLoading(false)
+        } finally {
+            setLoading(false)
+        }
+    }, [router]); // Add router as a dependency
+
+    // Check for email and OTP in URL parameters on component mount
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search)
+        const emailParam = params.get('email')
+        const otpParam = params.get('otp')
+        
+        if (emailParam && otpParam) {
+            // Convert OTP string to array format
+            const otpArray = otpParam.split('').slice(0, 6)
+            // Pad with empty strings if OTP is less than 6 digits
+            while (otpArray.length < 6) {
+                otpArray.push('')
+                }
+                // setOtp(otpArray)
+                
+                // Verify the OTP from URL parameters
+                handleVerifyFromUrl(emailParam, otpParam)
+            } else{
+                setPageLoading(false)
+            }
+        }, [handleVerifyFromUrl])
+    
     useEffect(() => {
         let interval: NodeJS.Timeout
         if (resendTimer > 0) {
@@ -223,6 +305,7 @@ useEffect(() => {
         setLoading(false)
     }
 }
+
     // Original handler for form submission
     const handleVerifyOtp = async (e: React.FormEvent) => {
         if (e) e.preventDefault()
@@ -232,6 +315,13 @@ useEffect(() => {
 
     return (
         <section className="flex min-h-screen bg-background/80 px-4 py-8 md:py-16 dark:bg-transparent">
+        {pageLoading ? (
+                <div className="max-w-92 m-auto flex h-fit w-full flex-col items-center justify-center">
+                    <div className="animate-pulse text-center">
+                        <p className="text-lg">Verifying your request...</p>
+                    </div>
+                </div>
+            ) : (
             <form onSubmit={otpSent ? handleVerifyOtp : handleSendOtp} className="max-w-92 m-auto h-fit w-full">
                 <div className="p-6">
                     <div className='flex flex-col items-center'>
@@ -368,6 +458,7 @@ useEffect(() => {
                     </Button>
                 </p>
             </form>
+            )}
         </section>
     )
 }

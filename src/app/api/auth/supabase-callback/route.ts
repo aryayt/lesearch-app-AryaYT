@@ -6,6 +6,9 @@ import { createServerClient } from "@supabase/ssr";
 
 export async function GET(request: NextRequest) {
   try {
+    // Get the base URL for all redirects
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    
     // Get the NextAuth token
     const token = await getToken({ 
       req: request,
@@ -16,12 +19,12 @@ export async function GET(request: NextRequest) {
     
     if (!token || !token.idToken) {
       // console.error("No ID token available");
-      return NextResponse.redirect(new URL('/login?error=no-id-token', request.url));
+      return NextResponse.redirect(new URL('/login?error=no-id-token', baseUrl));
     }
 
     // Create a response object for redirect
     const response = NextResponse.redirect(
-      new URL('/documents', process.env.NEXT_PUBLIC_APP_URL)
+      new URL('/documents', baseUrl)
     );
     
     // Create Supabase client with server-side cookie management
@@ -84,7 +87,7 @@ export async function GET(request: NextRequest) {
           if (signUpError) {
             // console.error("Error creating new user:", signUpError);
             return NextResponse.redirect(
-              new URL(`/login?error=${encodeURIComponent(signUpError.message)}`, request.url)
+              new URL(`/login?error=${encodeURIComponent(signUpError.message)}`, baseUrl)
             );
           }
           
@@ -100,20 +103,20 @@ export async function GET(request: NextRequest) {
           if (retryError) {
             // console.error("Error signing in after user creation:", retryError);
             return NextResponse.redirect(
-              new URL(`/login?error=${encodeURIComponent(retryError.message)}`, request.url)
+              new URL(`/login?error=${encodeURIComponent(retryError.message)}`, baseUrl)
             );
           }
         } catch (signUpError) {
           // console.error("Exception during sign up process:", signUpError);
           if(signUpError)
           return NextResponse.redirect(
-            new URL('/login?error=signup-failed', request.url)
+            new URL('/login?error=signup-failed', baseUrl)
           );
         }
       } else {
         // For other errors, redirect to login with the error message
         return NextResponse.redirect(
-          new URL(`/login?error=${encodeURIComponent(error.message)}`, request.url)
+          new URL(`/login?error=${encodeURIComponent(error.message)}`, baseUrl)
         );
       }
     }
@@ -125,9 +128,10 @@ export async function GET(request: NextRequest) {
     
   } catch (error) {
     // console.error("Error in supabase-callback handler:", error);
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     if(error)
     return NextResponse.redirect(
-      new URL('/login?error=callback-failed', request.url)
+      new URL('/login?error=callback-failed', baseUrl)
     );
   }
 }

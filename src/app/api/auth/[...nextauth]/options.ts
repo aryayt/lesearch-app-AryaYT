@@ -72,7 +72,7 @@ export const authOptions: NextAuthOptions = {
   // Custom pages to handle the flow
   pages: {
     signIn: '/login',
-    signOut: '/login',
+    // signOut: '/login',
   },
   // debug: process.env.NODE_ENV === 'development', // Enable debug logs in development
   secret: process.env.NEXTAUTH_SECRET, // Make sure this is set in your .env

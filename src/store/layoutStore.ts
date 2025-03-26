@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 type MinimizeTriggered = "settings" | "documents";
 type LayoutState = {
@@ -60,6 +60,10 @@ export const useLayoutStore = create<LayoutState & LayoutAction>()(
     }),
     {
       name: "layout-storage",
+      partialize: (state) => ({
+        minimize: state.minimize,
+      }),
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );

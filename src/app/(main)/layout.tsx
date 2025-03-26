@@ -39,7 +39,7 @@ export default function MainLayout({ children }: PropsWithChildren) {
   }
 
   return (
-    <LayoutWrapper currentUser={user.user_metadata}>
+    <LayoutWrapper>
       {children}
     </LayoutWrapper>
   );

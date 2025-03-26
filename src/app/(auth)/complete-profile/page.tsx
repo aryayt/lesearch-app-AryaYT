@@ -74,7 +74,7 @@ const profileSchema = z.object({
 });
 
 const CompleteProfile = () => {
-  const { user,updateUserData, fetchUser } = useUserStore();
+  const { user, fetchUser } = useUserStore();
   const [activeStep, setActiveStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
@@ -242,8 +242,14 @@ const CompleteProfile = () => {
         password: values.password
       };
 
+      const { error } = await supabase.auth.updateUser({
+        ...userUpdateData
+      });
+      
+      if (error) {
+        throw error;
+      }
 
-      await updateUserData(userUpdateData);
       
       // Force a refresh of user data
       await fetchUser();

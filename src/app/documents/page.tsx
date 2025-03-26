@@ -9,10 +9,9 @@ import { signOut } from 'next-auth/react';
 const Documents = () => {
   const { 
     user, 
-    loading,
-    error, 
+    userLoading,
+    userError, 
     fetchUser, 
-    updateUserData, 
     initialized,
     isDataStale,
     lastUpdated
@@ -41,35 +40,30 @@ const Documents = () => {
 
   useEffect(() => {
     // If initialized and no user, redirect to login
-    if (initialized && !loading && !user) {
+    if (initialized && !userLoading && !user) {
       console.log("No user found, redirecting to login");
       router.push('/login');
     }
-  }, [initialized, loading, user, router]);
+  }, [initialized, userLoading, user, router]);
 
   // Handle errors from the store
   useEffect(() => {
-    if (error) {
-      setAuthError(error);
+    if (userError) {
+      setAuthError(userError);
       
       // If the error is about session expiration, redirect to login
-      if (error.includes("session") || error.includes("expired")) {
+      if (userError.includes("session") || userError.includes("expired")) {
         setTimeout(() => {
           router.push('/login');
         }, 2000);
       }
     }
-  }, [error, router]);
+  }, [userError, router]);
 
   const handleUpdateUser = async () => {
     try {
       setUpdateStatus("Updating...");
       setAuthError(null);
-      
-      await updateUserData({
-        isLoggedin: "NotLogged",
-        lastLoginAt: new Date().toISOString()
-      });
       
       setUpdateStatus("User updated successfully!");
       
@@ -83,8 +77,8 @@ const Documents = () => {
       setUpdateStatus(error instanceof Error ? `Update failed: ${error.message}` : 'Update failed');
       
       // If it's a session error, set auth error
-      if (error instanceof Error && 
-          (error.message.includes("session") || error.message.includes("missing"))) {
+      if (userError && 
+          (userError.includes("session") || userError.includes("missing"))) {
         setAuthError("Your session has expired. Please sign in again.");
         
         // Redirect to login after a short delay
@@ -178,7 +172,7 @@ const Documents = () => {
             type="button"
             onClick={handleRefreshUser}
             className="rounded bg-secondary px-4 py-2 text-sm text-secondary-foreground hover:bg-secondary/90 transition-colors"
-            disabled={loading}
+            disabled={userLoading}
           >
             Refresh Data
           </button>
@@ -187,7 +181,7 @@ const Documents = () => {
             type="button"
             onClick={handleSignOut}
             className="rounded bg-destructive px-4 py-2 text-sm text-destructive-foreground hover:bg-destructive/90 transition-colors"
-            disabled={loading}
+            disabled={userLoading}
           >
             Sign Out
           </button>
@@ -203,7 +197,7 @@ const Documents = () => {
                 type="button"
                 onClick={handleUpdateUser}
                 className="rounded bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 transition-colors"
-                disabled={loading}
+                disabled={userLoading}
               >
                 Update Login Status
               </button>

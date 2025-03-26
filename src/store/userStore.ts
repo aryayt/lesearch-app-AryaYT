@@ -6,15 +6,13 @@ import type { User } from '@supabase/supabase-js';
 
 interface UserState {
   user: User | null;
-  loading: boolean;
-  error: string | null;
+  userLoading: boolean;
+  userError: string | null;
   initialized: boolean;
   lastUpdated: number | null;
   
   // Actions
   fetchUser: () => Promise<void>;
-  updateUserData: (userData: Record<string, unknown>) => Promise<void>;
-  updatePassword: (password: string) => Promise<void>;
   clearUser: () => void;
   isDataStale: () => boolean;
 }
@@ -26,8 +24,8 @@ export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
       user: null,
-      loading: false,
-      error: null,
+      userLoading: false,
+      userError: null,
       initialized: false,
       lastUpdated: null,
       
@@ -39,16 +37,10 @@ export const useUserStore = create<UserState>()(
         return (now - lastUpdated) > STALE_TIME;
       },
       
-      
       fetchUser: async () => {
-        if (get().loading) return;
+        if (get().userLoading) return;
         
-        // If we have a user and data is not stale, don't fetch again
-        // if (get().user && !get().isDataStale() && get().initialized) {
-        //   return;
-        // }
-        
-        set({ loading: true, error: null });
+        set({ userLoading: true, userError: null });
         
         try {
           const supabase = createClient();
@@ -62,8 +54,8 @@ export const useUserStore = create<UserState>()(
           
           set({ 
             user: data.user, 
-            loading: false, 
-            error: null,
+            userLoading: false, 
+            userError: null,
             initialized: true,
             lastUpdated: Date.now()
           });
@@ -71,91 +63,18 @@ export const useUserStore = create<UserState>()(
         } catch (error) {
           // console.error('Error fetching user:', error);
           set({ 
-            error: error instanceof Error ? error.message : 'Authentication error',
-            loading: false,
+            userError: error instanceof Error ? error.message : 'Authentication error',
+            userLoading: false,
             initialized: true,
             lastUpdated: Date.now()
           });
         }
       },
       
-      updateUserData: async (userData: Record<string, unknown> | { data: Record<string, unknown>, password?: string }) => {
-        set({ loading: true, error: null });
-        
-        try {
-          const supabase = createClient();
-          
-          let updateOptions: Record<string, unknown> = {};
-  
-          if ('data' in userData && typeof userData.data === 'object') {
-            // Handle the combined format with both data and possibly password
-            updateOptions = {
-              data: userData.data
-            };
-            
-            // Add password if it exists
-            if (userData.password) {
-              updateOptions.password = userData.password;
-            }
-          } else {
-            // Handle the simple case where userData is just metadata
-              updateOptions = {
-              data: userData
-            };
-          }
-          
-          const { error } = await supabase.auth.updateUser({
-            ...updateOptions
-          });
-          
-          if (error) {
-            throw error;
-          }
-          
-          // Fetch fresh user data to update the store
-          await get().fetchUser();
-          
-        } catch (error) {
-          // console.error('Error updating user:', error);
-          set({ 
-            error: error instanceof Error ? error.message : 'Update error',
-            loading: false 
-          });
-          throw error; // Re-throw for handling in the component
-        }
-      },
-      
-      updatePassword: async (password: string) => {
-        set({ loading: true, error: null });
-        
-        try {
-          const supabase = createClient();
-          
-          const { error } = await supabase.auth.updateUser({
-            password: password
-          });
-          
-          if (error) {
-            throw error;
-          }
-          
-          // Fetch fresh user data
-          await get().fetchUser();
-          
-        } catch (error) {
-          // console.error('Error updating password:', error);
-          set({ 
-            error: error instanceof Error ? error.message : 'Password update error',
-            loading: false 
-          });
-          throw error; // Re-throw for handling in the component
-        }
-      },
-      
       clearUser: () => {
         set({ 
           user: null, 
-          error: null, 
+          userError: null, 
           lastUpdated: Date.now() 
         });
       }

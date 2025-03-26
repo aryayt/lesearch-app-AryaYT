@@ -33,7 +33,7 @@ export const authOptions: NextAuthOptions = {
       clientSecret: googleClientSecret,
       authorization: {
         params: {
-          prompt: "consent",
+          // prompt: "consent",
           access_type: "offline",
           response_type: "code",
           scope: "openid email profile" // 'openid' is required for ID tokens

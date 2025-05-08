@@ -19,7 +19,7 @@ export function NavMain() {
   return (
     <SidebarMenu>
       {/* Search Item */}
-      <SidebarMenuItem>
+      <SidebarMenuItem title="Search">
         <SearchDialog>
           <SidebarMenuButton>
             <Search />
@@ -29,7 +29,7 @@ export function NavMain() {
       </SidebarMenuItem>
 
       {/* Ask AI Item */}
-      <SidebarMenuItem>
+      <SidebarMenuItem title="Lesearch AI">
         <SidebarMenuButton asChild isActive={isAskAI}>
           <Link href="/askAI">
             <Sparkles />
@@ -39,7 +39,7 @@ export function NavMain() {
       </SidebarMenuItem>
 
       {/* Home Item */}
-      <SidebarMenuItem>
+      <SidebarMenuItem title="Home">
         <SidebarMenuButton asChild isActive={isHome}>
           <Link href="/">
             <Home />
@@ -49,7 +49,7 @@ export function NavMain() {
       </SidebarMenuItem>
 
       {/* Inbox Item */}
-      <SidebarMenuItem>
+      <SidebarMenuItem title="GraphView">
         <SidebarMenuButton asChild isActive={isGraphView}>
           <Link href="/graphview">
           <svg

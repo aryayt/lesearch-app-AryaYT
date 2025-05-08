@@ -1,13 +1,69 @@
 "use client"
-import React from 'react'
-import { useParams } from 'next/navigation'
+import{ Panel, PanelGroup,PanelResizeHandle, type ImperativePanelHandle } from 'react-resizable-panels'
+import { useRef} from 'react'
+import MiddlePanel from '../_components/middle-panel'
+import RightPanel from '../_components/right-panel'
+import LeftPanel from '../_components/left-panel'
+import { usePanelStore } from '@/store/usePanelStore'
 
-const Page = () => {
-const params = useParams()
-const pageId = params.pageId;
+const DashboardPage = () => {
+
+  const leftPanelRef = useRef<ImperativePanelHandle>(null);
+  const middlePanelRef = useRef<ImperativePanelHandle>(null);
+  const rightPanelRef = useRef<ImperativePanelHandle>(null);
+  const { showMiddlePanel, showRightPanel } = usePanelStore();
+
   return (
-    <div>{pageId}</div>
+    <div className='h-full w-full px-1 relative overflow-hidden'>
+       <PanelGroup
+      autoSaveId="ImperativePanelApi"
+      direction="horizontal"
+      id="imperative-Panel-api"
+    >
+      <Panel
+        collapsible
+        defaultSize={20}
+        id="left"
+        maxSize={100}
+        minSize={10}
+        order={1}
+        ref={leftPanelRef}
+        className='border-r-2 border-gray-200 flex flex-col rounded-xl shadow-xl h-full overflow-hidden'
+      >
+        <LeftPanel />
+      </Panel>
+      {showMiddlePanel && <>
+      <PanelResizeHandle className="w-1.5 bg-white cursor-col-resize z-10" />
+      <Panel
+        collapsible={true}
+        id="middle"
+        maxSize={100}
+        minSize={25}
+        order={2}
+        ref={middlePanelRef}
+        className='border-r-2 border-gray-200 flex flex-col rounded-xl shadow-xl overflow-y-scroll h-full overflow-hidden'
+      >
+        <MiddlePanel />
+      </Panel>
+      </>}
+      {showRightPanel && <>
+      <PanelResizeHandle className="w-1.5 bg-white cursor-col-resize z-10" />
+      <Panel
+        collapsible
+        defaultSize={20}
+        id="right"
+        maxSize={100}
+        minSize={10}
+        order={3}
+        ref={rightPanelRef}
+        className='border-r border-gray-200 flex flex-col rounded-xl shadow-xl h-full overflow-hidden'
+      >
+        <RightPanel />
+      </Panel>
+      </>}
+    </PanelGroup>
+    </div>
   )
 }
 
-export default Page
+export default DashboardPage

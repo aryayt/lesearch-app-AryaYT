@@ -39,8 +39,10 @@ export default function MainLayout({ children }: PropsWithChildren) {
   }
 
   return (
-    <LayoutWrapper>
-      {children}
-    </LayoutWrapper>
+    <div className="flex flex-col h-screen">
+      <LayoutWrapper>
+        {children}
+      </LayoutWrapper>
+    </div>
   );
 }

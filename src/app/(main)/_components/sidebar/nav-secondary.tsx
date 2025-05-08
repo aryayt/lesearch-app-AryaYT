@@ -19,7 +19,7 @@ export function NavSecondary({
       <SidebarGroupContent>
         {/* Main items at top */}
         <SidebarMenu>
-          <SidebarMenuItem>
+          <SidebarMenuItem title="Trash">
             <SidebarMenuButton asChild>
               <Link href="/trash" className="flex items-center gap-1">
               <Trash2 size={16} className="text-primary" />
@@ -27,7 +27,7 @@ export function NavSecondary({
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <SidebarMenuItem>
+          <SidebarMenuItem title="Feedback">
             <SidebarMenuButton asChild>
               <Link href="/feedback" className="flex items-center gap-1">
               <MessageSquare size={16} className="text-primary" />
@@ -41,7 +41,7 @@ export function NavSecondary({
         <div className="mt-4 pt-2">
           <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
-              <Link href="/invite" className="flex flex-col items-center p-1 hover:text-foreground transition-colors">
+              <Link href="/invite" className="flex flex-col items-center p-1 hover:text-foreground transition-colors" title="Invite and earn">
               <Users size={16} />
               <span>Invite and earn</span>
               </Link>

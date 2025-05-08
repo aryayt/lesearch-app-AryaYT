@@ -18,6 +18,7 @@ type LayoutAction = {
   setSidebarWidth: (width: number) => void;
   setIsDragging: (isDragging: boolean) => void;
   resetSidebarWidth: () => void;
+
 };
 
 const DEFAULT_WIDTH = 240;
@@ -33,13 +34,14 @@ export const useLayoutStore = create<LayoutState & LayoutAction>()(
       prevSidebarWidth: DEFAULT_WIDTH,
       sidebarWidth: DEFAULT_WIDTH,
       isDragging: false,
-      
+
       setMinimize: (v) => set({ minimize: v }),
       
       triggerMinimize: (v) => set({ 
         minimizeTriggered: v, 
         minimize: true 
       }),
+      
       
       setSidebarWidth: (width) => {
         const { minSidebarWidth, maxSidebarWidth } = get();
@@ -51,6 +53,7 @@ export const useLayoutStore = create<LayoutState & LayoutAction>()(
         set({ sidebarWidth: clampedWidth });
       },
       
+
       setIsDragging: (isDragging) => set({ isDragging }),
       
       resetSidebarWidth: () => set({ 

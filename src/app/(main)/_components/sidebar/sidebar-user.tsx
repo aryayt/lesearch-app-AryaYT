@@ -28,7 +28,7 @@ export default function SidebarUser() {
             className="flex h-[24px] items-center justify-start  gap-x-2  md:h-8"
           >
             <Avatar className="w-6 h-6">
-              <AvatarImage src={image || ""} alt={fullname[0]} loading="lazy" />
+              <AvatarImage src={image ?? ""} alt={fullname[0]} loading="lazy" />
               <AvatarFallback>
                 {fullname ? fullname[0].toUpperCase() : "?"}
               </AvatarFallback>

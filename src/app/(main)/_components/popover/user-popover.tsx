@@ -40,7 +40,7 @@ export default function UserPopover({
 
   return (
     <Popover>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      <PopoverTrigger className="has-[>svg]:px-2" asChild>{children}</PopoverTrigger>
       <PopoverContent
         asChild
         className="overflow-hidden p-0"

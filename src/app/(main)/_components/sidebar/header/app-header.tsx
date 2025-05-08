@@ -1,18 +1,18 @@
 "use client";
 
-import { CustomSidebarTrigger } from "./custom-sidebar-trigger";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import { NavActions } from "../sidebar/nav-actions";
+import { NavActions } from "../nav-actions";
 import { usePathname } from "next/navigation";
 
 const Header = function Header() {
   const pathname = usePathname();
   const isDocumentPage = pathname.startsWith("/documents") && pathname !== "/documents";
   return (
-    <header className="flex sticky top-0 bg-background h-16 shrink-0 items-center gap-2  px-2 z-50">
+    <header className="flex sticky top-0 bg-background h-10 shrink-0 items-end gap-2  px-2 z-30">
       <div className="flex flex-1 items-center gap-2">
-        <CustomSidebarTrigger />
+        <SidebarTrigger />
         {isDocumentPage &&<>
         <Separator orientation="vertical" className="mr-1 h-4" />
         <Breadcrumb>
@@ -26,7 +26,7 @@ const Header = function Header() {
         </Breadcrumb>
         </>}
       </div>
-      {isDocumentPage &&<div className="ml-auto px-3">
+      {isDocumentPage &&<div className="ml-auto flex px-3 relative ">
         <NavActions />
       </div>}
     </header>

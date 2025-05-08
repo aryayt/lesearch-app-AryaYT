@@ -61,6 +61,8 @@ export const useUserStore = create<UserState>()(
           if (error) {
             throw error;
           }
+
+          const image = data.user?.user_metadata.image || data.user?.user_metadata.avatar_url;
           
           set({ 
             user: data.user, 
@@ -70,7 +72,7 @@ export const useUserStore = create<UserState>()(
             email: data.user?.email,
             firstname: data.user?.user_metadata.firstname,
             fullname: data.user?.user_metadata.full_name,
-            image: data.user?.user_metadata.image || data.user?.user_metadata.avatar_url,
+            image: image,
             lastUpdated: Date.now()
           });
           

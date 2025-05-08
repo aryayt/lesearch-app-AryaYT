@@ -9,12 +9,14 @@ import {
   CornerUpLeft,
   CornerUpRight,
   FileText,
+  FileX,
   GalleryVerticalEnd,
   LineChart,
   Link,
+  MessageCircle,
+  MessageCircleOff,
   MoreHorizontal,
   Settings2,
-  Star,
   Trash,
   Trash2,
 } from "lucide-react"
@@ -34,6 +36,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { usePanelStore } from "@/store/usePanelStore"
 
 const data = [
   {
@@ -112,15 +115,47 @@ const data = [
 
 export function NavActions() {
   const [isOpen, setIsOpen] = React.useState(false)
+  const {showMiddlePanel, showRightPanel, setShowMiddlePanel, setShowRightPanel } = usePanelStore();
+
 
   return (
     <div className="flex items-center gap-2 text-sm">
+      {/* Panel Toggles */}
+            <Button
+              title={showMiddlePanel ? "Close PDF Panel" : "Open PDF Panel"}
+              aria-label="Toggle PDF Panel"
+              variant="ghost"
+              size="icon"
+              className="size-7"
+              onClick={() => setShowMiddlePanel(!showMiddlePanel)}
+            >
+              {showMiddlePanel ? (
+                <FileX />
+              ) : (
+                <FileText />
+              )}
+            </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="size-7"
+        title={showRightPanel ? "Close Chat Bot" : "Open Chat Bot"}
+        aria-label="Toggle Chat Bot"
+        onClick={() => setShowRightPanel(!showRightPanel)}
+      >
+        {showRightPanel ? (
+          // X icon for open state
+          <MessageCircleOff />
+        ) : (
+          <MessageCircle />
+        )}
+      </Button>
       <div className="hidden font-medium text-muted-foreground md:inline-block">
         Edit Oct 08
       </div>
-      <Button variant="ghost" size="icon" className="h-7 w-7">
+      {/* <Button variant="ghost" size="icon" className="h-7 w-7">
         <Star />
-      </Button>
+      </Button> */}
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -132,7 +167,7 @@ export function NavActions() {
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-56 overflow-hidden rounded-lg p-0"
+          className="w-56 overflow-hidden rounded-lg p-0 z-[120]"
           align="end"
         >
           <Sidebar collapsible="none" className="bg-transparent">

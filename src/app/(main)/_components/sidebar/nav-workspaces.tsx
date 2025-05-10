@@ -1,82 +1,147 @@
-import * as React from "react"
-import {
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-} from "@/components/ui/sidebar"
-import { type FileItem, FileTree } from "@/components/sidebar/file-tree"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { PlusIcon } from "lucide-react"
-
-const initialFiles:  FileItem[] = [
-  // SPACES
-  { id: "space-1", name: "Marketing", parentId: null, type: "space" },
-  { id: "space-2", name: "Engineering", parentId: null, type: "space" },
-
-  // PROJECTS under Marketing
-  { id: "project-1", name: "Product Launch", parentId: "space-1", type: "project" },
-  { id: "project-2", name: "Campaigns", parentId: "space-1", type: "project" },
-
-  // PROJECTS under Engineering
-  { id: "project-3", name: "AI Integration", parentId: "space-2", type: "project" },
-
-  // Default folders under Product Launch
-  { id: "project-1-chat", name: "Chat", parentId: "project-1", type: "folder", folderType: "chat" },
-  { id: "project-1-file", name: "Files", parentId: "project-1", type: "folder", folderType: "file" },
-  { id: "project-1-notes", name: "Notes", parentId: "project-1", type: "folder", folderType: "notes" },
-
-  // Files inside Product Launch folders
-  { id: "chat-1", name: "Team Discussion", parentId: "project-1-chat", type: "file" },
-  { id: "file-1", name: "LaunchChecklist.pdf", parentId: "project-1-file", type: "file" },
-  { id: "note-1", name: "Meeting Summary", parentId: "project-1-notes", type: "file" },
-
-  // Default folders under Campaigns
-  { id: "project-2-chat", name: "Chat", parentId: "project-2", type: "folder", folderType: "chat" },
-  { id: "project-2-file", name: "Files", parentId: "project-2", type: "folder", folderType: "file" },
-  { id: "project-2-notes", name: "Notes", parentId: "project-2", type: "folder", folderType: "notes" },
-
-  // No files in Campaigns yet — empty folders
-
-  // Default folders under AI Integration
-  { id: "project-3-chat", name: "Chat", parentId: "project-3", type: "folder", folderType: "chat" },
-  { id: "project-3-file", name: "Files", parentId: "project-3", type: "folder", folderType: "file" },
-  { id: "project-3-notes", name: "Notes", parentId: "project-3", type: "folder", folderType: "notes" },
-
-  // Files in AI Integration
-  { id: "file-2", name: "Design Doc", parentId: "project-3-file", type: "file" },
-  { id: "chat-2", name: "Slack Export", parentId: "project-3-chat", type: "file" },
-  { id: "note-2", name: "Dev Sync Notes", parentId: "project-3-notes", type: "file" },
-]
-
-export type Creation = {
-  parentId: string | null
-  type: FileItem["type"]
-  folderType?: FileItem["folderType"]
-} | null
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { FileNode } from "@/app/(main)/_components/sidebar/workspaces/file-node";
+import { SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarGroup } from "@/components/ui/sidebar";
+import { PlusIcon } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { type FileItem, useStore } from "@/store/useCollectionStore"; // Import Zustand store
 
 export function NavWorkspaces() {
-  const [files, setFiles] = useState<FileItem[]>(initialFiles)
-   const [creation, setCreation] = React.useState<Creation>(null)
-  return (
-    <SidebarGroup className="group-data-[collapsible=icon]:hidden select-none">
-      <SidebarGroupLabel className="flex items-center justify-between">
-  Workspaces
-  <Button
-    size="icon"
-    variant="ghost"
-    onClick={() => setCreation({ parentId: null, type: "space" })}
-  >
-    <PlusIcon />
-  </Button>
-</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          <FileTree files={files} onUpdate={setFiles} creation={creation} setCreation={setCreation}/>
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
-  )
-}
+  // Accessing Zustand store state and actions
+  const {
+    allItems,
+    draggedItem,
+    dropTarget,
+    creation,
+    setDraggedItem,
+    setDropTarget,
+    setCreation,
+    createItem,
+    handleDrop,
+  } = useStore();
+  const [newName, setNewName] = React.useState(""); // Declare newName and setNewName
+  // Helper function to organize files into root (workspace) and child files
+  const getFileHierarchy = (fileList: FileItem[]) => {
+    const rootFiles = fileList.filter((file) => file.parentId === "workspace");
+    const getChildFiles = (parentId: string) => fileList.filter((file) => file.parentId === parentId);
+    return { rootFiles, getChildFiles };
+  };
 
+  const { rootFiles, getChildFiles } = getFileHierarchy(allItems);
+
+  // Drag start handler
+  const handleDragStart = (e: React.DragEvent, item: FileItem) => {
+    e.stopPropagation();
+    setDraggedItem(item);
+    e.dataTransfer.setData("application/json", JSON.stringify(item));
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  // Drag end handler
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+    setDropTarget(null);
+  };
+
+  // Handle drop of an item
+  const handleDropHandler = (e: React.DragEvent, targetId: string) => {
+    handleDrop(draggedItem, targetId);
+  };
+
+  // Handle item creation (creating files, folders, etc.)
+  const handleCreate = () => {
+    if (!creation || !newName.trim()) return; // Ensure name is entered
+  
+    // Call createItem from Zustand store to create a new item
+    createItem(newName, creation.parentId, creation.type, creation.folderType);
+    
+    // Clear the input and reset the creation state
+    setNewName(""); 
+    setCreation(null);
+  
+    // Show success toast
+    toast.success(`Created new ${creation.type}: "${newName}"`);
+  };
+
+  return (
+    <div>
+      {/* Workspaces Section */}
+      <SidebarGroup>
+        <SidebarGroupLabel>
+          Workspaces
+          <Button size="icon" variant="ghost" onClick={() => setCreation({ parentId: "workspace", type: "space" })}>
+            <PlusIcon />
+          </Button>
+        </SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <div className={cn("w-full min-h-[100px] p-2")}>
+              {rootFiles.map((file) => (
+                <FileNode
+                  key={file.id}
+                  file={file}
+                  level={0}
+                  childFiles={getChildFiles(file.id)}
+                  getChildFiles={getChildFiles}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  onDrop={handleDropHandler}
+                  draggedItem={draggedItem}
+                  setDropTarget={setDropTarget}
+                  dropTarget={dropTarget}
+                  isDraggable={file.type === "folder" || file.type === "file"}
+                  onRequestCreate={(newItem) => setCreation(newItem)}
+                />
+              ))}
+            </div>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+
+      {/* My Collection Section */}
+      <SidebarGroup>
+        <SidebarGroupLabel>
+          My Collection
+          <Button size="icon" variant="ghost" onClick={() => setCreation({ parentId: "collection", type: "file" })}>
+            <PlusIcon />
+          </Button>
+        </SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {allItems.filter((item) => item.parentId === "collection").map((collectionItem) => (
+              <FileNode
+                key={collectionItem.id}
+                file={collectionItem}
+                level={0}
+                childFiles={[]}
+                getChildFiles={() => []}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDrop={handleDropHandler}
+                draggedItem={draggedItem}
+                setDropTarget={setDropTarget}
+                dropTarget={dropTarget}
+                isDraggable={true}
+                onRequestCreate={(newItem) => setCreation(newItem)}
+              />
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+
+      {/* Dialog for Creating Items */}
+      <Dialog open={!!creation} onOpenChange={(open) => open || setCreation(null)}>
+        <DialogContent>
+          <DialogTitle>Create {creation?.type}</DialogTitle>
+          <div className="space-y-4">
+            <Input placeholder="Enter title…" value={newName} onChange={(e) => setNewName(e.target.value)} />
+            <Button onClick={handleCreate}>Create</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

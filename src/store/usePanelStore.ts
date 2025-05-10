@@ -23,8 +23,6 @@ export const usePanelStore = create<LayoutState & LayoutAction>()(
       setShowRightPanel: (v: boolean) => set({ 
         showRightPanel: v, 
       }),
-      
-      
 
     }),
     {

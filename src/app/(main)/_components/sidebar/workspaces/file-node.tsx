@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import type { FileItem } from "./file-tree";
+import type { FileItem } from "../nav-workspaces";
 import {
   ArrowUpRight,
   ChevronDown,
@@ -19,16 +19,16 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "../ui/sidebar";
+} from "@/components/ui/sidebar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 
 export type FileNodeProps = {
   file: FileItem;
@@ -93,7 +93,7 @@ export function FileNode({
   return (
     <>
       <SidebarMenuItem
-        className={cn("transition-colors duration-100 cursor-grab", isDragging && "opacity-50 cursor-grabbing")}
+        className={cn("transition-colors duration-100 cursor-grab", isDragging && " cursor-grabbing")}
         onDragOver={e => {
           e.preventDefault();
           if (file.type !== "file" && draggedItem && draggedItem.id !== file.id) setDropTarget(file.id);
@@ -106,13 +106,14 @@ export function FileNode({
       >
         <SidebarMenuButton
           asChild
+          isActive={isDropTarget || isDragging}
           draggable={isDraggable}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           className={cn(
             "flex items-center w-full py-1 px-2.5 rounded-md cursor-pointer",
             level > 0 && "ml-4",
-            isDropTarget ? "bg-primary/10" : "hover:bg-muted/50",
+            isDropTarget ? "bg-primary" : "hover:bg-muted/50",
           )}
         >
           <div className="relative flex items-center w-full">

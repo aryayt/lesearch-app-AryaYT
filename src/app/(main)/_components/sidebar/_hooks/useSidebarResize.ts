@@ -50,7 +50,6 @@ export function useSidebarResize() {
     
     // Calculate new width based on mouse position
     const newWidth = e.clientX;
-    console.log("newWidth",newWidth)
     // Update sidebar width within constraints
     setSidebarWidth(Math.max(minSidebarWidth, Math.min(maxSidebarWidth, newWidth)));
     

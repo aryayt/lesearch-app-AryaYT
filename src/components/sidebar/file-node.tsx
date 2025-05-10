@@ -79,16 +79,16 @@ export function FileNode({
     onDragEnd();
   };
 
-     React.useEffect(() => {
-          const handleClick = () => {
-              if (draggedItem || dropTarget) {
-                  onDragEnd();
-                  setDropTarget(null);
-              }
-          };
-          document.addEventListener("click", handleClick);
-          return () => document.removeEventListener("click", handleClick);
-      }, [draggedItem, dropTarget, onDragEnd, setDropTarget]);
+  React.useEffect(() => {
+    const handleClick = () => {
+      if (draggedItem || dropTarget) {
+        onDragEnd();
+        setDropTarget(null);
+      }
+    };
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [draggedItem, dropTarget, onDragEnd, setDropTarget]);
 
   return (
     <>
@@ -116,24 +116,30 @@ export function FileNode({
           )}
         >
           <div className="relative flex items-center w-full">
-          {file.type === "file" ? <FileText /> : <FolderOpen />}
-                        {file.type !== "file" && (
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className={cn(
-                                    "absolute left-0 flex items-center justify-center z-10 transition-opacity",
-                                    "opacity-0 hover:opacity-100",
-                                    "bg-sidebar-accent text-sidebar-accent-foreground rounded-full",
-                                    "group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 md:opacity-0"
-                                )}
-                                onClick={toggleOpen}
-                            >
-                                {isOpen ? <ChevronDown /> : <ChevronRight />}
-                            </Button>
-                        )}
-            <span className="ml-2 flex-1 truncate" onClick={toggleOpen}>{file.name}</span>
+            {file.type === "file" ? <FileText /> : <FolderOpen />}
+            {file.type !== "file" && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "absolute left-0 flex items-center justify-center z-10 transition-opacity",
+                  "opacity-0 hover:opacity-100",
+                  "bg-sidebar-accent text-sidebar-accent-foreground rounded-full",
+                  "group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 md:opacity-0"
+                )}
+                onClick={toggleOpen}
+              >
+                {isOpen ? <ChevronDown /> : <ChevronRight />}
+              </Button>
+            )}
+            <button
+              type="button"
+              className="ml-2 flex-1 truncate bg-transparent border-none p-0 text-left"
+               onClick={toggleOpen}
+            >
+              {file.name}
+            </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuAction showOnHover>

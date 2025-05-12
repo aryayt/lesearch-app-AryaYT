@@ -10,7 +10,7 @@ const Header = function Header() {
   const pathname = usePathname();
   const isDocumentPage = pathname.startsWith("/documents") && pathname !== "/documents";
   return (
-    <header className="flex sticky top-0 bg-background h-10 shrink-0 items-end gap-2  px-2 z-30">
+    <header className="flex sticky top-0 bg-background h-10 shrink-0 items-end gap-2  px-2 z-20">
       <div className="flex flex-1 items-center gap-2">
         <SidebarTrigger />
         {isDocumentPage &&<>

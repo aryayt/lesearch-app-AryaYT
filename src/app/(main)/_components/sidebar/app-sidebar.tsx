@@ -17,8 +17,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const {  handleRailMouseDown } = useSidebarResize();
   return (
     <Sidebar collapsible="icon" className="border-r-0" {...props}>
-      <SidebarHeader>
-        <SidebarUser  />
+      <SidebarHeader >
+        <SidebarUser />
         <NavMain />
       </SidebarHeader>
       <SidebarContent className="flex flex-col h-full">

@@ -118,7 +118,7 @@ export const useStore = create<Store>((set, get) => ({
 
   
     // Filter and retain only the necessary fields (id, name, type)
-    const cleanFiles = files?.map(({ id, name, type , parent_id }) => ({ id, name, type , parentId: parent_id })) || [];
+    const cleanFiles = files?.map(({ id, name, type , parent_id, content_id }) => ({ id, name, type , parentId: parent_id, content_id })) || [];
     const cleanFolders = folders?.map(({ id, name, type , parent_id }) => ({ id, name, type , parentId: parent_id })) || [];
   
     // Combine files and folders and update the state

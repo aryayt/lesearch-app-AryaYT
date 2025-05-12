@@ -122,7 +122,7 @@ export function PDFViewer({ pdfUrl }: PDFViewerProps) {
 	}
 
 	return (
-		<div className="flex flex-col h-full overflow-hidden">
+		<div className="flex flex-col h-full overflow-hidden w-full">
 			<Root
 				source={pdfSource}
 				className="bg-gray-100 border rounded-md overflow-hidden relative flex flex-col justify-stretch"

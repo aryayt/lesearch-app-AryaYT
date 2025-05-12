@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {  useStore } from "@/store/useCollectionStore";
+import { useUserStore } from "@/store/userStore";
 
 interface PDFImportProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ export function PDFImport({ isOpen, onClose }: PDFImportProps) {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { createItem } = useStore();
+  const { user } = useUserStore();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -45,14 +47,34 @@ export function PDFImport({ isOpen, onClose }: PDFImportProps) {
       return;
     }
 
+    if (!user) {
+      toast.error("User not found");
+      return;
+    }
+
     try {
       setIsUploading(true);
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('userId', user?.id);
       
-      // Read the file as a base64 string
-      const base64 = await readFileAsBase64(file);
+      // Send to server-side API for processing
+      const response = await fetch('/api/documents/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to upload document');
+      }
+      
+      const data = await response.json();
+      
       
       // Add the PDF name and id to the collection store
-      createItem(fileName, null, "pdf");
+      createItem(fileName, null, "pdf", data.document.id);
       
       // Close the dialog
       onClose();
@@ -60,7 +82,7 @@ export function PDFImport({ isOpen, onClose }: PDFImportProps) {
       // Navigate to the PDF viewer
       // Using window.location.href instead of router.push to force a full page reload
       // This ensures the Zustand store is properly rehydrated from localStorage
-      // window.location.href = `/documents/123`;
+      window.location.href = `/documents/${data.document.id}`;
       
       toast.success("PDF imported successfully");
     } catch (error) {
@@ -69,23 +91,6 @@ export function PDFImport({ isOpen, onClose }: PDFImportProps) {
     } finally {
       setIsUploading(false);
     }
-  };
-
-  const readFileAsBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          resolve(reader.result);
-        } else {
-          reject(new Error('Failed to read file as base64'));
-        }
-      };
-      reader.onerror = () => {
-        reject(reader.error);
-      };
-      reader.readAsDataURL(file);
-    });
   };
 
   return (

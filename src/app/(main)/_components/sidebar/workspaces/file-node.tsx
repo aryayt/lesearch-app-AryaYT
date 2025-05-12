@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import{ useStore, type CollectionItem } from "@/store/useCollectionStore";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
+import { usePageStore } from "@/store/usePageStore";
+import { useRouter } from "next/navigation";
 
 export type FileNodeProps = {
   file: CollectionItem;
@@ -40,63 +42,59 @@ export function FileNode({
   onRequestCreate,
 }: FileNodeProps) {
   const { openFolders, setOpenFolders, activeItemId, setActiveItem, deleteItem, isDeleting } = useStore();
+  const {page, setIsPageLoading} = usePageStore();
   const isOpen = openFolders.has(file.id); 
   const isDragging = draggedItem?.id === file.id;
   const [hoverTimer, setHoverTimer] = React.useState<NodeJS.Timeout | null>(null); // Timer for hover
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   // const isDropTarget = dropTarget === file.id;
+  const isActive = page.id === file.content_id; 
+
+  const router = useRouter();
+
+  const handleDragStart = React.useCallback((e: React.DragEvent) => {
+    onDragStart(e, file);
+  }, [onDragStart, file]);
+
+  const handleDragEnd = React.useCallback(() => {
+    onDragEnd();
+  }, [onDragEnd]);
+
+  const handleDropHandler = React.useCallback((e: React.DragEvent) => {
+    onDrop(e, file.id);
+  }, [onDrop, file.id]);
+
+  const handleDelete = React.useCallback(() => {
+    setIsDeleteDialogOpen(true);
+  }, []);
+
   const toggleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
     setOpenFolders(file.id, !isOpen);
   };
 
-  const handleDragStart = (e: React.DragEvent) => {
-    onDragStart(e, file);
-  };
-
-  const handleDragEnd = () => {
-    onDragEnd();
-  };
-
-  const handleDropHandler = (e: React.DragEvent) => {
-    onDrop(e, file.id);
-  };
-
-  const handleDragEnter = (e: React.DragEvent) => {
+  // Memoize file structure retrieval and file dragging logic
+  const handleDragEnter = React.useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
-    // Start a timer to open the folder after 1 second
     if (hoverTimer) {
-      clearTimeout(hoverTimer); // Clear any existing timer
+      clearTimeout(hoverTimer);
     }
-
     const newTimer = setTimeout(() => {
-      setOpenFolders(file.id, true); // Open the folder after 1 second
-    }, 300); // 300ms delay
+      setOpenFolders(file.id, true);
+    }, 300);
+    setHoverTimer(newTimer);
+  }, [hoverTimer, setOpenFolders, file.id]);
 
-    setHoverTimer(newTimer); // Save the timer to clear if needed
-  };
-
-  const handleDragLeave = () => {
-    // If we leave the folder before 1 second, clear the timer
-    if(dropTarget === file.id){
-      setDropTarget(null)
-    }
-    
+  const handleDragLeave = React.useCallback(() => {
     if (hoverTimer) {
       clearTimeout(hoverTimer);
       setHoverTimer(null);
     }
-
-    // Optionally, you can collapse the folder here if desired
-    // setIsOpen(false);
-  };
-
-  const handleDelete = () => {
-    setIsDeleteDialogOpen(true);
-  };
-
+    if (dropTarget === file.id) {
+      setDropTarget(null);
+    }
+  }, [hoverTimer, dropTarget, setDropTarget, file.id]);
 
   React.useEffect(() => {
     const handleClick = () => {
@@ -110,10 +108,17 @@ export function FileNode({
     return () => document.removeEventListener("click", handleClick);
   }, [draggedItem, dropTarget, onDragEnd, setDropTarget, setActiveItem, activeItemId]);
 
+  const handleRoute = () => {
+    setIsPageLoading(true)
+    if (file.content_id) {
+      router.push(`/documents/${file.content_id}`);
+    }
+  };
+
   return (
     <>
       <SidebarMenuItem
-        className={cn("transition-colors duration-100 cursor-grab", isDragging && " cursor-grabbing")}
+        className={cn("transition-colors duration-100 cursor-pointer", isDragging && " cursor-grabbing")}
         onDragOver={(e) => {
           e.preventDefault();
           // Only update the drop target if the dragged item is different and not the same as the current drop target
@@ -121,13 +126,14 @@ export function FileNode({
             setDropTarget(file.id); // Update the drop target only if it's different from the current state
           }
         }}
+        onClick={handleRoute}
         onDrop={handleDropHandler}
         onDragEnter={handleDragEnter} 
         onDragLeave={handleDragLeave}
       >
         <SidebarMenuButton
           asChild
-          isActive={isDragging || activeItemId === file.id}
+          isActive={isActive}
           draggable={isDraggable}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
@@ -135,6 +141,7 @@ export function FileNode({
             "flex items-center w-full py-1 px-2.5 rounded-md cursor-pointer",
             level > 0 && "ml-4",
             "hover:bg-muted/50",
+            (isDragging || activeItemId === file.id) && "bg-primary/50 text-primary-foreground font-semibold"
           )}
         >
           <div className="relative flex items-center w-full">
@@ -143,6 +150,7 @@ export function FileNode({
               <Button
                 type="button"
                 variant="ghost"
+                aria-label="Toggle Folder"
                 size="icon"
                 className={cn(
                   "absolute left-0 flex items-center justify-center z-10 transition-opacity",
@@ -155,19 +163,13 @@ export function FileNode({
                 {isOpen ? <ChevronDown /> : <ChevronRight />}
               </Button>
             )}
-            {!["note", "chat", "pdf"].includes(file.type) ? <button
+             <button
               type="button"
-              className="ml-2 flex-1 truncate bg-transparent border-none p-0 text-left"
-              onClick={toggleOpen}
+              className="ml-2 flex-1 truncate bg-transparent border-none p-0 text-left cursor-pointer"
+              onClick={file.content_id ? handleRoute : toggleOpen}
             >
               {file.name}
-            </button>:
-            <Link 
-              href={file.content_id ? `/documents/${file.content_id}` : ""}
-              className="ml-2 flex-1 truncate bg-transparent border-none p-0 text-left"
-            >
-              {file.name}
-            </Link>}
+            </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuAction showOnHover>
@@ -175,7 +177,7 @@ export function FileNode({
                   <span className="sr-only">More</span>
                 </SidebarMenuAction>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 rounded-lg" side="right">
+              <DropdownMenuContent className="w-56 rounded-lg" side="bottom" align="start" >
                 <DropdownMenuItem>
                   <Star className="text-muted-foreground" />
                   <span>Add to Favorites</span>

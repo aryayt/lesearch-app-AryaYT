@@ -1,13 +1,17 @@
+import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+
+// Initialize Supabase client with service role key for admin privileges
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || ''
+)
 
 export async function POST(req: Request) {
   try {
     const { email, otp } = await req.json();
 
-    // Initialize Supabase client
-    const supabase = await createClient();
-
+    console.log(email, otp)
     // Step 1: Verify OTP
     const { data: storedOtp, error: otpError } = await supabase
       .from("otp")
@@ -16,6 +20,8 @@ export async function POST(req: Request) {
       .eq("otp", otp)
       .gte("expires_at", new Date().toISOString()) // Ensure OTP is not expired
       .single();
+
+    console.log(storedOtp)
 
     if (otpError) {
       console.error("OTP verification error:", otpError.message);

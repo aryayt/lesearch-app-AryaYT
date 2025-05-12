@@ -15,8 +15,8 @@ type LayoutAction = {
 export const usePanelStore = create<LayoutState & LayoutAction>()(
   persist(
     (set) => ({
-      showMiddlePanel: true,
-      showRightPanel: true,
+      showMiddlePanel: false,
+      showRightPanel: false,
 
       setShowMiddlePanel: (v: boolean) => set({ showMiddlePanel: v }),
       

@@ -128,7 +128,7 @@ const MiddlePanel = () => {
               <TabsContent key={tab.id} value={tab.id} className="flex flex-col mt-0 h-full overflow-hidden">
                 {
                   tab.type === 'pdf' ? (
-                          <PDFViewer pdfUrl={"https://arxiv.org/pdf/2404.15040"} />
+                          <PDFViewer pdfUrl={"https://geqxiumlcggtzltbrlkg.supabase.co/storage/v1/object/sign/documents/user-files/082eaeb4-37ae-4ce5-ae81-9115fa22e8f8/1744801218554-Resume.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5Xzc5MTY3MGI4LWZkMzUtNDE1MC05YTNhLWM4ZGViMmI3YWViOCJ9.eyJ1cmwiOiJkb2N1bWVudHMvdXNlci1maWxlcy8wODJlYWViNC0zN2FlLTRjZTUtYWU4MS05MTE1ZmEyMmU4ZjgvMTc0NDgwMTIxODU1NC1SZXN1bWUucGRmIiwiaWF0IjoxNzQ3MDM4MDI5LCJleHAiOjE3NDc2NDI4Mjl9.ngRdC8t5v4el4dBAtH7nXpKcWfwiIwqWhkrMrv7u3SI"} />
                   ) : (
                     <Editor />
                   )

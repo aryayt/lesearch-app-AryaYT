@@ -39,7 +39,7 @@ export default function MainLayout({ children }: PropsWithChildren) {
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen overflow-hidden">
       <LayoutWrapper>
         {children}
       </LayoutWrapper>

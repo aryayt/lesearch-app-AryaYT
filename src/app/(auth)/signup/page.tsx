@@ -40,6 +40,8 @@ export default function SignupPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: emailParam, otp: otpValue })
             })
+
+            console.log(await response.json())
             
             if (!response.ok) throw new Error('Invalid verification code')
 

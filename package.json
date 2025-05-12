@@ -38,6 +38,7 @@
     "embla-carousel-react": "^8.5.2",
     "framer-motion": "^12.5.0",
     "google-auth-library": "^9.15.1",
+    "ldrs": "^1.1.7",
     "lucide-react": "^0.483.0",
     "next": "^15.3.2",
     "next-auth": "^4.24.11",

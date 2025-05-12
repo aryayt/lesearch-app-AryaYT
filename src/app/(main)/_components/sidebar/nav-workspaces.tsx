@@ -19,7 +19,6 @@ export function NavWorkspaces() {
     setDropTarget,
     setCreation,
     createItem,
-    handleDrop,
     updateFile,
     updateFolder,
     fetchFilesAndFolders,
@@ -40,6 +39,7 @@ export function NavWorkspaces() {
   }, []); // Memoize the hierarchy function to prevent recomputation on every render
 
   const { rootFiles, getChildFiles } = getFileHierarchy(allItems);
+
 
   // Fetch workspaces and collections data when the component mounts
   React.useEffect(() => {
@@ -78,68 +78,44 @@ export function NavWorkspaces() {
 
   const handleDropHandler = async (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
-  
     if (!draggedItem) return;
   
-    // Check if the dragged item is the same as the target
-    if (draggedItem.id === targetId) {
-      return; // Avoid moving the item to itself
-    }
-
-    const targetItem = allItems.find((item) => item.id === targetId);
-
-    // If the target item is of type "pdf", "chat", or "note", do not allow the drop
-    if (targetItem && ["pdf", "chat", "note"].includes(targetItem.type)) {
-      toast.error("You cannot drop items onto a PDF, Chat, or Note.");
-      return;
-    }
+    if (draggedItem.id === targetId) return;
   
-    // Check if the dragged item is a folder and is dropped inside a valid target folder
-    if (draggedItem.type === "folder") {
-      if (targetId === null) {
-        // Handle folder being moved to the workspace (root folder)
-        handleDrop(draggedItem, targetId);
-        await updateFolder(draggedItem.id, { parentId: targetId });
-        toast.success(`Moved folder "${draggedItem.name}" to Workspace.`);
-      } else if (targetId !== null) {
-        // Handle folder being moved into another folder
-        handleDrop(draggedItem, targetId);
-        await updateFolder(draggedItem.id, { parentId: targetId });
-        toast.success(`Moved folder "${draggedItem.name}" into the folder.`);
+    try {
+      const targetItem = allItems.find((item) => item.id === targetId);
+      if (targetItem && ["pdf", "chat", "note"].includes(targetItem.type)) {
+        toast.error("You cannot drop items onto a PDF, Chat, or Note.");
+        return;
       }
-    }
   
-    // Handle "project" type items (like folder)
-    if (draggedItem.type === "project") {
-      if (targetId === null) {
-        // Handle project being moved to the workspace (root folder)
-        handleDrop(draggedItem, targetId);
+      if (draggedItem.type === "folder") {
+        if (targetId === null) {
+          await updateFolder(draggedItem.id, { parentId: targetId });
+          toast.success(`Moved folder "${draggedItem.name}" to Workspace.`);
+        } else {
+          await updateFolder(draggedItem.id, { parentId: targetId });
+          toast.success(`Moved folder "${draggedItem.name}" into the folder.`);
+        }
+      }
+  
+      // Handle project and file moves similarly
+      if (draggedItem.type === "project") {
         await updateFolder(draggedItem.id, { parentId: targetId });
         toast.success(`Moved project "${draggedItem.name}" to Workspace.`);
-      } else if (targetId !== null) {
-        // Handle project being moved into another folder (or another project)
-        handleDrop(draggedItem, targetId);
-        await updateFolder(draggedItem.id, { parentId: targetId });
-        toast.success(`Moved project "${draggedItem.name}" into the folder.`);
       }
-    }
   
-    // Check if the dragged item is a file and is dropped into a valid folder
-    if (draggedItem.type === "note" || draggedItem.type === "pdf" || draggedItem.type === "chat") {
-      if (targetId !== null ) {
-        // Handle file being moved into a folder
-        handleDrop(draggedItem, targetId);
-        await updateFile(draggedItem.id, { parentId: targetId });
-        toast.success(`Moved file "${draggedItem.name}" to the folder.`);
-      } else {
-        // If file is dropped in an invalid place, show an error
-        toast.error("Files cannot be dropped into the workspace directly.");
+      if (draggedItem.type === "note" || draggedItem.type === "pdf" || draggedItem.type === "chat") {
+        if (targetId !== null) {
+          await updateFile(draggedItem.id, { parentId: targetId });
+          toast.success(`Moved file "${draggedItem.name}" to the folder.`);
+        } else {
+          toast.error("Files cannot be dropped into the workspace directly.");
+        }
       }
-    }
-  
-    // Handle invalid drop target (if dragged item type doesn't match the target folder type)
-    if (draggedItem.type !== "folder" && targetId === null) {
-      toast.error("You can't drop files directly into the workspace.");
+    } catch (error) {
+      console.error("Error handling drop:", error);
+      toast.error("An error occurred while moving the item. Please try again.");
     }
   };
 
@@ -161,12 +137,11 @@ export function NavWorkspaces() {
     // Show success toast
     toast.success(`Created new ${creation.type}: "${newName}"`);
   };
-console.log(rootFiles.length)
   return (
     <div>
       {/* Workspaces Section */}
       {rootFiles.length > 0 && (
-        <SidebarGroup>
+        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
         <SidebarGroupLabel>
           Workspaces
         </SidebarGroupLabel>
@@ -201,7 +176,7 @@ console.log(rootFiles.length)
       </SidebarGroup>)}
 
       {/* My Collection Section */}
-      <SidebarGroup>
+      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
         <SidebarGroupLabel>
           My Collection
         </SidebarGroupLabel>

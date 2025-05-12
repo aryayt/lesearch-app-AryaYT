@@ -25,7 +25,7 @@ export const HighlightLayerContent = () => {
 
 	return (
 		<Pages className="mx-auto py-6 bg-white dark:invert-[94%] dark:hue-rotate-180 dark:brightness-[80%] dark:contrast-[228%]">
-			<Page className="mx-auto shadow-md rounded-md overflow-hidden">
+			<Page className="mx-auto shadow-md rounded-md overflow-hidden ">
 				{selectionDimensions && <CustomSelect onHighlight={handleHighlight} />}
 				<CanvasLayer />
 				<TextLayer />

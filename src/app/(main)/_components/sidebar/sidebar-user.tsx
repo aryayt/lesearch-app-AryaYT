@@ -1,83 +1,124 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronsUpDownIcon, PlusIcon, ImportIcon, FilePlusIcon, FolderPlusIcon } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useUserStore } from "@/store/userStore";
-import UserPopover from "../popover/user-popover";
+import {
+  ChevronsUpDown,
+  LogOutIcon,
+  Moon,
+  Settings2Icon,
+  Sun,
+} from "lucide-react"
+
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useState } from "react";
-import { PDFImport } from "../pdfviewer/pdf-import";
-import { useStore } from "@/store/useCollectionStore";
-
+} from "@/components/ui/dropdown-menu"
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar"
+import { useUserStore } from "@/store/userStore"
+import { Button } from "@/components/ui/button"
+import { useTheme } from "next-themes";
+import { SettingsDialog } from "../dialog/settings-dialog"
+import SignOutDialog from "../dialog/signout-dialog"
 export default function SidebarUser() {
+  const { isMobile } = useSidebar()
   const { fullname, image, email } = useUserStore();
-  const [importPdfOpen, setImportPdfOpen] = useState(false);
-  const { setCreation } = useStore();
+    const { resolvedTheme: theme, setTheme } = useTheme();
 
   return (
-    <div className="flex items-center justify-between w-full">
-      <UserPopover fullname={fullname} username={email} image={image}>
-        {!fullname ? (
-          <Skeleton className="mb-1 h-8 w-full bg-primary/5" />
-        ) : (
-          <Button
-            variant="ghost"
-            size="lg"
-            className="flex h-[24px] items-center justify-start  gap-x-2  md:h-8"
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            {fullname && <SidebarMenuButton
+              size="lg"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            >
+              <Avatar className="h-8 w-8 rounded-lg">
+                <AvatarImage src={image || ""} alt={fullname || ""} />
+                <AvatarFallback className="rounded-lg">{fullname ? fullname[0].toUpperCase() : "?"}</AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">{fullname}</span>
+                <span className="truncate text-xs">{email}</span>
+              </div>
+              <ChevronsUpDown className="ml-auto size-4" />
+            </SidebarMenuButton>}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+            side={isMobile ? "bottom" : "right"}
+            align="start"
+            sideOffset={4}
           >
-            <Avatar className="w-6 h-6">
-              <AvatarImage src={image || ""} alt={fullname[0]} loading="lazy" />
-              <AvatarFallback>
-                {fullname ? fullname[0].toUpperCase() : "?"}
-              </AvatarFallback>
-            </Avatar>
+            <DropdownMenuLabel className="p-0 font-normal">
+              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                <Avatar className="h-8 w-8 rounded-lg">
+                  <AvatarImage src={image || ""} alt={fullname || ""} />
+                  <AvatarFallback className="rounded-lg">{fullname ? fullname[0].toUpperCase() : "?"}</AvatarFallback>
+                </Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">{fullname}</span>
+                  <span className="truncate text-xs">{email}</span>
+                </div>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <div className="w-72">
+          <section className="border-b p-2"> 
+            <div className="grid grid-cols-2 gap-2">
+              <SettingsDialog>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 justify-start px-2 text-xs font-normal"
+              >
+                <Settings2Icon className="mr-2 h-4 w-4" />
+                Settings
+              </Button>
+              </SettingsDialog>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 justify-start px-2 text-xs font-normal"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              >
+                {theme === "dark" ? (
+                  <Sun className="mr-2 h-4 w-4" />
+                ) : (
+                  <Moon className="mr-2 h-4 w-4" />
+                )}
+                {theme === "dark" ? "Light" : "Dark"}
+              </Button>
+            </div>
+          </section>
 
-            <p className="mr-1 max-w-[250px] truncate capitalize md:max-w-[120px]">
-              {fullname}
-            </p>
-
-            <ChevronsUpDownIcon className="h-3 w-3 text-muted-foreground" />
-          </Button>
-        )}
-      </UserPopover>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 "
-          >
-            <PlusIcon className="h-4 w-4" />
-            <span className="sr-only">Add menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem 
-            className="flex items-center gap-2 cursor-pointer"
-            onClick={() => setImportPdfOpen(true)}
-          >
-            <ImportIcon className="h-4 w-4" />
-            <span>Import PDF</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => setCreation({ parentId: null, type: "note" })}>
-            <FilePlusIcon className="h-4 w-4" />
-            <span>Create Page</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => setCreation({ parentId: null, type: "space" })}>
-            <FolderPlusIcon className="h-4 w-4" />
-            <span>Create Workspace</span>
-          </DropdownMenuItem>
+          <section className="w-full p-1">
+            <SignOutDialog>
+              <Button
+                variant="ghost"
+                className="h-8 w-full justify-start px-2 text-xs font-normal"
+              >
+                <LogOutIcon className="mr-3 h-4 w-4" />
+                Log out
+              </Button>
+            </SignOutDialog>
+          </section>
+        </div>
         </DropdownMenuContent>
-      </DropdownMenu>
-      {importPdfOpen && <PDFImport isOpen={importPdfOpen} onClose={() => setImportPdfOpen(false)} />}
-    </div>
-  );
+        </DropdownMenu>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  )
 }

@@ -52,7 +52,7 @@ export function PDFImport({ isOpen, onClose }: PDFImportProps) {
       const base64 = await readFileAsBase64(file);
       
       // Add the PDF name and id to the collection store
-      createItem(fileName, "collection", "pdf");
+      createItem(fileName, null, "pdf");
       
       // Close the dialog
       onClose();

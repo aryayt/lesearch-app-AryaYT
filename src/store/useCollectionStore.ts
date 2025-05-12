@@ -1,4 +1,3 @@
-// store/useStore.ts
 import {create} from "zustand";
 import { createClient } from "@/lib/supabase/client";
 import { useUserStore } from "./userStore";
@@ -80,14 +79,12 @@ export const useStore = create<Store>((set, get) => ({
       }
     }else{
       const { error } = await supabase.from("folders").delete().eq("id", id);
-      if (!error) {
-        const { error } = await supabase.from("files").delete().eq("parent_id", id);
+      console.log(error)
         if (!error) {
           set((state) => ({
             allItems: state.allItems.filter((item) => item.id !== id),
           }));
         }
-      }
     }
   },
 
@@ -235,7 +232,7 @@ addFolder: async (folder) => {
     if (!draggedItem || draggedItem.id === targetId) return;
 
     // Handle moving from My Collection to Workspaces or vice versa
-    if (draggedItem.parentId === "collection" && targetId) {
+    if (draggedItem.parentId === null && ["note", "chat", "pdf"].includes(draggedItem.type) && targetId) {
       set((state) => ({
         allItems: [
           ...state.allItems.filter((item) => item.id !== draggedItem.id),

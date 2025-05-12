@@ -34,7 +34,7 @@ export function NavWorkspaces() {
   // Helper function to organize files into root (workspace) and child files
   const getFileHierarchy = React.useMemo(() => {
     return (fileList: CollectionItem[]) => {
-      const rootFiles = fileList.filter((file) => file.parentId === "workspace");
+      const rootFiles = fileList.filter((file) => file.parentId === null && file.type === "space");
       const getChildFiles = (parentId: string) => fileList.filter((file) => file.parentId === parentId);
       return { rootFiles, getChildFiles };
     };
@@ -97,12 +97,12 @@ export function NavWorkspaces() {
   
     // Check if the dragged item is a folder and is dropped inside a valid target folder
     if (draggedItem.type === "folder") {
-      if (targetId === "workspace") {
+      if (targetId === null) {
         // Handle folder being moved to the workspace (root folder)
         handleDrop(draggedItem, targetId);
         await updateFolder(draggedItem.id, { parentId: targetId });
         toast.success(`Moved folder "${draggedItem.name}" to Workspace.`);
-      } else if (targetId !== "workspace") {
+      } else if (targetId !== null) {
         // Handle folder being moved into another folder
         handleDrop(draggedItem, targetId);
         await updateFolder(draggedItem.id, { parentId: targetId });
@@ -112,12 +112,12 @@ export function NavWorkspaces() {
   
     // Handle "project" type items (like folder)
     if (draggedItem.type === "project") {
-      if (targetId === "workspace") {
+      if (targetId === null) {
         // Handle project being moved to the workspace (root folder)
         handleDrop(draggedItem, targetId);
         await updateFolder(draggedItem.id, { parentId: targetId });
         toast.success(`Moved project "${draggedItem.name}" to Workspace.`);
-      } else if (targetId !== "workspace") {
+      } else if (targetId !== null) {
         // Handle project being moved into another folder (or another project)
         handleDrop(draggedItem, targetId);
         await updateFolder(draggedItem.id, { parentId: targetId });
@@ -127,7 +127,7 @@ export function NavWorkspaces() {
   
     // Check if the dragged item is a file and is dropped into a valid folder
     if (draggedItem.type === "note" || draggedItem.type === "pdf" || draggedItem.type === "chat") {
-      if (targetId !== "workspace") {
+      if (targetId !== null ) {
         // Handle file being moved into a folder
         handleDrop(draggedItem, targetId);
         await updateFile(draggedItem.id, { parentId: targetId });
@@ -139,7 +139,7 @@ export function NavWorkspaces() {
     }
   
     // Handle invalid drop target (if dragged item type doesn't match the target folder type)
-    if (draggedItem.type !== "folder" && targetId === "workspace") {
+    if (draggedItem.type !== "folder" && targetId === null) {
       toast.error("You can't drop files directly into the workspace.");
     }
   };
@@ -210,7 +210,7 @@ export function NavWorkspaces() {
       <SidebarGroup>
         <SidebarGroupLabel className="flex items-center justify-between">
           My Collection
-          <Button size="icon" variant="ghost" onClick={() => setCreation({ parentId: "collection", type: "note" })}>
+          <Button size="icon" variant="ghost" onClick={() => setCreation({ parentId: null, type: "note" })}>
             <PlusIcon />
           </Button>
         </SidebarGroupLabel>
@@ -219,10 +219,10 @@ export function NavWorkspaces() {
             {/* If there are no collections */}
             {isCollectionsLoading ? (
               <div className="text-muted-foreground text-sm px-2">Loading collections...</div>
-            ) : allItems.filter((item) => item.parentId === "collection").length === 0 ? (
+            ) : allItems.filter((item) => item.parentId === null && ["note", "chat", "pdf"].includes(item.type)).length === 0 ? (
               <div className="text-muted-foreground text-sm px-2">No collections</div>
             ) : (
-              allItems.filter((item) => item.parentId === "collection").map((collectionItem) => (
+              allItems.filter((item) => item.parentId === null && ["note", "chat", "pdf"].includes(item.type)).map((collectionItem) => (
                 <FileNode
                   key={collectionItem.id}
                   file={collectionItem}

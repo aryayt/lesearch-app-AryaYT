@@ -33,7 +33,7 @@ const DashboardPage = () => {
         <LeftPanel />
       </Panel>
       {showMiddlePanel && <>
-      <PanelResizeHandle className="w-1.5 bg-white cursor-col-resize z-10" />
+      <PanelResizeHandle className="w-1 bg-white cursor-col-resize z-10 hover:bg-blue-300 transition-colors duration-100 active:bg-blue-500" />
       <Panel
         collapsible={true}
         id="middle"
@@ -47,7 +47,7 @@ const DashboardPage = () => {
       </Panel>
       </>}
       {showRightPanel && <>
-      <PanelResizeHandle className="w-1.5 bg-white cursor-col-resize z-10" />
+      <PanelResizeHandle className="w-1 bg-white cursor-col-resize z-10 hover:bg-blue-300 transition-colors duration-100 active:bg-blue-500" />
       <Panel
         collapsible
         defaultSize={20}

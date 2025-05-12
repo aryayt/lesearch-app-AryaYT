@@ -12,9 +12,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useState } from "react";
+import { PDFImport } from "../pdfviewer/pdf-import";
 
 export default function SidebarUser() {
   const { fullname, image, email } = useUserStore();
+  const [importPdfOpen, setImportPdfOpen] = useState(false);
 
   return (
     <div className="flex items-center justify-between w-full">
@@ -28,7 +31,7 @@ export default function SidebarUser() {
             className="flex h-[24px] items-center justify-start  gap-x-2  md:h-8"
           >
             <Avatar className="w-6 h-6">
-              <AvatarImage src={image ?? ""} alt={fullname[0]} loading="lazy" />
+              <AvatarImage src={image || ""} alt={fullname[0]} loading="lazy" />
               <AvatarFallback>
                 {fullname ? fullname[0].toUpperCase() : "?"}
               </AvatarFallback>
@@ -55,9 +58,12 @@ export default function SidebarUser() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+          <DropdownMenuItem 
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => setImportPdfOpen(true)}
+          >
             <ImportIcon className="h-4 w-4" />
-            <span>Import</span>
+            <span>Import PDF</span>
           </DropdownMenuItem>
           <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
             <FilePlusIcon className="h-4 w-4" />
@@ -65,6 +71,7 @@ export default function SidebarUser() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      {importPdfOpen && <PDFImport isOpen={importPdfOpen} onClose={() => setImportPdfOpen(false)} />}
     </div>
   );
 }

@@ -1,49 +1,27 @@
 import * as React from "react";
-
-import type { FileItem } from "../nav-workspaces";
-import {
-  ArrowUpRight,
-  ChevronDown,
-  ChevronRight,
-  FileText,
-  FolderOpen,
-  MoreHorizontal,
-  Plus,
-  Star,
-  Trash2,
-} from "lucide-react";
-import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import {
-  SidebarMenuAction,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import Link from "next/link";
+import { FileText, FolderOpen, ChevronDown, ChevronRight, MoreHorizontal, Plus, Trash2, Star, ArrowUpRight } from "lucide-react";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import { SidebarMenuAction, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import{ useStore, type CollectionItem } from "@/store/useCollectionStore";
 
 export type FileNodeProps = {
-  file: FileItem;
+  file: CollectionItem;
   level: number;
-  childFiles: FileItem[];
-  getChildFiles: (parentId: string) => FileItem[];
-  onDragStart: (e: React.DragEvent, item: FileItem) => void;
+  childFiles: CollectionItem[];
+  getChildFiles: (parentId: string) => CollectionItem[];
+  onDragStart: (e: React.DragEvent, item: CollectionItem) => void;
   onDragEnd: () => void;
   onDrop: (e: React.DragEvent, targetId: string) => void;
-  draggedItem: FileItem | null;
+  draggedItem: CollectionItem | null;
   setDropTarget: (id: string | null) => void;
   dropTarget: string | null;
   isDraggable?: boolean;
   defaultOpen?: boolean;
-  onRequestCreate: (c: { parentId: string | null; type: FileItem["type"]; folderType?: FileItem["folderType"] }) => void;
+  onRequestCreate: (c: { parentId: string | null; type: CollectionItem["type"]; }) => void;
 };
 
 export function FileNode({
@@ -58,67 +36,104 @@ export function FileNode({
   setDropTarget,
   dropTarget,
   isDraggable = false,
-  defaultOpen = false,
   onRequestCreate,
 }: FileNodeProps) {
-  const [isOpen, setIsOpen] = React.useState(defaultOpen);
+  const { openFolders, setOpenFolders, activeItemId, setActiveItem, deleteItem } = useStore();
+  const isOpen = openFolders.has(file.id); 
   const isDragging = draggedItem?.id === file.id;
-  const isDropTarget = dropTarget === file.id;
-  const { isMobile } = useSidebar();
-
+  const [hoverTimer, setHoverTimer] = React.useState<NodeJS.Timeout | null>(null); // Timer for hover
+  // const isDropTarget = dropTarget === file.id;
   const toggleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsOpen(o => !o);
+    setOpenFolders(file.id, !isOpen);
   };
 
-  // drag handlers on the button wrapper
   const handleDragStart = (e: React.DragEvent) => {
     onDragStart(e, file);
   };
+
   const handleDragEnd = () => {
     onDragEnd();
   };
 
+  const handleDropHandler = (e: React.DragEvent) => {
+    onDrop(e, file.id);
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Start a timer to open the folder after 1 second
+    if (hoverTimer) {
+      clearTimeout(hoverTimer); // Clear any existing timer
+    }
+
+    const newTimer = setTimeout(() => {
+      setOpenFolders(file.id, true); // Open the folder after 1 second
+    }, 300); // 300ms delay
+
+    setHoverTimer(newTimer); // Save the timer to clear if needed
+  };
+
+  const handleDragLeave = () => {
+    // If we leave the folder before 1 second, clear the timer
+    if(dropTarget === file.id){
+      setDropTarget(null)
+    }
+    
+    if (hoverTimer) {
+      clearTimeout(hoverTimer);
+      setHoverTimer(null);
+    }
+
+    // Optionally, you can collapse the folder here if desired
+    // setIsOpen(false);
+  };
+
+
   React.useEffect(() => {
     const handleClick = () => {
-      if (draggedItem || dropTarget) {
+      if (draggedItem || dropTarget || activeItemId) {
         onDragEnd();
         setDropTarget(null);
+        setActiveItem(null);
       }
     };
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
-  }, [draggedItem, dropTarget, onDragEnd, setDropTarget]);
+  }, [draggedItem, dropTarget, onDragEnd, setDropTarget, setActiveItem, activeItemId]);
 
   return (
     <>
       <SidebarMenuItem
         className={cn("transition-colors duration-100 cursor-grab", isDragging && " cursor-grabbing")}
-        onDragOver={e => {
+        onDragOver={(e) => {
           e.preventDefault();
-          if (file.type !== "file" && draggedItem && draggedItem.id !== file.id) setDropTarget(file.id);
+          // Only update the drop target if the dragged item is different and not the same as the current drop target
+          if (draggedItem && draggedItem.id !== file.id && dropTarget !== file.id) {
+            setDropTarget(file.id); // Update the drop target only if it's different from the current state
+          }
         }}
-        onDrop={e => {
-          e.preventDefault();
-          if (file.type !== "file") onDrop(e, file.id);
-        }}
-        onDragLeave={() => dropTarget === file.id && setDropTarget(null)}
+        onDrop={handleDropHandler}
+        onDragEnter={handleDragEnter} 
+        onDragLeave={handleDragLeave}
       >
         <SidebarMenuButton
           asChild
-          isActive={isDropTarget || isDragging}
+          isActive={isDragging || activeItemId === file.id}
           draggable={isDraggable}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           className={cn(
             "flex items-center w-full py-1 px-2.5 rounded-md cursor-pointer",
             level > 0 && "ml-4",
-            isDropTarget ? "bg-primary" : "hover:bg-muted/50",
+            "hover:bg-muted/50",
           )}
         >
           <div className="relative flex items-center w-full">
-            {file.type === "file" ? <FileText /> : <FolderOpen />}
-            {file.type !== "file" && (
+            {file.type === "note" || file.type === "chat" || file.type === "pdf" ? <FileText /> : <FolderOpen />}
+            {!["note", "chat", "pdf"].includes(file.type) && (
               <Button
                 type="button"
                 variant="ghost"
@@ -134,13 +149,19 @@ export function FileNode({
                 {isOpen ? <ChevronDown /> : <ChevronRight />}
               </Button>
             )}
-            <button
+            {!["note", "chat", "pdf"].includes(file.type) ? <button
               type="button"
               className="ml-2 flex-1 truncate bg-transparent border-none p-0 text-left"
-               onClick={toggleOpen}
+              onClick={toggleOpen}
             >
               {file.name}
-            </button>
+            </button>:
+            <Link 
+              href={file.content_id ? `/documents/${file.content_id}` : ""}
+              className="ml-2 flex-1 truncate bg-transparent border-none p-0 text-left"
+            >
+              {file.name}
+            </Link>}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuAction showOnHover>
@@ -148,46 +169,66 @@ export function FileNode({
                   <span className="sr-only">More</span>
                 </SidebarMenuAction>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 rounded-lg" side={isMobile ? "bottom" : "right"} align={isMobile ? "end" : "start"}>
+              <DropdownMenuContent className="w-56 rounded-lg" side="right">
                 <DropdownMenuItem>
                   <Star className="text-muted-foreground" />
                   <span>Add to Favorites</span>
                 </DropdownMenuItem>
-                {file.type === "space" && <DropdownMenuItem onSelect={() => onRequestCreate({ parentId: file.id, type: "project" })}><Plus /> New Project</DropdownMenuItem>}
-                {file.type === "project" && <DropdownMenuItem onSelect={() => onRequestCreate({ parentId: file.id, type: "folder", folderType: "file" })}><Plus /> New Folder</DropdownMenuItem>}
-                {file.type === "folder" && <DropdownMenuItem onSelect={() => onRequestCreate({ parentId: file.id, type: "file" })}><Plus /> New File</DropdownMenuItem>}
+                {file.type === "space" && (
+                  <DropdownMenuItem onSelect={() => onRequestCreate({ parentId: file.id, type: "project" })}>
+                    <Plus /> New Project
+                  </DropdownMenuItem>
+                )}
+                {file.type === "project" && (
+                  <DropdownMenuItem onSelect={() => onRequestCreate({ parentId: file.id, type: "folder" })}>
+                    <Plus /> New Folder
+                  </DropdownMenuItem>
+                )}
+                {file.type === "folder" && (
+                  <DropdownMenuItem onSelect={() => onRequestCreate({ parentId: file.id, type: "note" })}>
+                    <Plus /> New File
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem><Link href={file.id}>Copy Link</Link></DropdownMenuItem>
-                <DropdownMenuItem><ArrowUpRight /> Open in New Tab</DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link href={file.id}>Copy Link</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <ArrowUpRight /> Open in New Tab
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem><Trash2 /> Delete</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => deleteItem(file.id, file.type)}>
+                  <Trash2 /> Delete
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </SidebarMenuButton>
       </SidebarMenuItem>
 
-      {file.type !== "file" && (
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      {file.type !== "note" && file.type !== "chat" && file.type !== "pdf" && (
+        <Collapsible open={isOpen} onOpenChange={() => setOpenFolders(file.id, !isOpen)}>
           <CollapsibleContent>
             <div className="border-l border-border ml-4 pl-2">
-              {childFiles.length > 0 ? childFiles.map(child => (
-                <FileNode
-                  key={child.id}
-                  file={child}
-                  level={level + 1}
-                  childFiles={getChildFiles(child.id)}
-                  getChildFiles={getChildFiles}
-                  onDragStart={onDragStart}
-                  onDragEnd={onDragEnd}
-                  onDrop={onDrop}
-                  draggedItem={draggedItem}
-                  setDropTarget={setDropTarget}
-                  dropTarget={dropTarget}
-                  isDraggable={child.type !== "space"}
-                  onRequestCreate={onRequestCreate}
-                />
-              )) : (
+              {childFiles.length > 0 ? (
+                childFiles.map((child) => (
+                  <FileNode
+                    key={child.id}
+                    file={child}
+                    level={level + 1}
+                    childFiles={getChildFiles(child.id)}
+                    getChildFiles={getChildFiles}
+                    onDragStart={onDragStart}
+                    onDragEnd={onDragEnd}
+                    onDrop={onDrop}
+                    draggedItem={draggedItem}
+                    setDropTarget={setDropTarget}
+                    dropTarget={dropTarget}
+                    isDraggable={child.type !== "space"}
+                    onRequestCreate={onRequestCreate}
+                  />
+                ))
+              ) : (
                 <div className="ml-4 py-1 italic text-sm text-muted-foreground">No files inside</div>
               )}
             </div>

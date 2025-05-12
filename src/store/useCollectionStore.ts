@@ -1,70 +1,234 @@
 // store/useStore.ts
 import {create} from "zustand";
-import { nanoid } from "nanoid";
+import { createClient } from "@/lib/supabase/client";
+import { useUserStore } from "./userStore";
 
 // Define types for FileItems
+export type FolderItem = {
+  id: string;
+  name: string;
+  parentId: string | null;
+  type: "space" | "project" | "folder" | "chats" | "pdfs" |"notes";
+};
+
 export type FileItem = {
   id: string;
   name: string;
   parentId: string | null;
-  type: "space" | "project" | "folder" | "file";
-  folderType?: "chat" | "file" | "notes";
+  type: "chat" | "pdf" | "note";
+  content_id?: string;
+};
+
+export type CollectionItem = {
+  id: string;
+  name: string;
+  parentId: string | null;
+  type: FolderItem["type"] | FileItem["type"];
+  content_id?: string;
 };
 
 // Zustand Store for managing files, dragged item, drop target, etc.
 type Store = {
-  allItems: FileItem[]; // All files and folders
-  draggedItem: FileItem | null; // Currently dragged item
+  allItems: CollectionItem[]; // All files and folders
+  draggedItem: CollectionItem | null; // Currently dragged item
   dropTarget: string | null; // Drop target item
-  creation: { parentId: string | null; type: FileItem["type"]; folderType?: FileItem["folderType"] } | null; // Creation dialog state
+  creation: { parentId: string | null; type: CollectionItem["type"]; } | null; // Creation dialog state
+  openFolders: Set<string>; // Set of open folders
+  activeItemId: string | null; // Track the active item by its ID
 
-  setAllItems: (items: FileItem[]) => void;
-  setDraggedItem: (item: FileItem | null) => void;
+  setAllItems: (items: CollectionItem[]) => void;
+  setDraggedItem: (item: CollectionItem | null) => void;
   setDropTarget: (targetId: string | null) => void;
-  setCreation: (newCreation: { parentId: string | null; type: FileItem["type"]; folderType?: FileItem["folderType"] } | null) => void;
-  createItem: (name: string, parentId: string | null, type: FileItem["type"], folderType?: FileItem["folderType"]) => void;
-  handleDrop: (draggedItem: FileItem | null, targetId: string | null) => void;
+  setCreation: (newCreation: { parentId: string | null; type: CollectionItem["type"]; } | null) => void;
+  createItem: (name: string, parentId: string | null, type: CollectionItem["type"], content_id?: string) => void;
+  handleDrop: (draggedItem: CollectionItem | null, targetId: string | null) => void;
+  setOpenFolders: (folderId: string, open: boolean) => void;
+  fetchFilesAndFolders: () => Promise<void>;
+  addFile: (file: FileItem) => Promise<void>;
+  addFolder: (folder: FolderItem) => Promise<void>;
+  updateFile: (id: string, updates: Partial<FileItem>) => Promise<void>;
+  updateFolder: (id: string, updates: Partial<FolderItem>) => Promise<void>;
+  deleteItem: (id: string, type: CollectionItem["type"]) => Promise<void>;
+  setActiveItem: (itemId: string | null) => void; // Method to set the active item
 };
 
-// Initial dummy data for files and collection items
-const initialFiles: FileItem[] = [
-    { id: "space-1", name: "Marketing", parentId: "workspace", type: "space" },
-    { id: "space-2", name: "Engineering", parentId: "workspace", type: "space" },
-    { id: "project-1", name: "Product Launch", parentId: "space-1", type: "project" },
-    { id: "project-2", name: "Campaigns", parentId: "space-1", type: "project" },
-    { id: "project-3", name: "AI Integration", parentId: "space-2", type: "project" },
-    { id: "project-1-chat", name: "Chat", parentId: "project-1", type: "folder", folderType: "chat" },
-    { id: "project-1-file", name: "Files", parentId: "project-1", type: "folder", folderType: "file" },
-    { id: "project-1-notes", name: "Notes", parentId: "project-1", type: "folder", folderType: "notes" },
-    { id: "chat-1", name: "Team Discussion", parentId: "project-1-chat", type: "file" },
-    { id: "file-1", name: "LaunchChecklist.pdf", parentId: "project-1-file", type: "file" },
-    { id: "note-1", name: "Meeting Summary", parentId: "project-1-notes", type: "file" },
-  ];
-  
-  const initialCollectionItems: FileItem[] = [
-    { id: "collection-1", name: "Budget Report", parentId: "collection", type: "file" },
-    { id: "collection-2", name: "Marketing Plan", parentId: "collection", type: "file" },
-    { id: "collection-3", name: "Client Proposals", parentId: "collection", type: "file" },
-  ];
 
-// Create Zustand store with state management logic
-export const useStore = create<Store>((set) => ({
-  allItems: initialFiles.concat(initialCollectionItems), // Initialize empty items array
+
+
+export const useStore = create<Store>((set, get) => ({
+  allItems: [],
   draggedItem: null,
   dropTarget: null,
   creation: null,
-
+  openFolders: new Set<string>(),
+  activeItemId: null,
   setAllItems: (items) => set({ allItems: items }),
   setDraggedItem: (item) => set({ draggedItem: item }),
   setDropTarget: (targetId) => set({ dropTarget: targetId }),
   setCreation: (newCreation) => set({ creation: newCreation }),
+  setActiveItem: (itemId) => set({ activeItemId: itemId }),
 
-  createItem: (name, parentId, type, folderType) => {
-    const id = nanoid();
-    const newItem = { id, name, parentId, type, folderType };
+
+  deleteItem: async (id, type) => {
+    const supabase = createClient();
+    if(type === "chat" || type === "pdf" || type === "note"){
+      const { error } = await supabase.from("files").delete().eq("id", id);
+      if (!error) {
+        set((state) => ({
+          allItems: state.allItems.filter((item) => item.id !== id),
+        }));
+      }
+    }else{
+      const { error } = await supabase.from("folders").delete().eq("id", id);
+      if (!error) {
+        const { error } = await supabase.from("files").delete().eq("parent_id", id);
+        if (!error) {
+          set((state) => ({
+            allItems: state.allItems.filter((item) => item.id !== id),
+          }));
+        }
+      }
+    }
+  },
+
+    // New method to set open folders
+    setOpenFolders: (folderId, open) => set((state) => {
+      const openFolders = new Set(state.openFolders);
+      if (open) {
+        openFolders.add(folderId);  // Add folder ID to open set
+      } else {
+        openFolders.delete(folderId);  // Remove folder ID from open set
+      }
+      return { openFolders };
+    }),
+  // Fetch files and folders from Supabase
+  fetchFilesAndFolders: async () => {
+    const supabase = createClient();
+    
+    // Fetch files and folders
+    const { data: files, error: filesError } = await supabase.from("files").select("*");
+    const { data: folders, error: foldersError } = await supabase.from("folders").select("*");
+  
+    // Handle errors
+    if (filesError || foldersError) {
+      console.log(filesError, foldersError);
+      return;
+    }
+
+  
+    // Filter and retain only the necessary fields (id, name, type)
+    const cleanFiles = files?.map(({ id, name, type , parent_id }) => ({ id, name, type , parentId: parent_id })) || [];
+    const cleanFolders = folders?.map(({ id, name, type , parent_id }) => ({ id, name, type , parentId: parent_id })) || [];
+  
+    // Combine files and folders and update the state
+    set({
+      allItems: [
+        ...cleanFolders,
+        ...cleanFiles,
+      ],
+    });
+  },
+
+
+
+  addFile: async (file) => {
+    const supabase = createClient();
+    console.log(file)
+    const { data, error } = await supabase.from("files")
+      .insert({
+        name: file.name,
+        parent_id: file.parentId,
+        type: file.type,
+        content_id: file.content_id,
+        user_id: useUserStore.getState().user?.id,
+      })
+      .select();
+      console.log(data, error)
+  
+    if (!error && data) {
+      // Update the state with the newly created file
+      set((state) => ({
+        allItems: [...state.allItems, ...data], // Appending new file to state
+      }));
+  
+    } else {
+      console.error('Error inserting file:', error);
+    }
+  },
+  
+
+// Add a folder to Supabase
+addFolder: async (folder) => {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("folders")
+    .insert({
+      name: folder.name,
+      parent_id: folder.parentId,
+      type: folder.type,
+      user_id: useUserStore.getState().user?.id,
+    })
+    .select();
+
+  if (!error && data) {
+    // Directly append the newly created folder to the allItems state
     set((state) => ({
-      allItems: [...state.allItems, newItem],
+      allItems: [...state.allItems, ...data], // This appends the newly created folder
     }));
+  } else {
+    console.error('Error inserting folder:', error);
+  }
+},
+
+
+  // Update a file in Supabase
+  updateFile: async (id, updates) => {
+    const supabase = createClient();
+    console.log("updateFile",id, updates);
+    const { data, error } = await supabase.from("files")
+    .update({
+      parent_id: updates.parentId,
+    })
+    .eq("id", id)
+    .select();
+    console.log("updateFile",data, error);
+    if (!error && data) {
+      set((state) => ({
+        allItems: state.allItems.map(item =>
+          item.id === id ? { ...item, ...updates } : item
+        ),
+      }));
+    }
+  },
+
+  // Update a folder in Supabase
+  updateFolder: async (id, updates) => {
+    const supabase = createClient();
+    console.log("updateFolder",id, updates);
+    const { data, error } = await supabase.from("folders").update({
+      parent_id: updates.parentId,
+    }).eq("id", id).select();
+    console.log("updateFolder",data, error);
+    if (!error && data) {
+      set((state) => ({
+        allItems: state.allItems.map(item =>
+          item.id === id ? { ...item, ...updates } : item
+        ),
+      }));
+    }
+  },
+
+  // Create item (decides file or folder by type)
+  createItem: async (name, parentId, type, content_id) => {
+    if (["note", "chat", "pdf"].includes(type)) {
+      // File
+      const file = {  name, parentId, type, content_id };
+      await get().addFile(file as FileItem);
+    } else {
+      // Folder
+      const folder = {  name, parentId, type };
+      await get().addFolder(folder as FolderItem);
+    }
+    await get().fetchFilesAndFolders();
   },
 
   handleDrop: (draggedItem, targetId) => {

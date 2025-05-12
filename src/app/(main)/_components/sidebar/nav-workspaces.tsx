@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { FileNode } from "@/app/(main)/_components/sidebar/workspaces/file-node";
 import { SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarGroup } from "@/components/ui/sidebar";
-import { PlusIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -143,8 +142,7 @@ export function NavWorkspaces() {
       toast.error("You can't drop files directly into the workspace.");
     }
   };
-  
-  
+
 
   // Handle item creation (creating files, folders, etc.)
   const handleCreate = async () => {
@@ -163,16 +161,14 @@ export function NavWorkspaces() {
     // Show success toast
     toast.success(`Created new ${creation.type}: "${newName}"`);
   };
-
+console.log(rootFiles.length)
   return (
     <div>
       {/* Workspaces Section */}
-      <SidebarGroup>
-        <SidebarGroupLabel className="flex items-center justify-between">
+      {rootFiles.length > 0 && (
+        <SidebarGroup>
+        <SidebarGroupLabel>
           Workspaces
-          <Button size="icon" variant="ghost" onClick={() => setCreation({ parentId: "workspace", type: "space" })}>
-            <PlusIcon />
-          </Button>
         </SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
@@ -180,8 +176,6 @@ export function NavWorkspaces() {
               {/* If there are no workspaces */}
               {isWorkspacesLoading ? (
                 <div className="text-muted-foreground text-sm px-2">Loading workspaces...</div>
-              ) : rootFiles.length === 0 ? (
-                <div className="text-muted-foreground text-sm px-2">No workspaces</div>
               ) : (
                 rootFiles.map((file) => (
                   <FileNode
@@ -204,15 +198,12 @@ export function NavWorkspaces() {
             </div>
           </SidebarMenu>
         </SidebarGroupContent>
-      </SidebarGroup>
+      </SidebarGroup>)}
 
       {/* My Collection Section */}
       <SidebarGroup>
-        <SidebarGroupLabel className="flex items-center justify-between">
+        <SidebarGroupLabel>
           My Collection
-          <Button size="icon" variant="ghost" onClick={() => setCreation({ parentId: null, type: "note" })}>
-            <PlusIcon />
-          </Button>
         </SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
@@ -220,7 +211,7 @@ export function NavWorkspaces() {
             {isCollectionsLoading ? (
               <div className="text-muted-foreground text-sm px-2">Loading collections...</div>
             ) : allItems.filter((item) => item.parentId === null && ["note", "chat", "pdf"].includes(item.type)).length === 0 ? (
-              <div className="text-muted-foreground text-sm px-2">No collections</div>
+              <div className="text-muted-foreground text-sm px-2">No files yet</div>
             ) : (
               allItems.filter((item) => item.parentId === null && ["note", "chat", "pdf"].includes(item.type)).map((collectionItem) => (
                 <FileNode

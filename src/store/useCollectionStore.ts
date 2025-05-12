@@ -34,6 +34,7 @@ type Store = {
   creation: { parentId: string | null; type: CollectionItem["type"]; } | null; // Creation dialog state
   openFolders: Set<string>; // Set of open folders
   activeItemId: string | null; // Track the active item by its ID
+  isDeleting: boolean;
 
   setAllItems: (items: CollectionItem[]) => void;
   setDraggedItem: (item: CollectionItem | null) => void;
@@ -61,6 +62,7 @@ export const useStore = create<Store>((set, get) => ({
   creation: null,
   openFolders: new Set<string>(),
   activeItemId: null,
+  isDeleting: false,
   setAllItems: (items) => set({ allItems: items }),
   setDraggedItem: (item) => set({ draggedItem: item }),
   setDropTarget: (targetId) => set({ dropTarget: targetId }),
@@ -70,6 +72,7 @@ export const useStore = create<Store>((set, get) => ({
 
   deleteItem: async (id, type) => {
     const supabase = createClient();
+    set({ isDeleting: true });
     if(type === "chat" || type === "pdf" || type === "note"){
       const { error } = await supabase.from("files").delete().eq("id", id);
       if (!error) {
@@ -85,6 +88,7 @@ export const useStore = create<Store>((set, get) => ({
             allItems: state.allItems.filter((item) => item.id !== id),
           }));
         }
+        set({ isDeleting: false });
     }
   },
 

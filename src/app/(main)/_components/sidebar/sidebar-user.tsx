@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronsUpDownIcon, PlusIcon, ImportIcon, FilePlusIcon } from "lucide-react";
+import { ChevronsUpDownIcon, PlusIcon, ImportIcon, FilePlusIcon, FolderPlusIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUserStore } from "@/store/userStore";
 import UserPopover from "../popover/user-popover";
@@ -14,10 +14,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { PDFImport } from "../pdfviewer/pdf-import";
+import { useStore } from "@/store/useCollectionStore";
 
 export default function SidebarUser() {
   const { fullname, image, email } = useUserStore();
   const [importPdfOpen, setImportPdfOpen] = useState(false);
+  const { setCreation } = useStore();
 
   return (
     <div className="flex items-center justify-between w-full">
@@ -65,9 +67,13 @@ export default function SidebarUser() {
             <ImportIcon className="h-4 w-4" />
             <span>Import PDF</span>
           </DropdownMenuItem>
-          <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+          <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => setCreation({ parentId: null, type: "note" })}>
             <FilePlusIcon className="h-4 w-4" />
             <span>Create Page</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => setCreation({ parentId: null, type: "space" })}>
+            <FolderPlusIcon className="h-4 w-4" />
+            <span>Create Workspace</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -1,12 +1,13 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { FileText, FolderOpen, ChevronDown, ChevronRight, MoreHorizontal, Plus, Trash2, Star, ArrowUpRight } from "lucide-react";
+import { FileText, FolderOpen, ChevronDown, ChevronRight, MoreHorizontal, Plus, Trash2, Star, ArrowUpRight, Loader2 } from "lucide-react";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { SidebarMenuAction, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import{ useStore, type CollectionItem } from "@/store/useCollectionStore";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 
 export type FileNodeProps = {
   file: CollectionItem;
@@ -38,10 +39,11 @@ export function FileNode({
   isDraggable = false,
   onRequestCreate,
 }: FileNodeProps) {
-  const { openFolders, setOpenFolders, activeItemId, setActiveItem, deleteItem } = useStore();
+  const { openFolders, setOpenFolders, activeItemId, setActiveItem, deleteItem, isDeleting } = useStore();
   const isOpen = openFolders.has(file.id); 
   const isDragging = draggedItem?.id === file.id;
   const [hoverTimer, setHoverTimer] = React.useState<NodeJS.Timeout | null>(null); // Timer for hover
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   // const isDropTarget = dropTarget === file.id;
   const toggleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -89,6 +91,10 @@ export function FileNode({
 
     // Optionally, you can collapse the folder here if desired
     // setIsOpen(false);
+  };
+
+  const handleDelete = () => {
+    setIsDeleteDialogOpen(true);
   };
 
 
@@ -197,7 +203,7 @@ export function FileNode({
                   <ArrowUpRight /> Open in New Tab
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => deleteItem(file.id, file.type)}>
+                <DropdownMenuItem onSelect={handleDelete}>
                   <Trash2 /> Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -234,6 +240,27 @@ export function FileNode({
             </div>
           </CollapsibleContent>
         </Collapsible>
+      )}
+      {isDeleteDialogOpen && (
+        <Dialog
+          open={isDeleteDialogOpen}
+          onOpenChange={() => setIsDeleteDialogOpen(false)}
+        >
+          <DialogContent>
+            <DialogTitle>Delete {file.name}</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {file.name}? This action cannot be undone.
+            </DialogDescription>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button disabled={isDeleting} variant="destructive" onClick={() => deleteItem(file.id, file.type)}>Delete
+                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </>
   );

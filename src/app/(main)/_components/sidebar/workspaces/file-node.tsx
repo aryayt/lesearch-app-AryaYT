@@ -48,7 +48,8 @@ export function FileNode({
   const [hoverTimer, setHoverTimer] = React.useState<NodeJS.Timeout | null>(null); // Timer for hover
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   // const isDropTarget = dropTarget === file.id;
-  const isActive = page.id === file.content_id; 
+  const isActive = page.id === file.content_id && page.type === file.type;
+  console.log(isActive,page.id,file.content_id)
 
   const router = useRouter();
 

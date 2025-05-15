@@ -2,8 +2,9 @@ import React from 'react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { FileText,File,Plus,X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { PDFViewer } from '@/components/pdf-viewer/pdfViewer'
+// import { PDFViewer } from '@/components/pdf-viewer/pdfViewer'
 import Editor from '@/components/blocknote/editor'
+import { AnaraViewer } from './anara/_components/anara'
 
 type TabType = 'pdf' | 'note'
 interface Tab {
@@ -59,7 +60,7 @@ const MiddlePanel = () => {
       }
     
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col w-full h-full">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col w-full h-full overflow-hidden">
       <TabsList className="w-full p-0 bg-background justify-start border-b border-border rounded-none flex-shrink-0 h-8">
         <div className="flex flex-1 min-w-0 h-full overflow-x-auto no-scrollbar">
           {tabs.map((tab) => (
@@ -128,7 +129,8 @@ const MiddlePanel = () => {
               <TabsContent key={tab.id} value={tab.id} className="flex flex-col mt-0 h-full overflow-hidden">
                 {
                   tab.type === 'pdf' ? (
-                          <PDFViewer pdfUrl={"https://geqxiumlcggtzltbrlkg.supabase.co/storage/v1/object/sign/documents/user-files/082eaeb4-37ae-4ce5-ae81-9115fa22e8f8/1744801218554-Resume.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5Xzc5MTY3MGI4LWZkMzUtNDE1MC05YTNhLWM4ZGViMmI3YWViOCJ9.eyJ1cmwiOiJkb2N1bWVudHMvdXNlci1maWxlcy8wODJlYWViNC0zN2FlLTRjZTUtYWU4MS05MTE1ZmEyMmU4ZjgvMTc0NDgwMTIxODU1NC1SZXN1bWUucGRmIiwiaWF0IjoxNzQ3MDM4MDI5LCJleHAiOjE3NDc2NDI4Mjl9.ngRdC8t5v4el4dBAtH7nXpKcWfwiIwqWhkrMrv7u3SI"} />
+                          // <PDFViewer pdfUrl={"https://geqxiumlcggtzltbrlkg.supabase.co/storage/v1/object/sign/documents/user-files/082eaeb4-37ae-4ce5-ae81-9115fa22e8f8/1744801218554-Resume.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5Xzc5MTY3MGI4LWZkMzUtNDE1MC05YTNhLWM4ZGViMmI3YWViOCJ9.eyJ1cmwiOiJkb2N1bWVudHMvdXNlci1maWxlcy8wODJlYWViNC0zN2FlLTRjZTUtYWU4MS05MTE1ZmEyMmU4ZjgvMTc0NDgwMTIxODU1NC1SZXN1bWUucGRmIiwiaWF0IjoxNzQ3MDM4MDI5LCJleHAiOjE3NDc2NDI4Mjl9.ngRdC8t5v4el4dBAtH7nXpKcWfwiIwqWhkrMrv7u3SI"} />
+                          <AnaraViewer pdfUrl={"https://geqxiumlcggtzltbrlkg.supabase.co/storage/v1/object/sign/documents/user-files/082eaeb4-37ae-4ce5-ae81-9115fa22e8f8/1744801218554-Resume.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5Xzc5MTY3MGI4LWZkMzUtNDE1MC05YTNhLWM4ZGViMmI3YWViOCJ9.eyJ1cmwiOiJkb2N1bWVudHMvdXNlci1maWxlcy8wODJlYWViNC0zN2FlLTRjZTUtYWU4MS05MTE1ZmEyMmU4ZjgvMTc0NDgwMTIxODU1NC1SZXN1bWUucGRmIiwiaWF0IjoxNzQ3MDM4MDI5LCJleHAiOjE3NDc2NDI4Mjl9.ngRdC8t5v4el4dBAtH7nXpKcWfwiIwqWhkrMrv7u3SI"}/>
                   ) : (
                     <Editor />
                   )

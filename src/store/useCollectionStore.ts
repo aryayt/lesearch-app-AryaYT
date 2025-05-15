@@ -6,14 +6,14 @@ import { useUserStore } from "./userStore";
 export type FolderItem = {
   id: string;
   name: string;
-  parentId: string | null;
+  parentId: FolderItem['id'] | null;
   type: "space" | "project" | "folder" | "chats" | "pdfs" |"notes";
 };
 
 export type FileItem = {
   id: string;
   name: string;
-  parentId: string | null;
+  parentId: FolderItem['id'] | null;
   type: "chat" | "pdf" | "note";
   content_id?: string;
 };
@@ -21,7 +21,7 @@ export type FileItem = {
 export type CollectionItem = {
   id: string;
   name: string;
-  parentId: string | null;
+  parentId: FolderItem['id'] | null;
   type: FolderItem["type"] | FileItem["type"];
   content_id?: string;
 };
@@ -51,8 +51,6 @@ type Store = {
   deleteItem: (id: string, type: CollectionItem["type"]) => Promise<void>;
   setActiveItem: (itemId: string | null) => void; // Method to set the active item
 };
-
-
 
 
 export const useStore = create<Store>((set, get) => ({

@@ -47,12 +47,19 @@ export async function POST(request: Request) {
 
     if (uploadError) throw uploadError;
 
+    const { data: publicUrlData } = supabase
+  .storage
+  .from('documents')
+  .getPublicUrl(filePath);
+
+const publicUrl = publicUrlData.publicUrl;
+
     // 2. Create record in the documents table
     const { data: documentRecord, error: dbError } = await supabase
       .from('documents')
       .insert({
         name: file.name,
-        file_path: fileData.path,
+        file_path: publicUrl,
         file_type: file.type,
         user_id: userId,
         size: file.size,

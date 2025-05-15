@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Icon } from "./icon";
 
-export const ZoomMenu = () => {
+const ZoomMenu = () => {
   const zoom = usePdf((state) => state.zoom);
   const setCustomZoom = usePdf((state) => state.updateZoom);
   const fitToWidth = usePdf((state) => state.zoomFitWidth);
@@ -71,3 +71,4 @@ export const ZoomMenu = () => {
   );
 };
 
+export default ZoomMenu;

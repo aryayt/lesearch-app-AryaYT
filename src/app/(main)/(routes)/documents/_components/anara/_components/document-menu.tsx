@@ -14,7 +14,7 @@ interface DocumentMenuProps {
   documentUrl: string;
 }
 
-export const DocumentMenu = ({ documentUrl }: DocumentMenuProps) => {
+const DocumentMenu = ({ documentUrl }: DocumentMenuProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const pdfDocumentProxy = usePdf((state) => state.pdfDocumentProxy);
 
@@ -79,4 +79,4 @@ export const DocumentMenu = ({ documentUrl }: DocumentMenuProps) => {
   );
 };
 
-
+export default DocumentMenu;

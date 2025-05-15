@@ -19,7 +19,7 @@ export default function LayoutWrapper({
     } as React.CSSProperties}
     >
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="overflow-hidden">
         <Header />
         <main className="flex-1 overflow-hidden transition-all duration-200 ease-in-out">
           {children}

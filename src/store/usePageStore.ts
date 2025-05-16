@@ -1,64 +1,78 @@
-import { createClient } from "@/lib/supabase/client";
-import { create } from "zustand"
-import { persist } from "zustand/middleware"
-import { createJSONStorage } from "zustand/middleware"
+import { create } from 'zustand';
+import { createClient } from '@/lib/supabase/client';
 
-interface DocumentData{
-    id: string;
-    user_id: string;
-    name: string;
-    file_path: string;
-    file_type: string;
-    size: string;
-    created_at: string;
+// Define the Pdf and Note data types
+interface PdfData {
+  id: string;
+  name: string;
+  pdf_url: string;
 }
 
-interface NotesData{
-    id: string;
-    name: string;
-    content: string;
+interface NoteData {
+  id: string;
+  title: string;
+  content: string;
 }
 
-
+// Define the store type
 interface PageStore {
-    page: {
-        id: string;
-        type: string;
-    };
-    isPageLoading: boolean;
-    pageData: DocumentData | NotesData;
-    setPageData: (pageData: DocumentData | NotesData) => void;
-    setPage: (page: { id: string; type: string }) => void;
-    setIsPageLoading: (isPageLoading: boolean) => void;
-    fetchPageData: (pageId: string) => Promise<void>;
+  isPageLoading: boolean;
+  error: string | null;
+  pageData: PdfData | NoteData | null; // Can be PdfData or NoteData based on the page type
+  fetchPageData: (pageId: string, pageType: 'pdf' | 'note') => void;
+  setIsPageLoading: (loading: boolean) => void;
 }
 
-export const usePageStore = create<PageStore>()(
-    persist(
-      (set) => ({
-    page: {
-        id: "",
-        type: ""
-    },
-    isPageLoading: false,
-    pageData: {} as DocumentData | NotesData,
-    setPageData: (pageData: DocumentData | NotesData) => set({ pageData }),
-    fetchPageData: async(pageId: string) => {
-        set({ isPageLoading: true })
-        try {
-            const supabase = createClient();
-            const { data, error } = await supabase.from("documents").select("*").eq("id", pageId);
-            if (error) throw error;
-            set({ pageData: data[0], isPageLoading: false });
-        } catch (error) {
-            console.error(error);
-            set({ isPageLoading: false });
-        }
-    },
+export const usePageStore = create<PageStore>((set) => ({
+  isPageLoading: true, // Initially, the page is loading
+  pageData: null, // Initially, no page data
+  error: null, // Initially, no error
+  setIsPageLoading: (loading) => set(() => ({ isPageLoading: loading })),
+  
+  // Action to fetch page data
+  fetchPageData: async (pageId, pageType) => {
 
-    setPage: (page: { id: string; type: string }) => set({ page }),
-    setIsPageLoading: (isPageLoading: boolean) => set({ isPageLoading }),
-}), {
-    name: "page",
-    storage: createJSONStorage(() => localStorage),
-}))
+    try {
+      set(() => ({ isPageLoading: true, error: null })); // Set loading to true and reset error
+
+      // Fetch page data based on type (pdf or note)
+      const { data, error } = await fetchPageByType( pageId, pageType);
+
+      if (error) {
+        console.error("Error fetching page data:", error);
+        set(() => ({ pageData: null, error: error as string }));
+      } else {
+        set(() => ({ pageData: data, error: null }));
+      }
+    } catch (error) {
+      console.error("Error fetching page data:", error);
+      set(() => ({ pageData: null, error: error as string }));
+    } finally {
+      set(() => ({ isPageLoading: false })); // Set loading to false after the fetch
+    }
+  },
+}));
+
+// Helper function to fetch data based on type
+const fetchPageByType = async ( pageId: string, pageType: 'pdf' | 'note') => {
+    const supabase = createClient();
+  if (pageType === 'pdf') {
+    const { data, error } = await supabase.from('pdfs').select('*').eq('id', pageId).single(); // single() returns only one item
+    return { data:{
+        id: data?.id,
+        name: data?.name,
+        pdf_url: data?.pdf_url,
+    }, error };
+  }
+
+  if (pageType === 'note') {
+    const { data, error } = await supabase.from('notes').select('*').eq('id', pageId).single(); // single() for note as well
+    return { data:{
+        id: data?.id,
+        title: data?.title,
+        content: data?.content,
+    }, error };
+  }
+
+  return { data: null, error: 'Invalid page type' }; // Handle unexpected types
+};

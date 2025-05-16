@@ -25,7 +25,7 @@ export function PDFImport({ isOpen, onClose }: PDFImportProps) {
   const [fileName, setFileName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { createItem } = useStore();
+  const { createItem, deleteItem } = useStore();
   const { user } = useUserStore();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,6 +59,15 @@ export function PDFImport({ isOpen, onClose }: PDFImportProps) {
       formData.append('file', file);
       formData.append('userId', user?.id);
       
+      const id = await createItem(fileName, null, "pdf");
+
+      if (!id) {
+        toast.error("Failed to create PDF");
+        return;
+      }
+
+      formData.append('id', id);
+
       // Send to server-side API for processing
       const response = await fetch('/api/documents/upload', {
         method: 'POST',
@@ -66,15 +75,13 @@ export function PDFImport({ isOpen, onClose }: PDFImportProps) {
       });
 
       if (!response.ok) {
+        deleteItem(id, "pdf");
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to upload document');
       }
-      
-      const data = await response.json();
-      
+            
       
       // Add the PDF name and id to the collection store
-      createItem(fileName, null, "pdf", data.document.id);
       
       // Close the dialog
       onClose();
@@ -82,7 +89,7 @@ export function PDFImport({ isOpen, onClose }: PDFImportProps) {
       // Navigate to the PDF viewer
       // Using window.location.href instead of router.push to force a full page reload
       // This ensures the Zustand store is properly rehydrated from localStorage
-      window.location.href = `/documents/${data.document.id}`;
+      window.location.href = `/documents/${id}`;
       
       toast.success("PDF imported successfully");
     } catch (error) {

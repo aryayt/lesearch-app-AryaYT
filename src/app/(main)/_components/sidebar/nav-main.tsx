@@ -51,7 +51,7 @@ export function NavMain() {
             <FilePlusIcon className="h-4 w-4" />
             <span>Create Page</span>
           </DropdownMenuItem>
-          <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => setCreation({ parentId: null, type: "space" })}>
+          <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => setCreation({ parentId: null, type: "folder" })}>
             <FolderPlusIcon className="h-4 w-4" />
             <span>Create Workspace</span>
           </DropdownMenuItem>

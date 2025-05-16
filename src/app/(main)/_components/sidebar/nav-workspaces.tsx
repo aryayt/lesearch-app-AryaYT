@@ -6,7 +6,7 @@ import { SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarGroup } fro
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { type CollectionItem, useStore } from "@/store/useCollectionStore"; // Import Zustand store
+import { type FileItem, useStore } from "@/store/useCollectionStore"; // Import Zustand store
 
 export function NavWorkspaces() {
   // Accessing Zustand store state and actions
@@ -20,7 +20,6 @@ export function NavWorkspaces() {
     setCreation,
     createItem,
     updateFile,
-    updateFolder,
     fetchFilesAndFolders,
     setActiveItem,
     setOpenFolders,
@@ -31,8 +30,8 @@ export function NavWorkspaces() {
 
   // Helper function to organize files into root (workspace) and child files
   const getFileHierarchy = React.useMemo(() => {
-    return (fileList: CollectionItem[]) => {
-      const rootFiles = fileList.filter((file) => file.parentId === null && file.type === "space");
+    return (fileList: FileItem[]) => {
+      const rootFiles = fileList.filter((file) => file.parentId === null && file.type === "folder");
       const getChildFiles = (parentId: string) => fileList.filter((file) => file.parentId === parentId);
       return { rootFiles, getChildFiles };
     };
@@ -63,7 +62,7 @@ export function NavWorkspaces() {
   }, [allItems, creation?.parentId, newName, setActiveItem]);
 
   // Drag start handler
-  const handleDragStart = (e: React.DragEvent, item: CollectionItem) => {
+  const handleDragStart = (e: React.DragEvent, item: FileItem) => {
     e.stopPropagation();
     setDraggedItem(item);
     e.dataTransfer.setData("application/json", JSON.stringify(item));
@@ -91,21 +90,21 @@ export function NavWorkspaces() {
   
       if (draggedItem.type === "folder") {
         if (targetId === null) {
-          await updateFolder(draggedItem.id, { parentId: targetId });
+          await updateFile(draggedItem.id, { parentId: targetId });
           toast.success(`Moved folder "${draggedItem.name}" to Workspace.`);
         } else {
-          await updateFolder(draggedItem.id, { parentId: targetId });
+          await updateFile(draggedItem.id, { parentId: targetId });
           toast.success(`Moved folder "${draggedItem.name}" into the folder.`);
         }
       }
   
       // Handle project and file moves similarly
-      if (draggedItem.type === "project") {
-        await updateFolder(draggedItem.id, { parentId: targetId });
-        toast.success(`Moved project "${draggedItem.name}" to Workspace.`);
-      }
+      // if (draggedItem.type === "project") {
+      //   await updateFolder(draggedItem.id, { parentId: targetId });
+      //   toast.success(`Moved project "${draggedItem.name}" to Workspace.`);
+      // }
   
-      if (draggedItem.type === "note" || draggedItem.type === "pdf" || draggedItem.type === "chat") {
+      if (draggedItem.type === "note" || draggedItem.type === "pdf" ) {
         if (targetId !== null) {
           await updateFile(draggedItem.id, { parentId: targetId });
           toast.success(`Moved file "${draggedItem.name}" to the folder.`);
@@ -137,6 +136,8 @@ export function NavWorkspaces() {
     // Show success toast
     toast.success(`Created new ${creation.type}: "${newName}"`);
   };
+
+
   return (
     <div>
       {/* Workspaces Section */}
@@ -165,7 +166,7 @@ export function NavWorkspaces() {
                     draggedItem={draggedItem}
                     setDropTarget={setDropTarget}
                     dropTarget={dropTarget}
-                    isDraggable={file.type!=="space"}
+                    isDraggable={file.type!=="folder" && file.parentId!==null}
                     onRequestCreate={(newItem) => setCreation(newItem)}
                   />
                 ))
@@ -213,7 +214,7 @@ export function NavWorkspaces() {
       {/* Dialog for Creating Items */}
       <Dialog open={!!creation} onOpenChange={(open) => open || setCreation(null)}>
         <DialogContent>
-          <DialogTitle>Create {creation?.type}</DialogTitle>
+          <DialogTitle>Create {creation?.parentId?creation?.type : "Workspace"}</DialogTitle>
           <div className="space-y-4">
             <Input placeholder="Enter title…" value={newName} onChange={(e) => setNewName(e.target.value)} />
             <Button onClick={handleCreate}>Create</Button>

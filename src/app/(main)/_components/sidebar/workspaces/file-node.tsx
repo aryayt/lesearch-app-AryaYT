@@ -6,25 +6,25 @@ import { SidebarMenuAction, SidebarMenuButton, SidebarMenuItem } from "@/compone
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import{ useStore, type CollectionItem } from "@/store/useCollectionStore";
+import{ useStore, type FileItem } from "@/store/useCollectionStore";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { usePageStore } from "@/store/usePageStore";
 import { useRouter } from "next/navigation";
 
 export type FileNodeProps = {
-  file: CollectionItem;
+  file: FileItem;
   level: number;
-  childFiles: CollectionItem[];
-  getChildFiles: (parentId: string) => CollectionItem[];
-  onDragStart: (e: React.DragEvent, item: CollectionItem) => void;
+  childFiles: FileItem[];
+  getChildFiles: (parentId: string) => FileItem[];
+  onDragStart: (e: React.DragEvent, item: FileItem) => void;
   onDragEnd: () => void;
   onDrop: (e: React.DragEvent, targetId: string) => void;
-  draggedItem: CollectionItem | null;
+  draggedItem: FileItem | null;
   setDropTarget: (id: string | null) => void;
   dropTarget: string | null;
   isDraggable?: boolean;
   defaultOpen?: boolean;
-  onRequestCreate: (c: { parentId: string | null; type: CollectionItem["type"]; }) => void;
+  onRequestCreate: (c: { parentId: string | null; type: FileItem["type"]; }) => void;
 };
 
 export function FileNode({
@@ -42,13 +42,13 @@ export function FileNode({
   onRequestCreate,
 }: FileNodeProps) {
   const { openFolders, setOpenFolders, activeItemId, setActiveItem, deleteItem, isDeleting } = useStore();
-  const {page, setIsPageLoading} = usePageStore();
+  const {pageData, setIsPageLoading} = usePageStore();
   const isOpen = openFolders.has(file.id); 
   const isDragging = draggedItem?.id === file.id;
   const [hoverTimer, setHoverTimer] = React.useState<NodeJS.Timeout | null>(null); // Timer for hover
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   // const isDropTarget = dropTarget === file.id;
-  const isActive = page.id === file.content_id; 
+  // const isActive = page.id === file.content_id; 
 
   const router = useRouter();
 
@@ -110,9 +110,10 @@ export function FileNode({
 
   const handleRoute = () => {
     setIsPageLoading(true)
-    if (file.content_id) {
-      router.push(`/documents/${file.content_id}`);
+    if (file.id && file.id !== pageData?.id) {
+      router.push(`/documents/${file.id}`);
     }
+    setIsPageLoading(false)
   };
 
   return (
@@ -133,7 +134,7 @@ export function FileNode({
       >
         <SidebarMenuButton
           asChild
-          isActive={isActive}
+          // isActive={isActive}
           draggable={isDraggable}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
@@ -145,8 +146,8 @@ export function FileNode({
           )}
         >
           <div className="relative flex items-center w-full">
-            {file.type === "note" || file.type === "chat" || file.type === "pdf" ? <FileText /> : <FolderOpen />}
-            {!["note", "chat", "pdf"].includes(file.type) && (
+            {file.type === "note" || file.type === "pdf" ? <FileText /> : <FolderOpen />}
+            {!["note", "pdf"].includes(file.type) && (
               <Button
                 type="button"
                 variant="ghost"
@@ -166,7 +167,7 @@ export function FileNode({
              <button
               type="button"
               className="ml-2 flex-1 truncate bg-transparent border-none p-0 text-left cursor-pointer"
-              onClick={file.content_id ? handleRoute : toggleOpen}
+              // onClick={file.content_id ? handleRoute : toggleOpen}
             >
               {file.name}
             </button>
@@ -182,21 +183,15 @@ export function FileNode({
                   <Star className="text-muted-foreground" />
                   <span>Add to Favorites</span>
                 </DropdownMenuItem>
-                {file.type === "space" && (
-                  <DropdownMenuItem onSelect={() => onRequestCreate({ parentId: file.id, type: "project" })}>
-                    <Plus /> New Project
-                  </DropdownMenuItem>
-                )}
-                {file.type === "project" && (
                   <DropdownMenuItem onSelect={() => onRequestCreate({ parentId: file.id, type: "folder" })}>
                     <Plus /> New Folder
                   </DropdownMenuItem>
-                )}
-                {file.type === "folder" && (
                   <DropdownMenuItem onSelect={() => onRequestCreate({ parentId: file.id, type: "note" })}>
-                    <Plus /> New File
+                    <Plus /> New Note
                   </DropdownMenuItem>
-                )}
+                  <DropdownMenuItem onSelect={() => onRequestCreate({ parentId: file.id, type: "note" })}>
+                    <Plus /> Import PDF
+                  </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Link href={file.id}>Copy Link</Link>
@@ -214,7 +209,7 @@ export function FileNode({
         </SidebarMenuButton>
       </SidebarMenuItem>
 
-      {file.type !== "note" && file.type !== "chat" && file.type !== "pdf" && (
+      {file.type !== "note" && file.type !== "pdf" && (
         <Collapsible open={isOpen} onOpenChange={() => setOpenFolders(file.id, !isOpen)}>
           <CollapsibleContent>
             <div className="border-l border-border ml-4 pl-2">
@@ -232,7 +227,7 @@ export function FileNode({
                     draggedItem={draggedItem}
                     setDropTarget={setDropTarget}
                     dropTarget={dropTarget}
-                    isDraggable={child.type !== "space"}
+                    isDraggable={child.type !== "folder"}
                     onRequestCreate={onRequestCreate}
                   />
                 ))

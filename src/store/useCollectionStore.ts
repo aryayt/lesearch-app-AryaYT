@@ -1,256 +1,247 @@
-import {create} from "zustand";
+import { create } from "zustand";
 import { createClient } from "@/lib/supabase/client";
 import { useUserStore } from "./userStore";
 
-// Define types for FileItems
-export type FolderItem = {
-  id: string;
-  name: string;
-  parentId: string | null;
-  type: "space" | "project" | "folder" | "chats" | "pdfs" |"notes";
-};
-
 export type FileItem = {
-  id: string;
-  name: string;
-  parentId: string | null;
-  type: "chat" | "pdf" | "note";
-  content_id?: string;
-};
-
-export type CollectionItem = {
-  id: string;
-  name: string;
-  parentId: string | null;
-  type: FolderItem["type"] | FileItem["type"];
-  content_id?: string;
+	id: string;
+	name: string;
+	parentId: string | null;
+	type: "folder" | "pdf" | "note";
+	// content_id?: string;
 };
 
 // Zustand Store for managing files, dragged item, drop target, etc.
 type Store = {
-  allItems: CollectionItem[]; // All files and folders
-  draggedItem: CollectionItem | null; // Currently dragged item
-  dropTarget: string | null; // Drop target item
-  creation: { parentId: string | null; type: CollectionItem["type"]; } | null; // Creation dialog state
-  openFolders: Set<string>; // Set of open folders
-  activeItemId: string | null; // Track the active item by its ID
-  isDeleting: boolean;
+	allItems: FileItem[]; // All files
+	draggedItem: FileItem | null; // Currently dragged item
+	dropTarget: string | null; // Drop target item
+	creation: { parentId: string | null; type: FileItem["type"] } | null; // Creation dialog state
+	openFolders: Set<string>; // Set of open folders
+	activeItemId: string | null; // Track the active item by its ID
+	isDeleting: boolean;
 
-  setAllItems: (items: CollectionItem[]) => void;
-  setDraggedItem: (item: CollectionItem | null) => void;
-  setDropTarget: (targetId: string | null) => void;
-  setCreation: (newCreation: { parentId: string | null; type: CollectionItem["type"]; } | null) => void;
-  createItem: (name: string, parentId: string | null, type: CollectionItem["type"], content_id?: string) => void;
-  handleDrop: (draggedItem: CollectionItem | null, targetId: string | null) => void;
-  setOpenFolders: (folderId: string, open: boolean) => void;
-  fetchFilesAndFolders: () => Promise<void>;
-  addFile: (file: FileItem) => Promise<void>;
-  addFolder: (folder: FolderItem) => Promise<void>;
-  updateFile: (id: string, updates: Partial<FileItem>) => Promise<void>;
-  updateFolder: (id: string, updates: Partial<FolderItem>) => Promise<void>;
-  deleteItem: (id: string, type: CollectionItem["type"]) => Promise<void>;
-  setActiveItem: (itemId: string | null) => void; // Method to set the active item
+	setAllItems: (items: FileItem[]) => void;
+	setDraggedItem: (item: FileItem | null) => void;
+	setDropTarget: (targetId: string | null) => void;
+	setCreation: (
+		newCreation: { parentId: string | null; type: FileItem["type"] } | null,
+	) => void;
+	createItem: (
+		name: string,
+		parentId: string | null,
+		type: FileItem["type"],
+		content_id?: string,
+	) => Promise<string>;
+	handleDrop: (draggedItem: FileItem | null, targetId: string | null) => void;
+	setOpenFolders: (folderId: string, open: boolean) => void;
+	fetchFilesAndFolders: () => Promise<void>;
+	addFile: (file: FileItem) => Promise<string>;
+	// addFolder: (folder: FolderItem) => Promise<void>;
+	updateFile: (id: string, updates: Partial<FileItem>) => Promise<void>;
+	// updateFolder: (id: string, updates: Partial<FolderItem>) => Promise<void>;
+	deleteItem: (id: string, type: FileItem["type"]) => Promise<void>;
+	setActiveItem: (itemId: string | null) => void; // Method to set the active item
 };
 
-
-
-
 export const useStore = create<Store>((set, get) => ({
-  allItems: [],
-  draggedItem: null,
-  dropTarget: null,
-  creation: null,
-  openFolders: new Set<string>(),
-  activeItemId: null,
-  isDeleting: false,
-  setAllItems: (items) => set({ allItems: items }),
-  setDraggedItem: (item) => set({ draggedItem: item }),
-  setDropTarget: (targetId) => set({ dropTarget: targetId }),
-  setCreation: (newCreation) => set({ creation: newCreation }),
-  setActiveItem: (itemId) => set({ activeItemId: itemId }),
-
+	allItems: [],
+	draggedItem: null,
+	dropTarget: null,
+	creation: null,
+	openFolders: new Set<string>(),
+	activeItemId: null,
+	isDeleting: false,
+	setAllItems: (items) => set({ allItems: items }),
+	setDraggedItem: (item) => set({ draggedItem: item }),
+	setDropTarget: (targetId) => set({ dropTarget: targetId }),
+	setCreation: (newCreation) => set({ creation: newCreation }),
+	setActiveItem: (itemId) => set({ activeItemId: itemId }),
 
   deleteItem: async (id, type) => {
     const supabase = createClient();
     set({ isDeleting: true });
-    if(type === "chat" || type === "pdf" || type === "note"){
-      const { error } = await supabase.from("files").delete().eq("id", id);
-      if (!error) {
-        set((state) => ({
-          allItems: state.allItems.filter((item) => item.id !== id),
-        }));
-      }
-    }else{
-      const { error } = await supabase.from("folders").delete().eq("id", id);
-      console.log(error)
-        if (!error) {
-          set((state) => ({
-            allItems: state.allItems.filter((item) => item.id !== id),
-          }));
+  
+    try {
+      // Step 1: Retrieve the file path from the database
+      let filePath = null;
+      if (type === "pdf") {
+        const { data: filePathData, error: filePathError } = await supabase
+          .from("pdfs")
+          .select("file_path")
+          .eq("id", id)
+          .single(); // Use `.single()` for a single row query
+  
+        if (filePathError) {
+          console.error("Error getting file path:", filePathError.message);
+          throw new Error("Failed to fetch file path.");
         }
-        set({ isDeleting: false });
-    }
-  },
-
-    // New method to set open folders
-    setOpenFolders: (folderId, open) => set((state) => {
-      const openFolders = new Set(state.openFolders);
-      if (open) {
-        openFolders.add(folderId);  // Add folder ID to open set
-      } else {
-        openFolders.delete(folderId);  // Remove folder ID from open set
+  
+        filePath = filePathData?.file_path;
+        console.log("File Path:", filePath);
       }
-      return { openFolders };
-    }),
-  // Fetch files and folders from Supabase
-  fetchFilesAndFolders: async () => {
-    const supabase = createClient();
-    
-    // Fetch files and folders
-    const { data: files, error: filesError } = await supabase.from("files").select("*");
-    const { data: folders, error: foldersError } = await supabase.from("folders").select("*");
   
-    // Handle errors
-    if (filesError || foldersError) {
-      console.log(filesError, foldersError);
-      return;
-    }
-
+      // Step 2: Delete the file from Supabase Storage (if filePath exists)
+      if (filePath) {
+        const { error: deleteError } = await supabase.storage
+          .from("documents")
+          .remove([filePath]);
   
-    // Filter and retain only the necessary fields (id, name, type)
-    const cleanFiles = files?.map(({ id, name, type , parent_id, content_id }) => ({ id, name, type , parentId: parent_id, content_id })) || [];
-    const cleanFolders = folders?.map(({ id, name, type , parent_id }) => ({ id, name, type , parentId: parent_id })) || [];
+        if (deleteError) {
+          console.error("Error deleting file from storage:", deleteError.message);
+          throw new Error("Failed to delete file from storage.");
+        }
+        console.log("File deleted from storage:", filePath);
+      }
   
-    // Combine files and folders and update the state
-    set({
-      allItems: [
-        ...cleanFolders,
-        ...cleanFiles,
-      ],
-    });
-  },
-
-
-
-  addFile: async (file) => {
-    const supabase = createClient();
-    console.log(file)
-    const { data, error } = await supabase.from("files")
-      .insert({
-        name: file.name,
-        parent_id: file.parentId,
-        type: file.type,
-        content_id: file.content_id,
-        user_id: useUserStore.getState().user?.id,
-      })
-      .select();
-      console.log(data, error)
+      // Step 3: Delete the file record from the database
+      const { error: deleteDbError } = await supabase
+        .from("files")
+        .delete()
+        .eq("id", id);
   
-    if (!error && data) {
-      // Update the state with the newly created file
+      if (deleteDbError) {
+        console.error("Error deleting file record from database:", deleteDbError.message);
+        throw new Error("Failed to delete file record from database.");
+      }
+  
+      // Step 4: Update the state to remove the item
       set((state) => ({
-        allItems: [...state.allItems, ...data], // Appending new file to state
+        allItems: state.allItems.filter((item) => item.id !== id),
       }));
   
-    } else {
-      console.error('Error inserting file:', error);
+      console.log("File and record successfully deleted.");
+    } catch (err) {
+      console.error("Error during file deletion process:", err);
+    } finally {
+      // Step 5: Reset deleting state
+      set({ isDeleting: false });
     }
-  },
-  
+  },  
 
-// Add a folder to Supabase
-addFolder: async (folder) => {
-  const supabase = createClient();
-  const { data, error } = await supabase.from("folders")
-    .insert({
-      name: folder.name,
-      parent_id: folder.parentId,
-      type: folder.type,
-      user_id: useUserStore.getState().user?.id,
-    })
-    .select();
+	// New method to set open folders
+	setOpenFolders: (folderId, open) =>
+		set((state) => {
+			const openFolders = new Set(state.openFolders);
+			if (open) {
+				openFolders.add(folderId); // Add folder ID to open set
+			} else {
+				openFolders.delete(folderId); // Remove folder ID from open set
+			}
+			return { openFolders };
+		}),
+	// Fetch files and folders from Supabase
+	fetchFilesAndFolders: async () => {
+		const supabase = createClient();
 
-  if (!error && data) {
-    // Directly append the newly created folder to the allItems state
-    set((state) => ({
-      allItems: [...state.allItems, ...data], // This appends the newly created folder
-    }));
-  } else {
-    console.error('Error inserting folder:', error);
-  }
-},
+		// Fetch files and folders
+		const { data: files, error: filesError } = await supabase
+			.from("files")
+			.select("*");
+		// const { data: folders, error: foldersError } = await supabase.from("folders").select("*");
+
+		// Handle errors
+		if (filesError) {
+			console.log(filesError);
+			return;
+		}
+
+		// Filter and retain only the necessary fields (id, name, type)
+		const cleanFiles =
+			files?.map(({ id, name, type, parent_id, content_id }) => ({
+				id,
+				name,
+				type,
+				parentId: parent_id,
+				content_id,
+			})) || [];
+		// const cleanFolders = folders?.map(({ id, name, type , parent_id }) => ({ id, name, type , parentId: parent_id })) || [];
+
+		// Combine files and folders and update the state
+		set({
+			allItems: [
+				// ...cleanFolders,
+				...cleanFiles,
+			],
+		});
+	},
+
+	addFile: async (file) => {
+		const supabase = createClient();
+		console.log(file);
+		const { data, error } = await supabase
+			.from("files")
+			.insert({
+				name: file.name,
+				parent_id: file.parentId,
+				type: file.type,
+				user_id: useUserStore.getState().user?.id,
+			})
+			.select();
+		console.log(data, error);
+
+		if (!error && data) {
+			// Update the state with the newly created file
+			set((state) => ({
+				allItems: [...state.allItems, ...data], // Appending new file to state
+			}));
+			return data[0].id;
+		}
+		console.error("Error inserting file:", error);
+	},
 
 
-  // Update a file in Supabase
-  updateFile: async (id, updates) => {
-    const supabase = createClient();
-    console.log("updateFile",id, updates);
-    const { data, error } = await supabase.from("files")
-    .update({
-      parent_id: updates.parentId,
-    })
-    .eq("id", id)
-    .select();
-    console.log("updateFile",data, error);
-    if (!error && data) {
-      set((state) => ({
-        allItems: state.allItems.map(item =>
-          item.id === id ? { ...item, ...updates } : item
-        ),
-      }));
-    }
-  },
+	// Update a file in Supabase
+	updateFile: async (id, updates) => {
+		const supabase = createClient();
+		console.log("updateFile", id, updates);
+		const { data, error } = await supabase
+			.from("files")
+			.update({
+				parent_id: updates.parentId,
+			})
+			.eq("id", id)
+			.select();
+		console.log("updateFile", data, error);
+		if (!error && data) {
+			set((state) => ({
+				allItems: state.allItems.map((item) =>
+					item.id === id ? { ...item, ...updates } : item,
+				),
+			}));
+		}
+	},
 
-  // Update a folder in Supabase
-  updateFolder: async (id, updates) => {
-    const supabase = createClient();
-    console.log("updateFolder",id, updates);
-    const { data, error } = await supabase.from("folders").update({
-      parent_id: updates.parentId,
-    }).eq("id", id).select();
-    console.log("updateFolder",data, error);
-    if (!error && data) {
-      set((state) => ({
-        allItems: state.allItems.map(item =>
-          item.id === id ? { ...item, ...updates } : item
-        ),
-      }));
-    }
-  },
+	// Create item
+	createItem: async (name, parentId, type) => {
+		const item = { name, parentId, type };
+		const id = await get().addFile(item as FileItem);
+		await get().fetchFilesAndFolders();
+		return id;
+	},
 
-  // Create item (decides file or folder by type)
-  createItem: async (name, parentId, type, content_id) => {
-    if (["note", "chat", "pdf"].includes(type)) {
-      // File
-      const file = {  name, parentId, type, content_id };
-      await get().addFile(file as FileItem);
-    } else {
-      // Folder
-      const folder = {  name, parentId, type };
-      await get().addFolder(folder as FolderItem);
-    }
-    await get().fetchFilesAndFolders();
-  },
+	handleDrop: (draggedItem, targetId) => {
+		if (!draggedItem || draggedItem.id === targetId) return;
 
-  handleDrop: (draggedItem, targetId) => {
-    if (!draggedItem || draggedItem.id === targetId) return;
-
-    // Handle moving from My Collection to Workspaces or vice versa
-    if (draggedItem.parentId === null && ["note", "chat", "pdf"].includes(draggedItem.type) && targetId) {
-      set((state) => ({
-        allItems: [
-          ...state.allItems.filter((item) => item.id !== draggedItem.id),
-          { ...draggedItem, parentId: targetId },
-        ],
-      }));
-    } else if (draggedItem.parentId && targetId) {
-      set((state) => ({
-        allItems: state.allItems.map((i) =>
-          i.id === draggedItem.id ? { ...i, parentId: targetId } : i
-        ),
-      }));
-    } else {
-      console.error("Invalid drop target.");
-    }
-  },
+		// Handle moving from My Collection to Workspaces or vice versa
+		if (
+			draggedItem.parentId === null &&
+			["note", "pdf"].includes(draggedItem.type) &&
+			targetId
+		) {
+			set((state) => ({
+				allItems: [
+					...state.allItems.filter((item) => item.id !== draggedItem.id),
+					{ ...draggedItem, parentId: targetId },
+				],
+			}));
+		} else if (draggedItem.parentId && targetId) {
+			set((state) => ({
+				allItems: state.allItems.map((i) =>
+					i.id === draggedItem.id ? { ...i, parentId: targetId } : i,
+				),
+			}));
+		} else {
+			console.error("Invalid drop target.");
+		}
+	},
 }));

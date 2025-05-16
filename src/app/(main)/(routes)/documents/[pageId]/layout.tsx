@@ -1,4 +1,3 @@
-"use client"
 import type { ReactNode } from 'react'
 import { useParams } from 'next/navigation'
 import { usePageStore } from '@/store/usePageStore'
@@ -9,7 +8,7 @@ import { useStore } from '@/store/useCollectionStore'
 
 const DashboardLayout = ({children}: {children: ReactNode}) => {
   const {pageId} = useParams()
-  const {isPageLoading,setIsPageLoading,pageData, fetchPageData} = usePageStore()
+  const {isPageLoading,setIsPageLoading, fetchPageData} = usePageStore()
   const {allItems} = useStore()
   const {resolvedTheme} = useTheme()
 

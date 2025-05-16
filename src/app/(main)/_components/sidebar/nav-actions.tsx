@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   ArrowDown,
   ArrowUp,
@@ -19,14 +19,14 @@ import {
   Settings2,
   Trash,
   Trash2,
-} from "lucide-react"
+} from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/popover";
 import {
   Sidebar,
   SidebarContent,
@@ -35,8 +35,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { usePanelStore } from "@/store/usePanelStore"
+} from "@/components/ui/sidebar";
+import { usePanelStore } from "@/store/usePanelStore";
+import { usePageStore } from "@/store/usePageStore";
 
 const data = [
   {
@@ -111,39 +112,47 @@ const data = [
       },
     ],
   },
-]
+];
 
 export function NavActions() {
-  const [isOpen, setIsOpen] = React.useState(false)
-  const {showMiddlePanel, showRightPanel, setShowMiddlePanel, setShowRightPanel } = usePanelStore();
+  const [isOpen, setIsOpen] = React.useState(false);
+  const { panelTabs, setPanelVisibility } = usePanelStore();
+  const { page } = usePageStore();
 
+  const pagePanelVisibility = panelTabs[page.id]?.panelVisibility || { showMiddlePanel: true, showRightPanel: true };
 
   return (
     <div className="flex items-center gap-2 text-sm">
       {/* Panel Toggles */}
-            <Button
-              title={showMiddlePanel ? "Close PDF Panel" : "Open PDF Panel"}
-              aria-label="Toggle PDF Panel"
-              variant="ghost"
-              size="icon"
-              className="size-7"
-              onClick={() => setShowMiddlePanel(!showMiddlePanel)}
-            >
-              {showMiddlePanel ? (
-                <FileX />
-              ) : (
-                <FileText />
-              )}
-            </Button>
+      <Button
+        title={pagePanelVisibility.showMiddlePanel ? "Close PDF Panel" : "Open PDF Panel"}
+        aria-label="Toggle PDF Panel"
+        variant="ghost"
+        size="icon"
+        className="size-7"
+        onClick={() => setPanelVisibility(page.id, { 
+          showMiddlePanel: !pagePanelVisibility.showMiddlePanel, 
+          showRightPanel: pagePanelVisibility.showRightPanel 
+        })}
+      >
+        {pagePanelVisibility.showMiddlePanel ? (
+          <FileX />
+        ) : (
+          <FileText />
+        )}
+      </Button>
       <Button
         variant="ghost"
         size="icon"
         className="size-7"
-        title={showRightPanel ? "Close Chat Bot" : "Open Chat Bot"}
+        title={pagePanelVisibility.showRightPanel ? "Close Chat Bot" : "Open Chat Bot"}
         aria-label="Toggle Chat Bot"
-        onClick={() => setShowRightPanel(!showRightPanel)}
+        onClick={() => setPanelVisibility(page.id, { 
+          showRightPanel: !pagePanelVisibility.showRightPanel, 
+          showMiddlePanel: pagePanelVisibility.showMiddlePanel 
+        })}
       >
-        {showRightPanel ? (
+        {pagePanelVisibility.showRightPanel ? (
           // X icon for open state
           <MessageCircleOff />
         ) : (
@@ -153,9 +162,7 @@ export function NavActions() {
       <div className="hidden font-medium text-muted-foreground md:inline-block">
         Edit Oct 08
       </div>
-      {/* <Button variant="ghost" size="icon" className="h-7 w-7">
-        <Star />
-      </Button> */}
+
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -192,5 +199,5 @@ export function NavActions() {
         </PopoverContent>
       </Popover>
     </div>
-  )
+  );
 }

@@ -1,5 +1,5 @@
 "use client";
-import type { PropsWithChildren } from "react";
+import type{ PropsWithChildren } from "react";
 
 import FullScreenLoading from "@/components/full-screen-loading";
 import dynamic from "next/dynamic";
@@ -22,6 +22,7 @@ export default function MainLayout({ children }: PropsWithChildren) {
       fetchUser();
     }
   });
+
 
   // Show loading while fetching user data
   if (user === undefined) {

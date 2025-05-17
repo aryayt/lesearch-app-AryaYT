@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { FileNode } from "@/app/(main)/_components/sidebar/workspaces/file-node";
+import { FileNode } from "@/components/sidebar/file-node";
 import { SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarGroup } from "@/components/ui/sidebar";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -31,13 +31,14 @@ export function NavWorkspaces() {
   // Helper function to organize files into root (workspace) and child files
   const getFileHierarchy = React.useMemo(() => {
     return (fileList: FileItem[]) => {
-      const rootFiles = fileList.filter((file) => file.parentId === null && file.type === "folder");
+      const rootWorkspaces = fileList.filter((file) => file.parentId === null && file.type === "folder");
+      const rootCollections = fileList.filter((file) => file.parentId === null && file.type !== "folder");
       const getChildFiles = (parentId: string) => fileList.filter((file) => file.parentId === parentId);
-      return { rootFiles, getChildFiles };
+      return { rootWorkspaces, rootCollections, getChildFiles };
     };
   }, []); // Memoize the hierarchy function to prevent recomputation on every render
 
-  const { rootFiles, getChildFiles } = getFileHierarchy(allItems);
+  const { rootWorkspaces, rootCollections, getChildFiles } = getFileHierarchy(allItems);
 
 
   // Fetch workspaces and collections data when the component mounts
@@ -78,16 +79,16 @@ export function NavWorkspaces() {
   const handleDropHandler = async (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
     if (!draggedItem) return;
-  
+
     if (draggedItem.id === targetId) return;
-  
+
     try {
       const targetItem = allItems.find((item) => item.id === targetId);
       if (targetItem && ["pdf", "chat", "note"].includes(targetItem.type)) {
         toast.error("You cannot drop items onto a PDF, Chat, or Note.");
         return;
       }
-  
+
       if (draggedItem.type === "folder") {
         if (targetId === null) {
           await updateFile(draggedItem.id, { parentId: targetId });
@@ -97,14 +98,8 @@ export function NavWorkspaces() {
           toast.success(`Moved folder "${draggedItem.name}" into the folder.`);
         }
       }
-  
-      // Handle project and file moves similarly
-      // if (draggedItem.type === "project") {
-      //   await updateFolder(draggedItem.id, { parentId: targetId });
-      //   toast.success(`Moved project "${draggedItem.name}" to Workspace.`);
-      // }
-  
-      if (draggedItem.type === "note" || draggedItem.type === "pdf" ) {
+
+      if (draggedItem.type === "note" || draggedItem.type === "pdf") {
         if (targetId !== null) {
           await updateFile(draggedItem.id, { parentId: targetId });
           toast.success(`Moved file "${draggedItem.name}" to the folder.`);
@@ -122,59 +117,61 @@ export function NavWorkspaces() {
   // Handle item creation (creating files, folders, etc.)
   const handleCreate = async () => {
     if (!creation || !newName.trim()) return; // Ensure name is entered
-  
     // Call createItem from Zustand store to create a new item
-    createItem(newName, creation.parentId, creation.type);
-      // After creating the item, expand the folder containing it
-  const folder = allItems.find(item => item.id === creation.parentId);
-  if (folder) {
-    setOpenFolders(folder.id, true);  // Open the folder if a new item is created inside it
-  }
+    const id = await createItem(newName, creation.parentId, creation.type);
+
+    if (id) {
+      setActiveItem(id);
+    }
+    // After creating the item, expand the folder containing it
+    const folder = allItems.find(item => item.id === creation.parentId);
+    if (folder) {
+      setOpenFolders(folder.id, true);  // Open the folder if a new item is created inside it
+    }
     // Clear the input and reset the creation state
-    setNewName(""); 
+    setNewName("");
     setCreation(null);
     // Show success toast
     toast.success(`Created new ${creation.type}: "${newName}"`);
   };
 
-
   return (
     <div>
       {/* Workspaces Section */}
-      {rootFiles.length > 0 && (
+      {rootWorkspaces.length > 0 && (
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-        <SidebarGroupLabel>
-          Workspaces
-        </SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            <div className={cn("w-full p-2")}>
-              {/* If there are no workspaces */}
-              {isWorkspacesLoading ? (
-                <div className="text-muted-foreground text-sm px-2">Loading workspaces...</div>
-              ) : (
-                rootFiles.map((file) => (
-                  <FileNode
-                    key={file.id}
-                    file={file}
-                    level={0}
-                    childFiles={getChildFiles(file.id)}
-                    getChildFiles={getChildFiles}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    onDrop={handleDropHandler}
-                    draggedItem={draggedItem}
-                    setDropTarget={setDropTarget}
-                    dropTarget={dropTarget}
-                    isDraggable={file.type!=="folder" && file.parentId!==null}
-                    onRequestCreate={(newItem) => setCreation(newItem)}
-                  />
-                ))
-              )}
-            </div>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>)}
+          <SidebarGroupLabel>
+            Workspaces
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <div className={cn("w-full p-2")}>
+                {/* If there are no workspaces */}
+                {isWorkspacesLoading ? (
+                  <div className="text-muted-foreground text-sm px-2">Loading workspaces...</div>
+                ) : (
+                  rootWorkspaces.map((file) => (
+                    <FileNode
+                      key={file.id}
+                      file={file}
+                      level={0}
+                      childFiles={getChildFiles(file.id)}
+                      getChildFiles={getChildFiles}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                      onDrop={handleDropHandler}
+                      draggedItem={draggedItem}
+                      setDropTarget={setDropTarget}
+                      dropTarget={dropTarget}
+                      isDraggable={file.type !== "folder" && file.parentId !== null}
+                      onRequestCreate={(newItem) => setCreation(newItem)}
+                    />
+                  ))
+                )}
+              </div>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>)}
 
       {/* My Collection Section */}
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
@@ -182,20 +179,20 @@ export function NavWorkspaces() {
           My Collection
         </SidebarGroupLabel>
         <SidebarGroupContent>
-          <SidebarMenu>
+          <SidebarMenu className="w-full p-2">
             {/* If there are no collections */}
             {isCollectionsLoading ? (
               <div className="text-muted-foreground text-sm px-2">Loading collections...</div>
-            ) : allItems.filter((item) => item.parentId === null && ["note", "chat", "pdf"].includes(item.type)).length === 0 ? (
+            ) : rootCollections.length === 0 ? (
               <div className="text-muted-foreground text-sm px-2">No files yet</div>
             ) : (
-              allItems.filter((item) => item.parentId === null && ["note", "chat", "pdf"].includes(item.type)).map((collectionItem) => (
+              rootCollections.map((collectionItem) => (
                 <FileNode
                   key={collectionItem.id}
                   file={collectionItem}
                   level={0}
-                  childFiles={[]}
-                  getChildFiles={() => []}
+                  childFiles={getChildFiles(collectionItem.id)}
+                  getChildFiles={getChildFiles}
                   onDragStart={handleDragStart}
                   onDragEnd={handleDragEnd}
                   onDrop={handleDropHandler}
@@ -214,7 +211,7 @@ export function NavWorkspaces() {
       {/* Dialog for Creating Items */}
       <Dialog open={!!creation} onOpenChange={(open) => open || setCreation(null)}>
         <DialogContent>
-          <DialogTitle>Create {creation?.parentId?creation?.type : "Workspace"}</DialogTitle>
+          <DialogTitle>Create {creation?.parentId === null && creation?.type === "folder" ? "Workspace" : creation?.type}</DialogTitle>
           <div className="space-y-4">
             <Input placeholder="Enter title…" value={newName} onChange={(e) => setNewName(e.target.value)} />
             <Button onClick={handleCreate}>Create</Button>

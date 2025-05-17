@@ -7,7 +7,7 @@ export type FileItem = {
 	name: string;
 	parentId: string | null;
 	type: "folder" | "pdf" | "note";
-	// content_id?: string;
+	content_id?: string;
 };
 
 // Zustand Store for managing files, dragged item, drop target, etc.
@@ -116,7 +116,7 @@ export const useStore = create<Store>((set, get) => ({
       // Step 5: Reset deleting state
       set({ isDeleting: false });
     }
-  },  
+  },
 
 	// New method to set open folders
 	setOpenFolders: (folderId, open) =>
@@ -137,7 +137,6 @@ export const useStore = create<Store>((set, get) => ({
 		const { data: files, error: filesError } = await supabase
 			.from("files")
 			.select("*");
-		// const { data: folders, error: foldersError } = await supabase.from("folders").select("*");
 
 		// Handle errors
 		if (filesError) {
@@ -154,12 +153,10 @@ export const useStore = create<Store>((set, get) => ({
 				parentId: parent_id,
 				content_id,
 			})) || [];
-		// const cleanFolders = folders?.map(({ id, name, type , parent_id }) => ({ id, name, type , parentId: parent_id })) || [];
 
 		// Combine files and folders and update the state
 		set({
 			allItems: [
-				// ...cleanFolders,
 				...cleanFiles,
 			],
 		});
@@ -167,7 +164,6 @@ export const useStore = create<Store>((set, get) => ({
 
 	addFile: async (file) => {
 		const supabase = createClient();
-		console.log(file);
 		const { data, error } = await supabase
 			.from("files")
 			.insert({
@@ -189,11 +185,9 @@ export const useStore = create<Store>((set, get) => ({
 		console.error("Error inserting file:", error);
 	},
 
-
 	// Update a file in Supabase
 	updateFile: async (id, updates) => {
 		const supabase = createClient();
-		console.log("updateFile", id, updates);
 		const { data, error } = await supabase
 			.from("files")
 			.update({
@@ -201,7 +195,6 @@ export const useStore = create<Store>((set, get) => ({
 			})
 			.eq("id", id)
 			.select();
-		console.log("updateFile", data, error);
 		if (!error && data) {
 			set((state) => ({
 				allItems: state.allItems.map((item) =>
@@ -215,7 +208,19 @@ export const useStore = create<Store>((set, get) => ({
 	createItem: async (name, parentId, type) => {
 		const item = { name, parentId, type };
 		const id = await get().addFile(item as FileItem);
-		await get().fetchFilesAndFolders();
+		
+		// Instead of refetching all files, update the state directly
+		if (id) {
+			set((state) => ({
+				allItems: [...state.allItems, {
+					id,
+					name,
+					parentId,
+					type
+				}]
+			}));
+		}
+		
 		return id;
 	},
 

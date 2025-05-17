@@ -1,15 +1,15 @@
 "use client"
 
 import { useEffect } from "react";
-import Navigation from "./_components/Navigation";
-import Hero from "./_components/Hero";
-import ResearchChallenge from "./_components/ResearchChallenge";
-import HowLeSearchWorks from "./_components/HowLeSearchWorks";
-import Benefits from "./_components/Benefits";
-import Features from "./_components/Features";
-import Testimonials from "./_components/Testimonials";
-import FAQ from "./_components/FAQ";
-import Footer from "./_components/Footer";
+import Navigation from "@/components/landing-page/Navigation";
+import Hero from "@/components/landing-page/Hero";
+import ResearchChallenge from "@/components/landing-page/ResearchChallenge";
+import HowLeSearchWorks from "@/components/landing-page/HowLeSearchWorks";
+import Benefits from "@/components/landing-page/Benefits";
+import Features from "@/components/landing-page/Features";
+import Testimonials from "@/components/landing-page/Testimonials";
+import FAQ from "@/components/landing-page/FAQ";
+import Footer from "@/components/landing-page/Footer";
 
 const LandingPage = () => {
   useEffect(() => {

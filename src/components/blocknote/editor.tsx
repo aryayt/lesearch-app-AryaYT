@@ -3,7 +3,7 @@ import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
 import { useCreateBlockNote } from "@blocknote/react";
  
-export default function App() {
+export default function Editor() {
   // Creates a new editor instance.
   const editor = useCreateBlockNote();
  

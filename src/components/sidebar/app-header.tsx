@@ -3,7 +3,7 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import { NavActions } from "../nav-actions";
+import { NavActions } from "./nav-actions";
 import { usePathname } from "next/navigation";
 
 const Header = function Header() {

@@ -1,5 +1,5 @@
 "use client"
-import React, { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Send } from 'lucide-react';
 
 interface Message {
@@ -31,6 +31,7 @@ const RightPanel = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!messages) return;
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
@@ -50,12 +51,6 @@ const RightPanel = () => {
     }, 1200);
   };
 
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
 
   return (
     <div className="flex flex-col h-full w-full bg-gradient-to-b from-slate-50 to-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
@@ -96,9 +91,10 @@ const RightPanel = () => {
         <div className="px-4 pb-3">
           <div className="text-xs text-gray-400 mb-2">Try asking:</div>
           <div className="flex flex-wrap gap-2">
-            {examplePrompts.map((prompt, i) => (
+            {examplePrompts.map((prompt) => (
               <button
-                key={i}
+                key={prompt}
+                type="button"
                 className="bg-gray-100 hover:bg-blue-100 text-gray-700 px-3 py-1 rounded-full text-xs border border-gray-200 transition"
                 onClick={() => setInput(prompt)}
               >
@@ -119,7 +115,12 @@ const RightPanel = () => {
           placeholder="Ask a question about this paper…"
           value={input}
           onChange={e => setInput(e.target.value)}
-          onKeyDown={handleInputKeyDown}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
           disabled={loading}
         />
         <button

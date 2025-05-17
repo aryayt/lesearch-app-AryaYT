@@ -13,6 +13,7 @@ import {
   useAnnotations,
   useSelectionDimensions,
   usePdfJump,
+  AnnotationLayer,
 } from "@anaralabs/lector";
 import React, { useCallback, useEffect, useState } from "react";
 import "pdfjs-dist/web/pdf_viewer.css";
@@ -127,6 +128,7 @@ const PDFContent = ({
       <Page>
         <CanvasLayer />
         <TextLayer />
+        <AnnotationLayer />
         <AnnotationHighlightLayer 
           className="dark:opacity-40 mix-blend-multiply transition-all duration-200 cursor-pointer"
           focusedAnnotationId={focusedAnnotationId}

@@ -80,7 +80,6 @@ export function PDFImport({ isOpen, onClose }: PDFImportProps) {
         throw new Error(errorData.error || 'Failed to upload document');
       }
             
-      
       // Add the PDF name and id to the collection store
       
       // Close the dialog

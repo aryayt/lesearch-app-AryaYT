@@ -10,7 +10,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import SidebarUser from "./sidebar-user"
-import { useSidebarResize } from "./_hooks/useSidebarResize"
+import { useSidebarResize } from "../../hooks/useSidebarResize"
 
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

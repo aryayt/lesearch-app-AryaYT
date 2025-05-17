@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import{ useStore, type FileItem } from "@/store/useCollectionStore";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
-import { usePageStore } from "@/store/usePageStore";
-import { useRouter } from "next/navigation";
+// import { usePageStore } from "@/store/usePageStore";
 
 export type FileNodeProps = {
   file: FileItem;
@@ -41,16 +40,14 @@ export function FileNode({
   isDraggable = false,
   onRequestCreate,
 }: FileNodeProps) {
-  const { openFolders, setOpenFolders, activeItemId, setActiveItem, deleteItem, isDeleting } = useStore();
-  const {pageData, setIsPageLoading} = usePageStore();
+  const { openFolders, setOpenFolders, activeItemId, deleteItem, isDeleting } = useStore();
+  // const {pageData} = usePageStore();
   const isOpen = openFolders.has(file.id); 
   const isDragging = draggedItem?.id === file.id;
   const [hoverTimer, setHoverTimer] = React.useState<NodeJS.Timeout | null>(null); // Timer for hover
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   // const isDropTarget = dropTarget === file.id;
-  // const isActive = page.id === file.content_id; 
-
-  const router = useRouter();
+  // const isActive = pageData?.id === activeItemId; 
 
   const handleDragStart = React.useCallback((e: React.DragEvent) => {
     onDragStart(e, file);
@@ -101,20 +98,12 @@ export function FileNode({
       if (draggedItem || dropTarget || activeItemId) {
         onDragEnd();
         setDropTarget(null);
-        setActiveItem(null);
+        // setActiveItem(null);
       }
     };
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
-  }, [draggedItem, dropTarget, onDragEnd, setDropTarget, setActiveItem, activeItemId]);
-
-  const handleRoute = () => {
-    setIsPageLoading(true)
-    if (file.id && file.id !== pageData?.id) {
-      router.push(`/documents/${file.id}`);
-    }
-    setIsPageLoading(false)
-  };
+  }, [draggedItem, dropTarget, onDragEnd, setDropTarget, activeItemId]);
 
   return (
     <>
@@ -127,7 +116,6 @@ export function FileNode({
             setDropTarget(file.id); // Update the drop target only if it's different from the current state
           }
         }}
-        onClick={handleRoute}
         onDrop={handleDropHandler}
         onDragEnter={handleDragEnter} 
         onDragLeave={handleDragLeave}
@@ -142,12 +130,11 @@ export function FileNode({
             "flex items-center w-full py-1 px-2.5 rounded-md cursor-pointer",
             level > 0 && "ml-4",
             "hover:bg-muted/50",
-            (isDragging || activeItemId === file.id) && "bg-primary/50 text-primary-foreground font-semibold"
+            (isDragging || activeItemId === file.id) && "font-semibold"
           )}
         >
           <div className="relative flex items-center w-full">
             {file.type === "note" || file.type === "pdf" ? <FileText /> : <FolderOpen />}
-            {!["note", "pdf"].includes(file.type) && (
               <Button
                 type="button"
                 variant="ghost"
@@ -157,20 +144,23 @@ export function FileNode({
                   "absolute left-0 flex items-center justify-center z-10 transition-opacity",
                   "opacity-0 hover:opacity-100",
                   "bg-sidebar-accent text-sidebar-accent-foreground rounded-full",
-                  "group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 md:opacity-0"
                 )}
                 onClick={toggleOpen}
               >
                 {isOpen ? <ChevronDown /> : <ChevronRight />}
               </Button>
-            )}
-             <button
-              type="button"
+             {file.type === "note" || file.type === "pdf" ? <Link
+              href={`/documents/${file.id}`}
               className="ml-2 flex-1 truncate bg-transparent border-none p-0 text-left cursor-pointer"
-              // onClick={file.content_id ? handleRoute : toggleOpen}
             >
               {file.name}
-            </button>
+            </Link> : <button
+              type="button"
+              className="ml-2 flex-1 truncate bg-transparent border-none p-0 text-left cursor-pointer"
+              onClick={toggleOpen}
+            >
+              {file.name}
+            </button>}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuAction showOnHover>
@@ -209,7 +199,6 @@ export function FileNode({
         </SidebarMenuButton>
       </SidebarMenuItem>
 
-      {file.type !== "note" && file.type !== "pdf" && (
         <Collapsible open={isOpen} onOpenChange={() => setOpenFolders(file.id, !isOpen)}>
           <CollapsibleContent>
             <div className="border-l border-border ml-4 pl-2">
@@ -232,12 +221,11 @@ export function FileNode({
                   />
                 ))
               ) : (
-                <div className="ml-4 py-1 italic text-sm text-muted-foreground">No files inside</div>
+                <div className="ml-4 py-1 italic text-sm text-muted-foreground truncate">No files inside</div>
               )}
             </div>
           </CollapsibleContent>
         </Collapsible>
-      )}
       {isDeleteDialogOpen && (
         <Dialog
           open={isDeleteDialogOpen}

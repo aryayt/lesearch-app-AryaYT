@@ -8,7 +8,7 @@ import { useUserStore } from "@/store/userStore";
 import { useEffectOnce } from "react-use"; // You'll need to install react-use package
 
 // Dynamically import the layout wrapper for better performance
-const LayoutWrapper = dynamic(() => import("./_components/layout-wrapper"), {
+const LayoutWrapper = dynamic(() => import("../../components/sidebar/layout-wrapper"), {
   ssr: false,
   loading: () => <FullScreenLoading />,
 });

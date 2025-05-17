@@ -19,7 +19,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react";
 import { useStore } from "@/store/useCollectionStore";
-import { PDFImport } from "../pdfviewer/pdf-import"
+import {PDFImport} from "./pdf-import"
 
 export function NavMain() {
    const pathname = usePathname()

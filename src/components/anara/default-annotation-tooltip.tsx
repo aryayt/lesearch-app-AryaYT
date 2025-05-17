@@ -31,6 +31,7 @@ export const DefaultAnnotationTooltipContent = ({
         {colors.map((color) => (
           <button
             type="button"
+            title="Change color"
             key={color}
             className="w-6 h-6 rounded"
             style={{ backgroundColor: color }}

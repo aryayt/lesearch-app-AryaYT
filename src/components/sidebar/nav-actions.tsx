@@ -36,8 +36,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { usePanelStore } from "@/store/usePanelStore";
-import { usePageStore } from "@/store/usePageStore";
+// import { usePanelStore } from "@/store/usePanelStore";
 
 const data = [
   {
@@ -116,10 +115,10 @@ const data = [
 
 export function NavActions() {
   const [isOpen, setIsOpen] = React.useState(false);
-  const { panelTabs, setPanelVisibility } = usePanelStore();
-  const { page } = usePageStore();
+  // const {  setPanelVisibility } = usePanelStore();
+  // const { pageData } = usePanelStore();
 
-  const pagePanelVisibility = panelTabs[page.id]?.panelVisibility || { showMiddlePanel: true, showRightPanel: true };
+  const pagePanelVisibility = { showMiddlePanel: true, showRightPanel: true };
 
   return (
     <div className="flex items-center gap-2 text-sm">
@@ -130,10 +129,10 @@ export function NavActions() {
         variant="ghost"
         size="icon"
         className="size-7"
-        onClick={() => setPanelVisibility(page.id, { 
-          showMiddlePanel: !pagePanelVisibility.showMiddlePanel, 
-          showRightPanel: pagePanelVisibility.showRightPanel 
-        })}
+        // onClick={() => setPanelVisibility(pageData?.id as string, { 
+        //   showMiddlePanel: !pagePanelVisibility.showMiddlePanel, 
+        //   showRightPanel: pagePanelVisibility.showRightPanel 
+        // })}
       >
         {pagePanelVisibility.showMiddlePanel ? (
           <FileX />
@@ -147,10 +146,10 @@ export function NavActions() {
         className="size-7"
         title={pagePanelVisibility.showRightPanel ? "Close Chat Bot" : "Open Chat Bot"}
         aria-label="Toggle Chat Bot"
-        onClick={() => setPanelVisibility(page.id, { 
-          showRightPanel: !pagePanelVisibility.showRightPanel, 
-          showMiddlePanel: pagePanelVisibility.showMiddlePanel 
-        })}
+        // onClick={() => setPanelVisibility(pageData?.id as string, { 
+        //   showRightPanel: !pagePanelVisibility.showRightPanel, 
+        //   showMiddlePanel: pagePanelVisibility.showMiddlePanel 
+        // })}
       >
         {pagePanelVisibility.showRightPanel ? (
           // X icon for open state

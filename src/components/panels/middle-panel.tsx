@@ -4,7 +4,7 @@ import { FileText,File,Plus,X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 // import { PDFViewer } from '@/components/pdf-viewer/pdfViewer'
 import Editor from '@/components/blocknote/editor'
-import { AnaraViewer } from './anara/_components/anara'
+import { AnaraViewer } from '../anara/anara'
 
 type TabType = 'pdf' | 'note'
 interface Tab {

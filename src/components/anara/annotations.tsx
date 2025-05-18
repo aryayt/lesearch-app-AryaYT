@@ -120,7 +120,8 @@ export const TooltipContent = ({ annotation, onClose }: TooltipContentProps) => 
             type="button"
             title="color"
               key={color}
-              className={`w-6 h-6 rounded bg-${color}`}
+              className={'w-6 h-6 rounded'}
+              style={{ backgroundColor: color }}
               onClick={(e) => handleColorChange(e, color)}
             />
           ))}

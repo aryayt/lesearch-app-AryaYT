@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { type FileItem, useStore } from "@/store/useCollectionStore"; // Import Zustand store
+import { usePanelStore } from "@/store/usePanelStore";
 
 export function NavWorkspaces() {
   // Accessing Zustand store state and actions
@@ -19,14 +20,35 @@ export function NavWorkspaces() {
     setDropTarget,
     setCreation,
     createItem,
+    createNote,
     updateFile,
     fetchFilesAndFolders,
     setActiveItem,
     setOpenFolders,
   } = useStore();
+  const {addTab, setLeftActiveTabId} = usePanelStore()
   const [newName, setNewName] = React.useState(""); // Declare newName and setNewName
   const [isWorkspacesLoading, setIsWorkspacesLoading] = React.useState(false);
   const [isCollectionsLoading, setIsCollectionsLoading] = React.useState(false);
+  const [dialogContent, setDialogContent] = React.useState(creation);
+
+  // Update dialogContent when creation changes
+  React.useEffect(() => {
+    if (creation) {
+      setDialogContent(creation);
+    }
+  }, [creation]);
+
+  // Handle dialog close
+  const handleDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      // Wait for animation to complete before clearing dialog content
+      setTimeout(() => {
+        setDialogContent(null);
+      }, 300); // Match this with your animation duration
+      setCreation(null);
+    }
+  };
 
   // Helper function to organize files into root (workspace) and child files
   const getFileHierarchy = React.useMemo(() => {
@@ -120,8 +142,8 @@ export function NavWorkspaces() {
     if (!creation || !newName.trim()) return; // Ensure name is entered
     // Call createItem from Zustand store to create a new item
     const id = await createItem(newName, creation.parentId, creation.type);
-
-    if (id) {
+    const data = await createNote(id, newName);
+    if (id && data && !creation.parentId) {
       setActiveItem(id);
     }
     // After creating the item, expand the folder containing it
@@ -134,8 +156,30 @@ export function NavWorkspaces() {
     setCreation(null);
     // Show success toast
     toast.success(`Created new ${creation.type}: "${newName}"`);
+    window.location.href = `/documents/${id}`;
+
   };
 
+  const handleCreateFromPanel = async () => {
+    if (!creation || !newName.trim()) return; // Ensure name is entered
+    // Call createItem from Zustand store to create a new item
+    const id = await createItem(newName, creation.parentId, creation.type);
+    const data = await createNote(id, newName);
+    
+    if(data){
+      const tabs = await addTab(id as string, 'note', 'left');
+      console.log("updatedtabs-->", tabs)
+      setLeftActiveTabId(id as string);
+    }
+
+    // Clear the input and reset the creation state
+    setNewName("");
+    setCreation(null);
+    // Show success toast
+    toast.success(`Added new note: "${newName}"}`);
+  };
+
+ 
   return (
     <div>
       {/* Workspaces Section */}
@@ -180,7 +224,8 @@ export function NavWorkspaces() {
           My Collection
         </SidebarGroupLabel>
         <SidebarGroupContent>
-          <SidebarMenu className="w-full p-2">
+          <SidebarMenu className="w-full gap-0">
+          <div className={cn("w-full p-2")}>
             {/* If there are no collections */}
             {isCollectionsLoading ? (
               <div className="text-muted-foreground text-sm px-2">Loading collections...</div>
@@ -206,17 +251,23 @@ export function NavWorkspaces() {
                 />
               ))
             )}
+            </div>
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
 
       {/* Dialog for Creating Items */}
-      <Dialog open={!!creation} onOpenChange={(open) => open || setCreation(null)}>
+      <Dialog open={!!creation} onOpenChange={handleDialogOpenChange}>
         <DialogContent>
-          <DialogTitle>Create {creation?.parentId === null && creation?.type === "folder" ? "Workspace" : creation?.type}</DialogTitle>
+          <DialogTitle>
+            Create&nbsp;
+            {dialogContent?.parentId === null && dialogContent?.type === "folder" 
+              ? "Workspace" 
+              : `${(dialogContent?.type || "").charAt(0).toUpperCase()}${(dialogContent?.type || "").slice(1).toLowerCase()}`}
+          </DialogTitle>
           <div className="space-y-4">
             <Input placeholder="Enter title…" value={newName} onChange={(e) => setNewName(e.target.value)} />
-            <Button onClick={handleCreate}>Create</Button>
+            {dialogContent?.panel ? <Button onClick={handleCreateFromPanel}>Add Note</Button> : <Button onClick={handleCreate}>Create</Button>}
           </div>
         </DialogContent>
       </Dialog>

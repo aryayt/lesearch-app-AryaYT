@@ -5,25 +5,31 @@ import { File, FileText, Plus, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import Editor from '../blocknote/editor';
 import { AnaraViewer } from '../anara/anara';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { useStore } from '@/store/useCollectionStore';
 
 const LeftPanel = () => {
-  const { activePageId, getLeftPanelTabs, removeTab } = usePanelStore();
+  const { activePageId, getLeftPanelTabs, removeTab, leftActiveTabId, setLeftActiveTabId } = usePanelStore();
+  const { setCreation } = useStore();
   const tabs = getLeftPanelTabs();
-  const mainTab = tabs.find(tab => tab.id === activePageId);
-  const [activeTabId, setActiveTabId] = React.useState(mainTab?.id);
+ 
 
   // Update activeTabId when activePageId changes
   useEffect(() => {
     const tab = tabs.find(tab => tab.id === activePageId);
     if (tab) {
-      setActiveTabId(tab.id);
+      setLeftActiveTabId(tab.id);
     }
-  }, [activePageId, tabs]);
+  }, [activePageId, tabs, setLeftActiveTabId]);
+
+  const handleAddNote = () => {
+    setCreation({ parentId: activePageId, type: "note", panel: 'left' });
+  }
 
   if (tabs.length === 0) return null;
 
   return (
-    <Tabs value={activeTabId} onValueChange={setActiveTabId} defaultValue={activeTabId as string} className="flex flex-col w-full h-full">
+    <Tabs value={leftActiveTabId} onValueChange={setLeftActiveTabId} defaultValue={leftActiveTabId as string} className="flex flex-col w-full h-full">
       <TabsList className="w-full p-0 bg-background justify-start border-b border-border rounded-none flex-shrink-0 h-8 overflow-hidden">
         <div className="flex flex-1 min-w-0 h-full overflow-x-auto no-scrollbar">
           {tabs.map((tab) => (
@@ -35,7 +41,7 @@ const LeftPanel = () => {
                 {tab.type === 'pdf' ? <FileText size={15} className="text-blue-500" /> : <File size={15} className="text-emerald-500" />}
                 <span className="truncate">{tab.name}</span>
               </TabsTrigger>
-              {tabs.length > 1 && tab.id !== activeTabId && (
+              {tabs.length > 1 && tab.id !== leftActiveTabId && (
                 <button
                   type="button"
                   aria-label={`Close ${tab.name}`}
@@ -52,18 +58,19 @@ const LeftPanel = () => {
             </div>
           ))}
         </div>
-        <div className="flex items-center h-full flex-shrink-0 px-1">
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              aria-label="Add tab"
-            >
-              <Plus size={16} />
-            </Button>
-          </div>
-        </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Plus size={16} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={handleAddNote}>
+                <FileText size={16} />
+                Add Note
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
       </TabsList>
       <div className="flex-1 overflow-hidden">
         {tabs.map((tab: Tab) => (

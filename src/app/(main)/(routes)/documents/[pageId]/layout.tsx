@@ -4,13 +4,12 @@ import { useParams } from 'next/navigation'
 import { useEffect } from 'react'
 import { useStore } from '@/store/useCollectionStore'
 import { usePanelStore } from '@/store/usePanelStore'
-import { LoaderIcon } from 'lucide-react'
 
 
 const DashboardLayout = ({children}: {children: ReactNode}) => {
   const {pageId} = useParams()
   const {allItems , setActiveItem} = useStore()
-  const {isLoading, setActivePageId, addTab, getLeftPanelTabs} = usePanelStore()
+  const {setActivePageId, addTab, getLeftPanelTabs} = usePanelStore()
   
 
   useEffect(() => {
@@ -23,6 +22,7 @@ const DashboardLayout = ({children}: {children: ReactNode}) => {
     }
     setActiveItem(pageId as string);
     setActivePageId(pageId as string);
+    console.log(getLeftPanelTabs())
     
     // Define async function inside the effect
     async function loadPageData() {
@@ -44,10 +44,6 @@ const DashboardLayout = ({children}: {children: ReactNode}) => {
   }, [pageId, allItems, setActiveItem, setActivePageId, addTab, getLeftPanelTabs]);
 
   return (
-    isLoading ? 
-    <div className="h-full w-full flex items-center justify-center">
-      <LoaderIcon className="h-6 w-6 animate-spin" />
-    </div> : 
     <div className="h-full w-full flex">
       {children}
     </div>

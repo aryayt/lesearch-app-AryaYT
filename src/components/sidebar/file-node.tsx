@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { FileText, FolderOpen, ChevronDown, ChevronRight, MoreHorizontal, Plus, Trash2, Star, ArrowUpRight, Loader2, X } from "lucide-react";
+import { FileText, FolderOpen, ChevronDown, ChevronRight, MoreHorizontal, Plus, Trash2, Star, ArrowUpRight, Loader2, X, FilePen } from "lucide-react";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { SidebarMenuAction, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -44,7 +44,7 @@ export function FileNode({
   isCollection = false,
 }: FileNodeProps) {
   const { openFolders, setOpenFolders, activeItemId, deleteItem, isDeleting, moveToCollection } = useStore();
-  const {activePageId} = usePanelStore();
+  const {activePageId, addTab} = usePanelStore();
   const isOpen = openFolders.has(file.id); 
   const isDragging = draggedItem?.id === file.id;
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
@@ -129,7 +129,7 @@ export function FileNode({
           )}
         >
           <div className="relative flex items-center w-full">
-            {file.type === "note" || file.type === "pdf" ? <FileText /> : <FolderOpen />}
+            {file.type !== "folder" ? file.type === "note" ? <FilePen /> : <FileText /> : <FolderOpen />}
               <Button
                 type="button"
                 variant="ghost"
@@ -181,9 +181,9 @@ export function FileNode({
                 <DropdownMenuItem>
                   <Link href={file.id}>Copy Link</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <ArrowUpRight /> Open in New Tab
-                </DropdownMenuItem>
+                {file.type !== "folder" && <DropdownMenuItem onSelect={() => addTab(file.id, file.type as "note" | "pdf", 'left')}>
+                  <ArrowUpRight /> Open in Left Panel
+                </DropdownMenuItem>}
                 <DropdownMenuSeparator />
                 {!isCollection && file.type !== "folder" && <DropdownMenuItem onSelect={handleMoveToCollection}>
                   <X /> Move to Collection

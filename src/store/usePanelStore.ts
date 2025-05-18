@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { createClient } from '@/lib/supabase/client';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 // Unified Tab type for UI
 export interface Tab {
@@ -14,6 +15,7 @@ export interface Tab {
 interface PanelStore {
   /* State */
   activePageId: string | null;
+  leftActiveTabId: string;
   isLoading: boolean;
   error: string | null;
   pageTabs: Record<
@@ -23,6 +25,7 @@ interface PanelStore {
 
   /* State setters */
   setActivePageId: (pageId: string) => void;
+  setLeftActiveTabId: (tabId: string) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
@@ -78,90 +81,125 @@ async function fetchPageData(
   };
 }
 
-export const usePanelStore = create<PanelStore>((set, get) => ({
-  /* Initial State */
-  activePageId: null,
-  isLoading: false,
-  error: null,
-  pageTabs: {},
+type PersistedState = Pick<PanelStore, 'pageTabs' | 'activePageId' | 'leftActiveTabId'>;
 
-  /* State setters */
-  setActivePageId: (pageId) => set({ activePageId: pageId }),
-  setLoading: (loading) => set({ isLoading: loading }),
-  setError: (error) => set({ error }),
-  clearError: () => set({ error: null }),
+export const usePanelStore = create(
+  persist<PanelStore, [], [], PersistedState>(
+    (set, get) => ({
+    /* Initial State */
+    activePageId: null,
+    leftActiveTabId: "",
+    isLoading: false,
+    error: null,
+    pageTabs: {},
 
-  /* Getters for current active page */
-  getLeftPanelTabs: () => {
-    const activeId = get().activePageId;
-    if(!activeId) {
-      return [];
-    }
-    const leftPanelTabs = get().pageTabs[activeId]?.leftPanelTabs ?? [];
-    return leftPanelTabs;
-  },
-  getMiddlePanelTabs: () => {
-    const pageId = get().activePageId;
-    return pageId
-      ? get().pageTabs[pageId]?.middlePanelTabs ?? []
-      : [];
-  },
+    /* State setters */
+    setActivePageId: (pageId) => set({ activePageId: pageId }),
+    setLeftActiveTabId: (tabId) => set({ leftActiveTabId: tabId }),
+    setLoading: (loading) => set({ isLoading: loading }),
+    setError: (error) => set({ error }),
+    clearError: () => set({ error: null }),
 
-  /* Unified add/remove tab methods */
-  addTab: async (pageId, pageType, panel) => {
-    set({ isLoading: true, error: null });
-    try {
-      const tab = await fetchPageData(pageId, pageType);
+    /* Getters for current active page */
+    getLeftPanelTabs: () => {
+      const activeId = get().activePageId;
+      if(!activeId) {
+        return [];
+      }
+      const leftPanelTabs = get().pageTabs[activeId]?.leftPanelTabs ?? [];
+      return leftPanelTabs;
+    },
+    getMiddlePanelTabs: () => {
+      const pageId = get().activePageId;
+      return pageId
+        ? get().pageTabs[pageId]?.middlePanelTabs ?? []
+        : [];
+    },
+
+    /* Unified add/remove tab methods */
+    addTab: async (pageId, pageType, panel) => {
+      set({ isLoading: true, error: null });
+      try {
+        const activePageId = get().activePageId;
+        if (!activePageId) return;
+
+        // Check if tab already exists in the specified panel
+        const existing = get().pageTabs[activePageId] || {
+          leftPanelTabs: [],
+          middlePanelTabs: [],
+        };
+        
+        const tabExists = panel === 'left' 
+          ? existing.leftPanelTabs.some(tab => tab.id === pageId)
+          : existing.middlePanelTabs.some(tab => tab.id === pageId);
+
+        if (tabExists) {
+          console.log("Tab already exists, skipping fetch");
+          return;
+        }
+
+        console.log("Fetching new tab data-->", pageId, pageType, panel);
+        const tab = await fetchPageData(pageId, pageType);
+        
+        set((state) => {
+          const updated = { ...existing };
+          if (panel === 'left') {
+            updated.leftPanelTabs = [...updated.leftPanelTabs, tab];
+          } else {
+            updated.middlePanelTabs = [...updated.middlePanelTabs, tab];
+          }
+
+          return {
+            pageTabs: {
+              ...state.pageTabs,
+              [activePageId]: updated,
+            },
+          };
+        });
+      } catch (err) {
+        console.error('Error adding tab:', err);
+        set({ error: err instanceof Error ? err.message : String(err) });
+      } finally {
+        set({ isLoading: false });
+      }
+    },
+
+    removeTab: (tabId, panel) => {
+      const activePageId = get().activePageId;
+      if (!activePageId) return;
       set((state) => {
-        const existing = state.pageTabs[pageId] || {
+        const existing = state.pageTabs[activePageId] || {
           leftPanelTabs: [],
           middlePanelTabs: [],
         };
         const updated = { ...existing };
         if (panel === 'left') {
-          updated.leftPanelTabs = [...updated.leftPanelTabs, tab];
+          updated.leftPanelTabs = existing.leftPanelTabs.filter(
+            (t) => t.id !== tabId
+          );
         } else {
-          updated.middlePanelTabs = [...updated.middlePanelTabs, tab];
+          updated.middlePanelTabs = existing.middlePanelTabs.filter(
+            (t) => t.id !== tabId
+          );
         }
         return {
           pageTabs: {
             ...state.pageTabs,
-            [pageId]: updated,
+            [activePageId]: updated,
           },
         };
       });
-    } catch (err) {
-      console.error('Error adding tab:', err);
-      set({ error: err instanceof Error ? err.message : String(err) });
-    } finally {
-      set({ isLoading: false });
-    }
-  },
-
-  removeTab: (tabId, panel) => {
-    const activePageId = get().activePageId;
-    if (!activePageId) return;
-    set((state) => {
-      const existing = state.pageTabs[activePageId] || {
-        leftPanelTabs: [],
-        middlePanelTabs: [],
-      };
-      const updated = { ...existing };
-      if (panel === 'left') {
-        updated.leftPanelTabs = existing.leftPanelTabs.filter(
-          (t) => t.id !== tabId
-        );
-      } else {
-        updated.middlePanelTabs = existing.middlePanelTabs.filter(
-          (t) => t.id !== tabId
-        );
-      }
-      return {
-        pageTabs: {
-          ...state.pageTabs,
-          [activePageId]: updated,
-        },
-      };
-    });
-  },
-}));
+    },
+  }),
+  {
+    name: 'panel-storage',
+    storage: createJSONStorage(() => localStorage),
+    partialize: (state) => ({
+      pageTabs: state.pageTabs,
+      activePageId: state.activePageId,
+      leftActiveTabId: state.leftActiveTabId,
+    }),
+  }
+  )
+);
+  

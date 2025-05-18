@@ -67,7 +67,7 @@ export async function POST(request: Request) {
 				id: id,
 				name: file.name,
 				pdf_url: publicUrl,
-        file_path: filePath,
+        		file_path: filePath,
 				file_type: file.type,
 				user_id: userId,
 				size: file.size,

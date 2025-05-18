@@ -15,7 +15,7 @@ type Store = {
 	allItems: FileItem[]; // All files
 	draggedItem: FileItem | null; // Currently dragged item
 	dropTarget: string | null; // Drop target item
-	creation: { parentId: string | null; type: FileItem["type"] } | null; // Creation dialog state
+	creation: { parentId: string | null; type: FileItem["type"]; panel?: 'left' | 'right' } | null; // Creation dialog state
 	openFolders: Set<string>; // Set of open folders
 	activeItemId: string | null; // Track the active item by its ID
 	isDeleting: boolean;
@@ -24,7 +24,7 @@ type Store = {
 	setDraggedItem: (item: FileItem | null) => void;
 	setDropTarget: (targetId: string | null) => void;
 	setCreation: (
-		newCreation: { parentId: string | null; type: FileItem["type"] } | null,
+		newCreation: { parentId: string | null; type: FileItem["type"]; panel?: 'left' | 'right' } | null,
 	) => void;
 	createItem: (
 		name: string,
@@ -32,13 +32,12 @@ type Store = {
 		type: FileItem["type"],
 		content_id?: string,
 	) => Promise<string>;
+	createNote: (id: string, name: string) => Promise<string>;
 	handleDrop: (draggedItem: FileItem | null, targetId: string | null) => void;
 	setOpenFolders: (folderId: string, open: boolean) => void;
 	fetchFilesAndFolders: () => Promise<void>;
 	addFile: (file: FileItem) => Promise<string>;
-	// addFolder: (folder: FolderItem) => Promise<void>;
 	updateFile: (id: string, updates: Partial<FileItem>) => Promise<void>;
-	// updateFolder: (id: string, updates: Partial<FolderItem>) => Promise<void>;
 	deleteItem: (id: string, type: FileItem["type"]) => Promise<void>;
 	setActiveItem: (itemId: string | null) => void; // Method to set the active item
 	moveToCollection: (id: string) => Promise<void>;
@@ -92,6 +91,26 @@ export const useStore = create<Store>((set, get) => ({
 			console.error("Error moving to collection:", error);
 			throw error;
 		}
+	},
+
+	createNote: async (id: string, name: string) => {
+		const supabase = createClient();
+		const { data, error } = await supabase
+			.from("notes")
+			.insert({ id, name, user_id: useUserStore.getState().user?.id })
+			.select()
+			.single();
+		if (error) {
+			const {error: deleteError} = await supabase
+			.from("files")
+			.delete()
+			.eq("id", id);
+			if(deleteError) {
+				console.log("Error deleting file:", deleteError);
+			}
+			return null;
+		}
+		return data;
 	},
 
   deleteItem: async (id, type) => {
@@ -210,7 +229,6 @@ export const useStore = create<Store>((set, get) => ({
 				user_id: useUserStore.getState().user?.id,
 			})
 			.select();
-		console.log(data, error);
 
 		if (!error && data) {
 			// Update the state with the newly created file

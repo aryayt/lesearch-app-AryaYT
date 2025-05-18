@@ -5,14 +5,14 @@ import {
   PanelGroup,
   PanelResizeHandle,
 } from "react-resizable-panels";
-// import MiddlePanel from "@/components/panels/middle-panel";
-// import RightPanel from "@/components/panels/right-panel";
+import MiddlePanel from "@/components/panels/middle-panel";
+import RightPanel from "@/components/panels/right-panel";
 
 
 const DashboardPage = () => {
   const initialVisibility = {
-    showMiddlePanel: false,
-    showRightPanel: false,
+    showMiddlePanel: true,
+    showRightPanel: true,
   };
   return (
     <div className="h-full w-full px-1 relative overflow-hidden">
@@ -39,7 +39,7 @@ const DashboardPage = () => {
               order={2}
               className="border-r-2 border-gray-200 flex flex-col rounded-xl shadow-xl overflow-y-scroll h-full"
             >
-              <div>Middle Panel</div>
+              <MiddlePanel />
             </Panel>
           </>
         )}
@@ -55,7 +55,7 @@ const DashboardPage = () => {
               order={3}
               className="border-r border-gray-200 flex flex-col rounded-xl shadow-xl h-full"
             >
-              <div>Right Panel</div>
+              <RightPanel />
             </Panel>
           </>
         )}

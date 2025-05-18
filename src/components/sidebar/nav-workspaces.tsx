@@ -165,10 +165,8 @@ export function NavWorkspaces() {
     // Call createItem from Zustand store to create a new item
     const id = await createItem(newName, creation.parentId, creation.type);
     const data = await createNote(id, newName);
-    
     if(data){
-      const tabs = await addTab(id as string, 'note', 'left');
-      console.log("updatedtabs-->", tabs)
+       await addTab(id as string, 'note', 'left');
       setLeftActiveTabId(id as string);
     }
 

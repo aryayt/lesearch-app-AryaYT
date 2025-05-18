@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { type Tab, usePanelStore } from '@/store/usePanelStore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { File, FileText, Plus, X } from 'lucide-react';
+import { FilePen, FileText, Plus, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import Editor from '../blocknote/editor';
 import { AnaraViewer } from '../anara/anara';
@@ -38,10 +38,10 @@ const LeftPanel = () => {
                 value={tab.id}
                 className="flex items-center gap-1 px-3 h-full text-xs font-medium leading-none truncate max-w-[180px] rounded-none shadow-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-muted-foreground data-[state=active]:text-foreground hover:bg-gray-100 dark:hover:bg-gray-800 border-b-2 border-transparent data-[state=active]:border-b-primary -mb-[2px] pr-6"
               >
-                {tab.type === 'pdf' ? <FileText size={15} className="text-blue-500" /> : <File size={15} className="text-emerald-500" />}
+                {tab.type === 'pdf' ? <FileText size={15}  /> : <FilePen size={15} />}
                 <span className="truncate">{tab.name}</span>
               </TabsTrigger>
-              {tabs.length > 1 && tab.id !== leftActiveTabId && (
+              {tabs.length > 1 && tab.id !== activePageId && (
                 <button
                   type="button"
                   aria-label={`Close ${tab.name}`}

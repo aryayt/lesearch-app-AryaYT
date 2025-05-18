@@ -93,10 +93,12 @@ export const usePanelStore = create<PanelStore>((set, get) => ({
 
   /* Getters for current active page */
   getLeftPanelTabs: () => {
-    const pageId = get().activePageId;
-    return pageId
-      ? get().pageTabs[pageId]?.leftPanelTabs ?? []
-      : [];
+    const activeId = get().activePageId;
+    if(!activeId) {
+      return [];
+    }
+    const leftPanelTabs = get().pageTabs[activeId]?.leftPanelTabs ?? [];
+    return leftPanelTabs;
   },
   getMiddlePanelTabs: () => {
     const pageId = get().activePageId;

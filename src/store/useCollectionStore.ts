@@ -41,6 +41,7 @@ type Store = {
 	// updateFolder: (id: string, updates: Partial<FolderItem>) => Promise<void>;
 	deleteItem: (id: string, type: FileItem["type"]) => Promise<void>;
 	setActiveItem: (itemId: string | null) => void; // Method to set the active item
+	moveToCollection: (id: string) => Promise<void>;
 };
 
 export const useStore = create<Store>((set, get) => ({
@@ -56,6 +57,42 @@ export const useStore = create<Store>((set, get) => ({
 	setDropTarget: (targetId) => set({ dropTarget: targetId }),
 	setCreation: (newCreation) => set({ creation: newCreation }),
 	setActiveItem: (itemId) => set({ activeItemId: itemId }),
+	moveToCollection: async (id) => {
+		const supabase = createClient();
+		try {
+			const { data, error } = await supabase
+				.from("files")
+				.update({ parent_id: null })
+				.eq("id", id)
+				.select();
+
+			if (error) {
+				throw error;
+			}
+
+			if (data?.[0]) {
+				// Update the state with the modified item
+				set((state) => {
+					const updatedItems = state.allItems.map((item) =>
+						item.id === id ? { ...item, parentId: null } : item
+					);
+					
+					return {
+						allItems: updatedItems,
+						// Reset any active selections or states that might need updating
+						draggedItem: null,
+						dropTarget: null
+					};
+				});
+
+				// Trigger a fetch to ensure we have the latest data
+				await get().fetchFilesAndFolders();
+			}
+		} catch (error) {
+			console.error("Error moving to collection:", error);
+			throw error;
+		}
+	},
 
   deleteItem: async (id, type) => {
     const supabase = createClient();

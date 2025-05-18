@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { type Tab, usePanelStore } from '@/store/usePanelStore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { File, FileText, Plus, X } from 'lucide-react';
@@ -12,10 +12,18 @@ const LeftPanel = () => {
   const mainTab = tabs.find(tab => tab.id === activePageId);
   const [activeTabId, setActiveTabId] = React.useState(mainTab?.id);
 
+  // Update activeTabId when activePageId changes
+  useEffect(() => {
+    const tab = tabs.find(tab => tab.id === activePageId);
+    if (tab) {
+      setActiveTabId(tab.id);
+    }
+  }, [activePageId, tabs]);
+
   if (tabs.length === 0) return null;
 
   return (
-    <Tabs value={activeTabId} onValueChange={setActiveTabId} className="flex flex-col w-full h-full">
+    <Tabs value={activeTabId} onValueChange={setActiveTabId} defaultValue={activeTabId as string} className="flex flex-col w-full h-full">
       <TabsList className="w-full p-0 bg-background justify-start border-b border-border rounded-none flex-shrink-0 h-8 overflow-hidden">
         <div className="flex flex-1 min-w-0 h-full overflow-x-auto no-scrollbar">
           {tabs.map((tab) => (

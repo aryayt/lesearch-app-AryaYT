@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { FileText, FolderOpen, ChevronDown, ChevronRight, MoreHorizontal, Plus, Trash2, Star, ArrowUpRight, Loader2 } from "lucide-react";
+import { FileText, FolderOpen, ChevronDown, ChevronRight, MoreHorizontal, Plus, Trash2, Star, ArrowUpRight, Loader2, X } from "lucide-react";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { SidebarMenuAction, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import{ useStore, type FileItem } from "@/store/useCollectionStore";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
-// import { usePageStore } from "@/store/usePageStore";
+import { usePanelStore } from "@/store/usePanelStore";
+import { toast } from "sonner";
 
 export type FileNodeProps = {
   file: FileItem;
@@ -24,6 +25,7 @@ export type FileNodeProps = {
   isDraggable?: boolean;
   defaultOpen?: boolean;
   onRequestCreate: (c: { parentId: string | null; type: FileItem["type"]; }) => void;
+  isCollection?: boolean;
 };
 
 export function FileNode({
@@ -39,15 +41,20 @@ export function FileNode({
   dropTarget,
   isDraggable = false,
   onRequestCreate,
+  isCollection = false,
 }: FileNodeProps) {
-  const { openFolders, setOpenFolders, activeItemId, deleteItem, isDeleting } = useStore();
-  // const {pageData} = usePageStore();
+  const { openFolders, setOpenFolders, activeItemId, deleteItem, isDeleting, moveToCollection } = useStore();
+  const {activePageId} = usePanelStore();
   const isOpen = openFolders.has(file.id); 
   const isDragging = draggedItem?.id === file.id;
-  const [hoverTimer, setHoverTimer] = React.useState<NodeJS.Timeout | null>(null); // Timer for hover
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
-  // const isDropTarget = dropTarget === file.id;
-  // const isActive = pageData?.id === activeItemId; 
+  const isActive = file.id === activePageId;
+
+
+  const handleMoveToCollection = React.useCallback(async () => {
+    await moveToCollection(file.id);
+    toast.success("Moved to collection");
+  }, [moveToCollection, file.id]);
 
   const handleDragStart = React.useCallback((e: React.DragEvent) => {
     onDragStart(e, file);
@@ -67,31 +74,19 @@ export function FileNode({
 
   const toggleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setOpenFolders(file.id, !isOpen);
+      setOpenFolders(file.id, !isOpen);
   };
 
   // Memoize file structure retrieval and file dragging logic
   const handleDragEnter = React.useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (hoverTimer) {
-      clearTimeout(hoverTimer);
-    }
-    const newTimer = setTimeout(() => {
-      setOpenFolders(file.id, true);
-    }, 300);
-    setHoverTimer(newTimer);
-  }, [hoverTimer, setOpenFolders, file.id]);
-
-  const handleDragLeave = React.useCallback(() => {
-    if (hoverTimer) {
-      clearTimeout(hoverTimer);
-      setHoverTimer(null);
-    }
-    if (dropTarget === file.id) {
-      setDropTarget(null);
-    }
-  }, [hoverTimer, dropTarget, setDropTarget, file.id]);
+  }, []);
+  
+  const handleDragLeave = React.useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
 
   React.useEffect(() => {
     const handleClick = () => {
@@ -122,7 +117,7 @@ export function FileNode({
       >
         <SidebarMenuButton
           asChild
-          // isActive={isActive}
+          isActive={isActive}
           draggable={isDraggable}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
@@ -130,7 +125,7 @@ export function FileNode({
             "flex items-center w-full py-1 px-2.5 rounded-md cursor-pointer",
             level > 0 && "ml-4",
             "hover:bg-muted/50",
-            (isDragging || activeItemId === file.id) && "font-semibold"
+            // isDropTarget && "bg-muted/50"
           )}
         >
           <div className="relative flex items-center w-full">
@@ -173,9 +168,9 @@ export function FileNode({
                   <Star className="text-muted-foreground" />
                   <span>Add to Favorites</span>
                 </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => onRequestCreate({ parentId: file.id, type: "folder" })}>
+                  {file.type === "folder" && <DropdownMenuItem onSelect={() => onRequestCreate({ parentId: file.id, type: "folder" })}>
                     <Plus /> New Folder
-                  </DropdownMenuItem>
+                  </DropdownMenuItem>}
                   <DropdownMenuItem onSelect={() => onRequestCreate({ parentId: file.id, type: "note" })}>
                     <Plus /> New Note
                   </DropdownMenuItem>
@@ -190,6 +185,9 @@ export function FileNode({
                   <ArrowUpRight /> Open in New Tab
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                {!isCollection && file.type !== "folder" && <DropdownMenuItem onSelect={handleMoveToCollection}>
+                  <X /> Move to Collection
+                </DropdownMenuItem>}
                 <DropdownMenuItem onSelect={handleDelete}>
                   <Trash2 /> Delete
                 </DropdownMenuItem>

@@ -10,25 +10,23 @@ import { LoaderIcon } from 'lucide-react'
 const DashboardLayout = ({children}: {children: ReactNode}) => {
   const {pageId} = useParams()
   const {allItems , setActiveItem} = useStore()
-  const {isLoading, setActivePageId, addTab} = usePanelStore()
+  const {isLoading, setActivePageId, addTab, getLeftPanelTabs} = usePanelStore()
   
 
   useEffect(() => {
     if (!pageId) return; // Early return if no pageId
 
-    // Find the page in allItems
-    console.log(allItems);
     const page = allItems.find(item => item.id === pageId);
     if (!page) {
       console.log('Page not found in allItems:', pageId);
       return;
     }
+    setActiveItem(pageId as string);
+    setActivePageId(pageId as string);
     
     // Define async function inside the effect
     async function loadPageData() {
       // Set active item in collection store to highlight it in the sidebar
-      setActiveItem(pageId as string);
-      setActivePageId(pageId as string);
       
       // Use optional chaining to safely access page properties
       if (page?.type) {
@@ -37,9 +35,13 @@ const DashboardLayout = ({children}: {children: ReactNode}) => {
         console.error('Page or page type is undefined');
       }
     }
+    const existingTabs = getLeftPanelTabs();
+    // console.log(existingTabs, pageId);
+    if(!existingTabs.find(tab => tab.id === pageId)) {
+      loadPageData();
+    }
     // Call the async function
-    loadPageData();
-  }, [pageId, allItems, setActiveItem, setActivePageId, addTab]);
+  }, [pageId, allItems, setActiveItem, setActivePageId, addTab, getLeftPanelTabs]);
 
   return (
     isLoading ? 

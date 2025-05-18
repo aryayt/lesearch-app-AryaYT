@@ -40,7 +40,6 @@ export function NavWorkspaces() {
 
   const { rootWorkspaces, rootCollections, getChildFiles } = getFileHierarchy(allItems);
 
-
   // Fetch workspaces and collections data when the component mounts
   React.useEffect(() => {
     const loadData = async () => {
@@ -107,6 +106,8 @@ export function NavWorkspaces() {
           toast.error("Files cannot be dropped into the workspace directly.");
         }
       }
+      setDropTarget(targetId);
+      setOpenFolders(targetId,true)
     } catch (error) {
       console.error("Error handling drop:", error);
       toast.error("An error occurred while moving the item. Please try again.");
@@ -201,6 +202,7 @@ export function NavWorkspaces() {
                   dropTarget={dropTarget}
                   isDraggable={true}
                   onRequestCreate={(newItem) => setCreation(newItem)}
+                  isCollection={true}
                 />
               ))
             )}

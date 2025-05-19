@@ -15,7 +15,7 @@ type Store = {
 	allItems: FileItem[]; // All files
 	draggedItem: FileItem | null; // Currently dragged item
 	dropTarget: string | null; // Drop target item
-	creation: { parentId: string | null; type: FileItem["type"]; panel?: 'left' | 'right' } | null; // Creation dialog state
+	creation: { parentId: string | null; type: FileItem["type"]; panel?: 'left' | 'middle' } | null; // Creation dialog state
 	openFolders: Set<string>; // Set of open folders
 	activeItemId: string | null; // Track the active item by its ID
 	isDeleting: boolean;
@@ -24,7 +24,7 @@ type Store = {
 	setDraggedItem: (item: FileItem | null) => void;
 	setDropTarget: (targetId: string | null) => void;
 	setCreation: (
-		newCreation: { parentId: string | null; type: FileItem["type"]; panel?: 'left' | 'right' } | null,
+		newCreation: { parentId: string | null; type: FileItem["type"]; panel?: 'left' | 'middle' } | null,
 	) => void;
 	createItem: (
 		name: string,

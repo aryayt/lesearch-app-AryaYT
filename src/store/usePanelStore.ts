@@ -16,6 +16,7 @@ interface PanelStore {
   /* State */
   activePageId: string | null;
   leftActiveTabId: string;
+  middleActiveTabId: string;
   isLoading: boolean;
   error: string | null;
   pageTabs: Record<
@@ -26,6 +27,7 @@ interface PanelStore {
   /* State setters */
   setActivePageId: (pageId: string) => void;
   setLeftActiveTabId: (tabId: string) => void;
+  setMiddleActiveTabId: (tabId: string) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
@@ -89,6 +91,7 @@ export const usePanelStore = create(
     /* Initial State */
     activePageId: null,
     leftActiveTabId: "",
+    middleActiveTabId: "",
     isLoading: false,
     error: null,
     pageTabs: {},
@@ -96,6 +99,7 @@ export const usePanelStore = create(
     /* State setters */
     setActivePageId: (pageId) => set({ activePageId: pageId }),
     setLeftActiveTabId: (tabId) => set({ leftActiveTabId: tabId }),
+    setMiddleActiveTabId: (tabId) => set({ middleActiveTabId: tabId }),
     setLoading: (loading) => set({ isLoading: loading }),
     setError: (error) => set({ error }),
     clearError: () => set({ error: null }),
@@ -147,6 +151,7 @@ export const usePanelStore = create(
             updated.leftPanelTabs = [...updated.leftPanelTabs, tab];
           } else {
             updated.middlePanelTabs = [...updated.middlePanelTabs, tab];
+            get().setMiddleActiveTabId(tab.id);
           }
 
           return {
@@ -177,10 +182,16 @@ export const usePanelStore = create(
           updated.leftPanelTabs = existing.leftPanelTabs.filter(
             (t) => t.id !== tabId
           );
+          if(get().leftActiveTabId === tabId) {
+            get().setLeftActiveTabId(get().getLeftPanelTabs()[0].id);
+          }
         } else {
           updated.middlePanelTabs = existing.middlePanelTabs.filter(
             (t) => t.id !== tabId
           );
+          if(get().middleActiveTabId === tabId) {
+            get().setMiddleActiveTabId(get().getMiddlePanelTabs()[0].id);
+          }
         }
         return {
           pageTabs: {

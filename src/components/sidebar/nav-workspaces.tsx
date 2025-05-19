@@ -170,7 +170,7 @@ export function NavWorkspaces() {
     const id = await createItem(newName, creation.parentId, creation.type);
     const data = await createNote(id, newName);
     if(data){
-       await addTab(id as string, 'note', 'left');
+       await addTab(id as string, 'note', creation.panel as "left" | "middle");
       setLeftActiveTabId(id as string);
     }
 

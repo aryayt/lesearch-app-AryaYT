@@ -183,9 +183,16 @@ export function FileNode({
                 <DropdownMenuItem>
                   <Link href={file.id}>Copy Link</Link>
                 </DropdownMenuItem>
-                {file.type !== "folder" && <DropdownMenuItem onSelect={() => addTab(file.id, file.type as "note" | "pdf", 'left')}>
+                {file.type !== "folder" && 
+                <>
+                <DropdownMenuItem onSelect={() => addTab(file.id, file.type as "note" | "pdf", 'left')}>
                   <ArrowUpRight /> Open in Left Panel
-                </DropdownMenuItem>}
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => addTab(file.id, file.type as "note" | "pdf", 'middle')}>
+                  <ArrowUpRight /> Open in Middle Panel
+                </DropdownMenuItem>
+                </>
+                }
                 <DropdownMenuSeparator />
                 {!isCollection && file.type !== "folder" && <DropdownMenuItem onSelect={handleMoveToCollection}>
                   <X /> Move to Collection

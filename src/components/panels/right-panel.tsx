@@ -1,11 +1,24 @@
 "use client"
 import { useRef, useEffect, useState } from 'react';
-import { Send } from 'lucide-react';
+import { Send, History } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 interface Message {
   id: number;
   sender: 'user' | 'bot';
   text: string;
+  timestamp: string;
+}
+
+interface ChatHistory {
+  id: string;
+  title: string;
+  messages: Message[];
+  lastUpdated: string;
 }
 
 const examplePrompts = [
@@ -20,7 +33,32 @@ const initialMessages: Message[] = [
   {
     id: 1,
     sender: 'bot',
-    text: "Hi! I'm your Lesearch assistant. Ask me anything about this paper or PDF. For example: 'Summarize this paper' or 'What is the main contribution?'"
+    text: "Hi! I'm your Lesearch assistant. Ask me anything about this paper or PDF. For example: 'Summarize this paper' or 'What is the main contribution?'",
+    timestamp: new Date().toISOString()
+  }
+];
+
+// Dummy chat history data
+const dummyChatHistory: ChatHistory[] = [
+  {
+    id: '1',
+    title: 'Discussion about Machine Learning Paper',
+    messages: [
+      { id: 1, sender: 'user', text: 'What are the key findings?', timestamp: '2024-03-15T10:00:00Z' },
+      { id: 2, sender: 'bot', text: 'The paper presents three main findings...', timestamp: '2024-03-15T10:00:05Z' },
+      { id: 3, sender: 'user', text: 'Can you explain the methodology?', timestamp: '2024-03-15T10:01:00Z' },
+      { id: 4, sender: 'bot', text: 'The researchers used a novel approach combining...', timestamp: '2024-03-15T10:01:10Z' },
+    ],
+    lastUpdated: '2024-03-15T10:01:10Z'
+  },
+  {
+    id: '2',
+    title: 'Analysis of Neural Networks',
+    messages: [
+      { id: 1, sender: 'user', text: 'How does this compare to previous work?', timestamp: '2024-03-14T15:30:00Z' },
+      { id: 2, sender: 'bot', text: 'This work improves upon previous approaches by...', timestamp: '2024-03-14T15:30:08Z' },
+    ],
+    lastUpdated: '2024-03-14T15:30:08Z'
   }
 ];
 
@@ -28,6 +66,7 @@ const RightPanel = () => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,7 +76,12 @@ const RightPanel = () => {
 
   const handleSend = async () => {
     if (!input.trim()) return;
-    const userMsg: Message = { id: Date.now(), sender: 'user', text: input };
+    const userMsg: Message = { 
+      id: Date.now(), 
+      sender: 'user', 
+      text: input,
+      timestamp: new Date().toISOString()
+    };
     setMessages((msgs) => [...msgs, userMsg]);
     setInput('');
     setLoading(true);
@@ -45,73 +89,125 @@ const RightPanel = () => {
     setTimeout(() => {
       setMessages((msgs) => [
         ...msgs,
-        { id: Date.now() + 1, sender: 'bot', text: "I'm here to help! (AI integration coming soon)" }
+        { 
+          id: Date.now() + 1, 
+          sender: 'bot', 
+          text: "I'm here to help! (AI integration coming soon)",
+          timestamp: new Date().toISOString()
+        }
       ]);
       setLoading(false);
     }, 1200);
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
-  return (
-    <div className="flex flex-col h-full w-full bg-gradient-to-b from-slate-50 to-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-2 border-b bg-white/80 sticky top-0 z-10">
-        <span className="font-semibold text-lg text-slate-700">Lesearch Assistant</span>
-        <span className="ml-auto text-xs text-gray-400">AI Chat for Papers</span>
-      </div>
-      {/* Chat History */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 custom-scrollbar">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
+  const renderChatHistory = () => (
+    // <div className="flex-1">
+      <ScrollArea className="h-full">
+        <div className="divide-y divide-border">
+          {dummyChatHistory.map((chat) => (
+            <Card key={chat.id} className="border-0 rounded-none hover:bg-accent/50 cursor-pointer transition-colors">
+              <CardContent>
+                <h3 className="font-medium text-foreground mb-1">{chat.title}</h3>
+                <div className="space-y-2 mb-2">
+                  {chat.messages.slice(-2).map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={cn(
+                        "text-sm",
+                        msg.sender === 'user' ? 'text-muted-foreground' : 'text-primary'
+                      )}
+                    >
+                      <span className="font-medium">
+                        {msg.sender === 'user' ? 'You: ' : 'AI: '}
+                      </span>
+                      {msg.text}
+                    </div>
+                  ))}
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {formatDate(chat.lastUpdated)}
+                </span>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </ScrollArea>
+    // </div>
+  );
+
+  const renderChatArea = () => (
+    <>
+      <ScrollArea className="flex-1 px-4">
+        <div className="space-y-3">
+          {messages.map((msg) => (
             <div
-              className={`max-w-[75%] px-4 py-2 rounded-2xl text-sm shadow-md whitespace-pre-line break-words
-                ${msg.sender === 'bot'
-                  ? 'bg-gradient-to-br from-blue-100 to-blue-50 text-blue-900'
-                  : 'bg-gradient-to-br from-gray-200 to-gray-100 text-gray-900 border'}
-              `}
+              key={msg.id}
+              className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              {msg.text}
+              <Card className={cn(
+                "max-w-[75%] px-4 py-2 text-sm shadow-md whitespace-pre-line break-words",
+                msg.sender === 'bot'
+                  ? 'bg-primary/10 text-primary'
+                  : 'bg-accent text-accent-foreground'
+              )}>
+                <CardContent className="p-0">
+                  {msg.text}
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {formatDate(msg.timestamp)}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </div>
-        ))}
-        {loading && (
-          <div className="flex justify-start">
-            <div className="max-w-[75%] px-4 py-2 rounded-2xl text-sm shadow-md bg-gradient-to-br from-blue-100 to-blue-50 text-blue-900 opacity-70 animate-pulse">
-              Thinking…
+          ))}
+          {loading && (
+            <div className="flex justify-start">
+              <Card className="max-w-[75%] px-4 py-2 text-sm shadow-md bg-primary/10 text-primary opacity-70 animate-pulse">
+                <CardContent className="p-0">
+                  Thinking…
+                </CardContent>
+              </Card>
             </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-      {/* Example Prompts (when chat is empty except welcome) */}
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </ScrollArea>
+
+      {/* Example Prompts */}
       {messages.length <= 1 && !loading && (
         <div className="px-4 pb-3">
-          <div className="text-xs text-gray-400 mb-2">Try asking:</div>
+          <div className="text-xs text-muted-foreground mb-2">Try asking:</div>
           <div className="flex flex-wrap gap-2">
             {examplePrompts.map((prompt) => (
-              <button
+              <Button
                 key={prompt}
-                type="button"
-                className="bg-gray-100 hover:bg-blue-100 text-gray-700 px-3 py-1 rounded-full text-xs border border-gray-200 transition"
+                variant="outline"
+                size="sm"
+                className="rounded-full"
                 onClick={() => setInput(prompt)}
               >
                 {prompt}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
       )}
+
       {/* Input Bar */}
       <form
-        className="flex items-center gap-2 px-3 py-2 border-t bg-white/90 sticky bottom-0 z-10"
+        className="flex items-center gap-2 px-3 py-2  border-t bg-background/90 sticky bottom-0 z-10"
         onSubmit={e => { e.preventDefault(); handleSend(); }}
       >
-        <input
+        <Input
           type="text"
-          className="flex-1 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm"
           placeholder="Ask a question about this paper…"
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -123,16 +219,41 @@ const RightPanel = () => {
           }}
           disabled={loading}
         />
-        <button
+        <Button
           type="submit"
-          className="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition disabled:opacity-60"
+          size="icon"
           disabled={loading || !input.trim()}
           aria-label="Send"
         >
           <Send size={18} />
-        </button>
+        </Button>
       </form>
-    </div>
+    </>
+  );
+
+  return (
+    <Card className="flex flex-col h-full w-full gap-1">
+      <CardHeader className="border-b h-8 bg-background/80 sticky top-0 z-10">
+        <div className="flex items-center gap-2 h-8">
+          <span className="font-semibold text-lg text-foreground">Lesearch Assistant</span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowHistory(!showHistory)}
+            className="ml-auto"
+            aria-label="Chat History"
+          >
+            <History size={20} className="text-muted-foreground" />
+          </Button>
+        </div>
+      </CardHeader>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col">
+        {showHistory ? renderChatHistory() : renderChatArea()}
+      </div>
+    </Card>
   );
 };
 

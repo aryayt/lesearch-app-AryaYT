@@ -27,7 +27,7 @@ const MiddlePanel = () => {
   }
 
   if (tabs.length === 0) return (
-    <div className="flex flex-col w-full h-full items-center justify-center border-2 border-gray-200">
+    <div className="flex flex-col w-full h-full items-center justify-center border-2 border-border">
         <p className="text-sm text-muted-foreground">There are no active tabs in this panel</p>
       <div className="flex flex-col items-center justify-center p-2">
         <Button variant="outline" size="sm" onClick={handleAddNote}>

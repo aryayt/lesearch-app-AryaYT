@@ -146,14 +146,18 @@ export function NavWorkspaces() {
     if (id && data && !creation.parentId) {
       setActiveItem(id);
     }
+    // Clear the input and reset the creation state
+    setNewName("");
+    setCreation(null);
+
     // After creating the item, expand the folder containing it
     const folder = allItems.find(item => item.id === creation.parentId);
     if (folder) {
       setOpenFolders(folder.id, true);  // Open the folder if a new item is created inside it
     }
-    // Clear the input and reset the creation state
-    setNewName("");
-    setCreation(null);
+    if(creation.type === "folder"){
+      return
+    }
     // Show success toast
     toast.success(`Created new ${creation.type}: "${newName}"`);
     window.location.href = `/documents/${id}`;

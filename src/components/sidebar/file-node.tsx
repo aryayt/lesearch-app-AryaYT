@@ -130,32 +130,34 @@ export function FileNode({
         >
           <div className="relative flex items-center w-full">
             {file.type !== "folder" ? file.type === "note" ? <FilePen /> : <FileText /> : <FolderOpen />}
-              <Button
+              <SidebarMenuAction
+                showOnHover
                 type="button"
-                variant="ghost"
+                // variant="ghost"
                 aria-label="Toggle Folder"
-                size="icon"
+                // size="icon"
                 className={cn(
-                  "absolute left-0 flex items-center justify-center z-10 transition-opacity",
+                  "absolute left-2 flex items-center justify-center z-10 transition-opacity",
                   "opacity-0 hover:opacity-100",
                   "bg-sidebar-accent text-sidebar-accent-foreground rounded-full",
                 )}
                 onClick={toggleOpen}
               >
                 {isOpen ? <ChevronDown /> : <ChevronRight />}
-              </Button>
-             {file.type === "note" || file.type === "pdf" ? <Link
-              href={`/documents/${file.id}`}
-              className="ml-2 flex-1 truncate bg-transparent border-none p-0 text-left cursor-pointer"
-            >
-              {file.name}
-            </Link> : <button
+              </SidebarMenuAction>
+            <button
               type="button"
               className="ml-2 flex-1 truncate bg-transparent border-none p-0 text-left cursor-pointer"
-              onClick={toggleOpen}
+              onClick={(e) => {
+                if (file.type === "note" || file.type === "pdf") {
+                  window.location.href = `/documents/${file.id}`;
+                } else {
+                  toggleOpen(e)
+                }
+              }}
             >
               {file.name}
-            </button>}
+            </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuAction showOnHover>

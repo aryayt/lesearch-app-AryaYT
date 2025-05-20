@@ -5,6 +5,7 @@ import {
   ArrowDown,
   ArrowUp,
   Bell,
+  Columns3,
   Copy,
   CornerUpLeft,
   CornerUpRight,
@@ -38,6 +39,9 @@ import {
 } from "@/components/ui/sidebar";
 import { usePanelStore } from "@/store/usePanelStore";
 import { useParams } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { SearchDialog } from "@/components/dialog/searchDialog";
+import { useState } from "react";
 
 const data = [
   {
@@ -116,6 +120,8 @@ const data = [
 
 export function NavActions() {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [showSearchDialog, setShowSearchDialog] = useState(false);
+
   const { activePageId, setPanelVisibility, getPanelVisibility } =
     usePanelStore();
   const params = useParams();
@@ -124,6 +130,16 @@ export function NavActions() {
   const pageId = activePageId || (params?.pageId as string);
   const pagePanelVisibility = getPanelVisibility(pageId);
 
+  // Toggle functions for each panel - now separated to ensure each button only controls its own panel
+
+  // The FileText/FileX icon is now dedicated to adding PDFs/documents to the left panel
+  // This functionality would connect with your existing document selection flow
+  const toggleDocumentSelection = () => {
+    // Open the search dialog
+    setShowSearchDialog(true);
+  };
+
+  // The Columns3 icon now exclusively controls the middle panel
   const toggleMiddlePanel = () => {
     if (!pageId) return;
 
@@ -133,6 +149,7 @@ export function NavActions() {
     });
   };
 
+  // The MessageCircle icon now exclusively controls the right chat panel
   const toggleRightPanel = () => {
     if (!pageId) return;
 
@@ -144,25 +161,55 @@ export function NavActions() {
 
   return (
     <div className="flex items-center gap-2 text-sm">
-      {/* Panel Toggles */}
+      {/* Document Selection Button (Now separate from panel controls) */}
+      <SearchDialog>
+        <Button
+          title="Open PDF or Document"
+          aria-label="Open PDF or Document"
+          variant="ghost"
+          size="icon"
+          className="size-7"
+        >
+          <FileText />
+        </Button>
+      </SearchDialog>
+
+      {/* Middle Panel Toggle with Columns3 icon */}
       <Button
+        variant={pagePanelVisibility.showMiddlePanel ? "default" : "ghost"}
+        size="icon"
+        className={cn(
+          "size-7 transition-colors",
+          pagePanelVisibility.showMiddlePanel &&
+            "bg-primary/20 hover:bg-primary/30"
+        )}
         title={
           pagePanelVisibility.showMiddlePanel
-            ? "Close PDF Panel"
-            : "Open PDF Panel"
+            ? "Close Middle Panel"
+            : "Open Middle Panel"
         }
-        aria-label="Toggle PDF Panel"
-        variant="ghost"
-        size="icon"
-        className="size-7"
+        aria-label="Toggle Middle Panel"
         onClick={toggleMiddlePanel}
       >
-        {pagePanelVisibility.showMiddlePanel ? <FileX /> : <FileText />}
+        <Columns3
+          className={
+            pagePanelVisibility.showMiddlePanel
+              ? "text-primary"
+              : "text-muted-foreground"
+          }
+          size={18}
+        />
       </Button>
+
+      {/* Chat Panel Toggle */}
       <Button
-        variant="ghost"
+        variant={pagePanelVisibility.showRightPanel ? "default" : "ghost"}
         size="icon"
-        className="size-7"
+        className={cn(
+          "size-7 transition-colors",
+          pagePanelVisibility.showRightPanel &&
+            "bg-primary/20 hover:bg-primary/30"
+        )}
         title={
           pagePanelVisibility.showRightPanel
             ? "Close Chat Bot"
@@ -172,10 +219,9 @@ export function NavActions() {
         onClick={toggleRightPanel}
       >
         {pagePanelVisibility.showRightPanel ? (
-          // X icon for open state
-          <MessageCircleOff />
+          <MessageCircleOff className="text-primary" />
         ) : (
-          <MessageCircle />
+          <MessageCircle className="text-muted-foreground" />
         )}
       </Button>
       <div className="hidden font-medium text-muted-foreground md:inline-block">

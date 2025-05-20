@@ -175,7 +175,8 @@ export const usePanelStore = create(
     getContent: (tabId) => get().memoryCache.content[tabId],
     getPdfHighlights: (tabId) => get().memoryCache.pdfHighlights[tabId],
     getPanelVisibility: (pageId) => {
-      return get().panelVisibility[pageId] || { showMiddlePanel: true, showRightPanel: true };
+      // Default to only showing left panel, with middle and right panels hidden
+      return get().panelVisibility[pageId] || { showMiddlePanel: false, showRightPanel: false };
     },
 
     /* Unified add/remove tab methods */
@@ -211,12 +212,19 @@ export const usePanelStore = create(
         
         set((state) => {
           const updated = { ...existing };
+          
+          // Store current active tab IDs before updating
+          const currentLeftActiveTabId = state.leftActiveTabId;
+          const currentMiddleActiveTabId = state.middleActiveTabId;
+          
           if (panel === 'left') {
             updated.leftPanelTabs = [...updated.leftPanelTabs, tab];
-            get().setLeftActiveTabId(tab.id);
+            // Set new tab as active in left panel
+            setTimeout(() => get().setLeftActiveTabId(tab.id), 50);
           } else {
             updated.middlePanelTabs = [...updated.middlePanelTabs, tab];
-            get().setMiddleActiveTabId(tab.id);
+            // Set new tab as active in middle panel
+            setTimeout(() => get().setMiddleActiveTabId(tab.id), 50);
           }
 
           return {
@@ -224,6 +232,9 @@ export const usePanelStore = create(
               ...state.pageTabs,
               [activePageId]: updated,
             },
+            // Preserve existing active tab IDs to prevent panel selection issues
+            leftActiveTabId: panel === 'left' ? tab.id : currentLeftActiveTabId,
+            middleActiveTabId: panel === 'middle' ? tab.id : currentMiddleActiveTabId,
           };
         });
       } catch (err) {
@@ -237,25 +248,42 @@ export const usePanelStore = create(
     removeTab: (tabId, panel) => {
       const activePageId = get().activePageId;
       if (!activePageId) return;
+      
+      // Store current active tab IDs before removing tabs
+      const currentLeftActiveTabId = get().leftActiveTabId;
+      const currentMiddleActiveTabId = get().middleActiveTabId;
+      
       set((state) => {
         const existing = state.pageTabs[activePageId] || {
           leftPanelTabs: [],
           middlePanelTabs: [],
         };
         const updated = { ...existing };
+        
+        let newLeftActiveTabId = currentLeftActiveTabId;
+        let newMiddleActiveTabId = currentMiddleActiveTabId;
+        
         if (panel === 'left') {
           updated.leftPanelTabs = existing.leftPanelTabs.filter(
             (t) => t.id !== tabId
           );
-          if(get().leftActiveTabId === tabId) {
-            get().setLeftActiveTabId(get().getLeftPanelTabs()[0].id);
+          
+          // If the removed tab was active, select another tab
+          if (currentLeftActiveTabId === tabId && updated.leftPanelTabs.length > 0) {
+            newLeftActiveTabId = updated.leftPanelTabs[0].id;
+            // Use setTimeout to ensure state updates properly
+            setTimeout(() => get().setLeftActiveTabId(newLeftActiveTabId), 50);
           }
         } else {
           updated.middlePanelTabs = existing.middlePanelTabs.filter(
             (t) => t.id !== tabId
           );
-          if(get().middleActiveTabId === tabId) {
-            get().setMiddleActiveTabId(get().getMiddlePanelTabs()[0].id);
+          
+          // If the removed tab was active, select another tab
+          if (currentMiddleActiveTabId === tabId && updated.middlePanelTabs.length > 0) {
+            newMiddleActiveTabId = updated.middlePanelTabs[0].id;
+            // Use setTimeout to ensure state updates properly
+            setTimeout(() => get().setMiddleActiveTabId(newMiddleActiveTabId), 50);
           }
         }
 
@@ -270,6 +298,9 @@ export const usePanelStore = create(
             [activePageId]: updated,
           },
           memoryCache: newMemoryCache,
+          // Preserve existing active tab IDs to prevent panel selection issues
+          leftActiveTabId: newLeftActiveTabId,
+          middleActiveTabId: newMiddleActiveTabId,
         };
       });
     },

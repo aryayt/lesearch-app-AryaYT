@@ -1,13 +1,13 @@
 "use client";
 
 import { v4 as uuidv4 } from "uuid";
-import { 
-  CanvasLayer, 
-  Page, 
-  Pages, 
-  Root, 
-  TextLayer, 
-  AnnotationHighlightLayer, 
+import {
+  CanvasLayer,
+  Page,
+  Pages,
+  Root,
+  TextLayer,
+  AnnotationHighlightLayer,
   type Annotation,
   SelectionTooltip,
   useAnnotations,
@@ -22,7 +22,11 @@ import { GlobalWorkerOptions } from "pdfjs-dist";
 import ZoomMenu from "./zoom-menu";
 import DocumentMenu from "./document-menu";
 import { PageNavigation } from "./page-navigation";
-import { SelectionTooltipContent, TooltipContent, type TooltipContentProps } from "./annotations";
+import {
+  SelectionTooltipContent,
+  TooltipContent,
+  type TooltipContentProps,
+} from "./annotations";
 
 const STORAGE_KEY = "pdf-annotations";
 
@@ -38,16 +42,14 @@ interface PDFContentProps {
   onAnnotationClick: (annotation: Annotation | null) => void;
 }
 
-
-const PDFContent = ({ 
-  onAnnotationsChange, 
+const PDFContent = ({
+  onAnnotationsChange,
   focusedAnnotationId,
   onAnnotationClick,
 }: PDFContentProps) => {
   const { addAnnotation, annotations } = useAnnotations();
   const { getDimension } = useSelectionDimensions();
   const { jumpToHighlightRects } = usePdfJump();
-
 
   useEffect(() => {
     onAnnotationsChange(annotations);
@@ -60,7 +62,7 @@ const PDFContent = ({
     const newAnnotation = {
       pageNumber: selection.highlights[0].pageNumber,
       highlights: selection.highlights,
-      color: "rgba(255, 255, 0, 0.3)", 
+      color: "rgba(255, 255, 0, 0.3)",
       borderColor: "rgba(255, 255, 0, 0.1)",
       text: selection.text,
       id: uuidv4(),
@@ -74,10 +76,11 @@ const PDFContent = ({
 
   useEffect(() => {
     if (annotations.length === 0) return;
-    
+
     const lastAnnotation = annotations[annotations.length - 1];
-    const isNewAnnotation = Date.now() - new Date(lastAnnotation.createdAt).getTime() < 1000;
-    
+    const isNewAnnotation =
+      Date.now() - new Date(lastAnnotation.createdAt).getTime() < 1000;
+
     if (isNewAnnotation) {
       onAnnotationClick(lastAnnotation);
     }
@@ -86,42 +89,43 @@ const PDFContent = ({
   useEffect(() => {
     if (!focusedAnnotationId) return;
 
-    const annotation = annotations.find(a => a.id === focusedAnnotationId);
+    const annotation = annotations.find((a) => a.id === focusedAnnotationId);
     if (!annotation || !annotation.highlights.length) return;
 
-    jumpToHighlightRects(
-      annotation.highlights,
-      "pixels",
-      "center", 
-      -50 
-    );
+    jumpToHighlightRects(annotation.highlights, "pixels", "center", -50);
   }, [focusedAnnotationId, annotations, jumpToHighlightRects]);
 
-  const handlePagesClick = useCallback((e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    
-    if (target.closest('[role="tooltip"]')) {
-      return; 
-    }
+  const handlePagesClick = useCallback(
+    (e: React.MouseEvent) => {
+      const target = e.target as HTMLElement;
 
-    const clickedHighlight = target.closest('[data-highlight-id]');
-    
-    // If we clicked on a highlight, let the AnnotationHighlightLayer handle it
-    if (clickedHighlight) {
-      return;
-    }
+      if (target.closest('[role="tooltip"]')) {
+        return;
+      }
 
-    if (focusedAnnotationId) {
-      onAnnotationClick(null);
-    }
-  }, [focusedAnnotationId, onAnnotationClick]);
+      const clickedHighlight = target.closest("[data-highlight-id]");
 
-  const renderTooltipContent = useCallback(({ annotation, onClose }: TooltipContentProps) => {
-    return <TooltipContent annotation={annotation} onClose={onClose} />;
-  }, []);
+      // If we clicked on a highlight, let the AnnotationHighlightLayer handle it
+      if (clickedHighlight) {
+        return;
+      }
+
+      if (focusedAnnotationId) {
+        onAnnotationClick(null);
+      }
+    },
+    [focusedAnnotationId, onAnnotationClick]
+  );
+
+  const renderTooltipContent = useCallback(
+    ({ annotation, onClose }: TooltipContentProps) => {
+      return <TooltipContent annotation={annotation} onClose={onClose} />;
+    },
+    []
+  );
 
   return (
-    <Pages 
+    <Pages
       className="dark:invert-[94%] dark:hue-rotate-180 dark:brightness-[80%] dark:contrast-[228%] dark:bg-gray-100"
       onClick={handlePagesClick}
     >
@@ -129,7 +133,7 @@ const PDFContent = ({
         <CanvasLayer />
         <TextLayer />
         <AnnotationLayer />
-        <AnnotationHighlightLayer 
+        <AnnotationHighlightLayer
           className="dark:opacity-40 mix-blend-multiply transition-all duration-200 cursor-pointer"
           focusedAnnotationId={focusedAnnotationId}
           tooltipClassName="bg-white shadow-lg rounded-lg p-3 min-w-[200px]"
@@ -145,8 +149,15 @@ const PDFContent = ({
   );
 };
 
-export const AnaraViewer = ({pdfUrl, pdfHighlights}: {pdfUrl: string, pdfHighlights: Annotation[]}) => {
-  const [savedAnnotations, setSavedAnnotations] = React.useState<Annotation[]>(pdfHighlights);
+export const AnaraViewer = ({
+  pdfUrl,
+  pdfHighlights,
+}: {
+  pdfUrl: string;
+  pdfHighlights: Annotation[];
+}) => {
+  const [savedAnnotations, setSavedAnnotations] =
+    React.useState<Annotation[]>(pdfHighlights);
   const [focusedAnnotationId, setFocusedAnnotationId] = useState<string>();
 
   const handleAnnotationsChange = useCallback((annotations: Annotation[]) => {
@@ -154,7 +165,7 @@ export const AnaraViewer = ({pdfUrl, pdfHighlights}: {pdfUrl: string, pdfHighlig
       localStorage.setItem(STORAGE_KEY, JSON.stringify(annotations));
       setSavedAnnotations(annotations);
     } catch (error) {
-      console.error('Error saving annotations:', error);
+      console.error("Error saving annotations:", error);
     }
   }, []);
 
@@ -168,14 +179,14 @@ export const AnaraViewer = ({pdfUrl, pdfHighlights}: {pdfUrl: string, pdfHighlig
         className="border overflow-hidden flex flex-col w-full h-full rounded-lg"
         source={pdfUrl}
         isZoomFitWidth={true}
-        loader={<div className="w-full"/>}
+        loader={<div className="w-full" />}
       >
         <div className="p-1 relative flex justify-between border-b">
           <ZoomMenu />
           <PageNavigation />
           <DocumentMenu documentUrl={pdfUrl} />
         </div>
-        <PDFContent 
+        <PDFContent
           initialAnnotations={savedAnnotations}
           onAnnotationsChange={handleAnnotationsChange}
           focusedAnnotationId={focusedAnnotationId}

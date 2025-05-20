@@ -1,17 +1,14 @@
 "use client";
 import type{ PropsWithChildren } from "react";
-
+import { memo } from "react";
 import FullScreenLoading from "@/components/full-screen-loading";
-import dynamic from "next/dynamic";
+import LayoutWrapper from "../../components/sidebar/layout-wrapper";
 import { redirect } from "next/navigation";
 import { useUserStore } from "@/store/userStore";
 import { useEffectOnce } from "react-use"; // You'll need to install react-use package
 
-// Dynamically import the layout wrapper for better performance
-const LayoutWrapper = dynamic(() => import("../../components/sidebar/layout-wrapper"), {
-  ssr: false,
-  loading: () => <FullScreenLoading />,
-});
+// Memoize the LayoutWrapper to prevent unnecessary re-renders
+const MemoizedLayoutWrapper = memo(LayoutWrapper);
 
 export default function MainLayout({ children }: PropsWithChildren) {
   const { user, fetchUser } = useUserStore();
@@ -22,7 +19,6 @@ export default function MainLayout({ children }: PropsWithChildren) {
       fetchUser();
     }
   });
-
 
   // Show loading while fetching user data
   if (user === undefined) {
@@ -41,9 +37,9 @@ export default function MainLayout({ children }: PropsWithChildren) {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      <LayoutWrapper>
+      <MemoizedLayoutWrapper>
         {children}
-      </LayoutWrapper>
+      </MemoizedLayoutWrapper>
     </div>
   );
 }

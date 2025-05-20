@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { type FileItem, useStore } from "@/store/useCollectionStore"; // Import Zustand store
 import { usePanelStore } from "@/store/usePanelStore";
+import { useRouter } from "next/navigation";
 
 export function NavWorkspaces() {
   // Accessing Zustand store state and actions
@@ -31,6 +32,7 @@ export function NavWorkspaces() {
   const [isWorkspacesLoading, setIsWorkspacesLoading] = React.useState(false);
   const [isCollectionsLoading, setIsCollectionsLoading] = React.useState(false);
   const [dialogContent, setDialogContent] = React.useState(creation);
+  const router = useRouter();
 
   // Update dialogContent when creation changes
   React.useEffect(() => {
@@ -160,7 +162,8 @@ export function NavWorkspaces() {
     }
     // Show success toast
     toast.success(`Created new ${creation.type}: "${newName}"`);
-    window.location.href = `/documents/${id}`;
+    router.push(`/documents/${id}`);
+    // window.location.href = `/documents/${id}`;
 
   };
 

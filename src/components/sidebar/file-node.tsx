@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { FileText, FolderOpen, ChevronDown, ChevronRight, MoreHorizontal, Plus, Trash2, Star, ArrowUpRight, Loader2, X, FilePen } from "lucide-react";
@@ -10,6 +12,7 @@ import{ useStore, type FileItem } from "@/store/useCollectionStore";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { usePanelStore } from "@/store/usePanelStore";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export type FileNodeProps = {
   file: FileItem;
@@ -45,6 +48,7 @@ export function FileNode({
 }: FileNodeProps) {
   const { openFolders, setOpenFolders, activeItemId, deleteItem, isDeleting, moveToCollection } = useStore();
   const {activePageId, addTab} = usePanelStore();
+  const router = useRouter();
   const isOpen = openFolders.has(file.id); 
   const isDragging = draggedItem?.id === file.id;
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
@@ -150,7 +154,7 @@ export function FileNode({
               className="ml-2 flex-1 truncate bg-transparent border-none p-0 text-left cursor-pointer"
               onClick={(e) => {
                 if (file.type === "note" || file.type === "pdf") {
-                  window.location.href = `/documents/${file.id}`;
+                  router.push(`/documents/${file.id}`);
                 } else {
                   toggleOpen(e)
                 }

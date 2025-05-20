@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { useLayoutStore } from '@/store/layoutStore';
 import { useSidebar } from "@/components/ui/sidebar";
 
@@ -25,12 +25,11 @@ export function useSidebarResize() {
     minSidebarWidth,
     maxSidebarWidth,
     minimize,
-    setMinimize,
-    prevSidebarWidth
+    setMinimize
   } = useLayoutStore();
   
   // Create a default sidebar context object with no-op functions
-  const defaultSidebarContext = {
+  const defaultSidebarContext = useMemo(() => ({
     state: "expanded" as const,
     open: true,
     setOpen: () => {},
@@ -38,7 +37,7 @@ export function useSidebarResize() {
     setOpenMobile: () => {},
     isMobile: false,
     toggleSidebar: () => {}
-  };
+  }), []);
   
   // Use our safe context hook to get the sidebar context
   const sidebarContext = useSafeContext(useSidebar, defaultSidebarContext);
@@ -65,41 +64,6 @@ export function useSidebarResize() {
       setIsDragging(false);
     }
   }, [isDragging, setIsDragging]);
-
-  // Handle toggle minimize with width reset
-  const toggleMinimize = useCallback(() => {
-    if (isValidContext) {
-      // Use the built-in toggleSidebar function if available
-      sidebarContext.toggleSidebar();
-    }
-    
-    if (minimize) {
-      // When expanding, reset to default width
-      setSidebarWidth(DEFAULT_SIDEBAR_WIDTH);
-      setMinimize(false);
-    } else {
-      // Save current width before minimizing
-      useLayoutStore.setState({ prevSidebarWidth: sidebarWidth });
-      setMinimize(true);
-    }
-  }, [minimize, sidebarWidth, setSidebarWidth, setMinimize, sidebarContext, isValidContext]);
-
-  // Handle sidebar toggle from SidebarTrigger
-  useEffect(() => {
-    // No need for this effect if we don't have access to sidebar context
-    if (!isValidContext) return;
-    
-    // We can access the current state directly
-    const isExpanded = sidebarContext.state === "expanded";
-    
-    // Set minimize state based on sidebar state
-    if (isExpanded && minimize) {
-      setMinimize(false);
-    } else if (!isExpanded && !minimize) {
-      setMinimize(true);
-    }
-    
-  }, [minimize, setMinimize, sidebarContext, isValidContext]);
 
   // Handle rail mousedown for both drag and click
   const handleRailMouseDown = useCallback((e: React.MouseEvent) => {
@@ -152,11 +116,45 @@ export function useSidebarResize() {
     document.addEventListener('mouseup', handleMouseUp);
   }, [setIsDragging]);
 
-  // Add event listeners when dragging starts
+  // Handle toggle minimize with width reset
+  const toggleMinimize = useCallback(() => {
+    if (isValidContext) {
+      // Use the built-in toggleSidebar function if available
+      sidebarContext.toggleSidebar();
+    }
+    
+    if (minimize) {
+      // When expanding, reset to default width
+      setSidebarWidth(DEFAULT_SIDEBAR_WIDTH);
+      setMinimize(false);
+    } else {
+      // Save current width before minimizing
+      useLayoutStore.setState({ prevSidebarWidth: sidebarWidth });
+      setMinimize(true);
+    }
+  }, [minimize, sidebarWidth, setSidebarWidth, setMinimize, sidebarContext, isValidContext]);
+
+  // Handle sidebar toggle from SidebarTrigger
+  useEffect(() => {
+    // No need for this effect if we don't have access to sidebar context
+    if (!isValidContext) return;
+    
+    // We can access the current state directly
+    const isExpanded = sidebarContext.state === "expanded";
+    
+    // Set minimize state based on sidebar state
+    if (isExpanded && minimize) {
+      setMinimize(false);
+    } else if (!isExpanded && !minimize) {
+      setMinimize(true);
+    }
+  }, [minimize, setMinimize, sidebarContext, isValidContext]);
+
+  // Add event listeners for mouse move and up
   useEffect(() => {
     if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
       
       // Apply cursor style to the entire document when dragging
       document.body.style.cursor = 'col-resize';
@@ -166,10 +164,9 @@ export function useSidebarResize() {
       document.body.style.userSelect = '';
     }
 
-    // Clean up event listeners
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
     };
@@ -177,15 +174,11 @@ export function useSidebarResize() {
 
   return {
     sidebarWidth,
-    setSidebarWidth,
+    minimize,
+    toggleMinimize,
     isDragging,
     setIsDragging,
-    minimize,
-    setMinimize,
-    toggleMinimize,
-    minSidebarWidth,
-    maxSidebarWidth,
-    prevSidebarWidth,
+    setSidebarWidth,
     handleRailMouseDown
   };
 }

@@ -35,7 +35,7 @@ export const useAnnotationActions = ({
 
   const handleColorChange = useCallback(
     (color: string) => {
-      updateAnnotation(annotation.id, { color, borderColor: color });
+      updateAnnotation(annotation.id, { color });
       onClose?.();
     },
     [annotation.id, updateAnnotation, onClose]

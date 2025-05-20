@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import { createClient } from '@/lib/supabase/client';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import type{ Annotation } from '@anaralabs/lector';
+
+// Memory cache for large data
+interface MemoryCache {
+  content: Record<string, string>;
+  pdfHighlights: Record<string, Annotation[]>;
+}
 
 // Unified Tab type for UI
 export interface Tab {
@@ -23,6 +30,7 @@ interface PanelStore {
     string,
     { leftPanelTabs: Tab[]; middlePanelTabs: Tab[] }
   >;
+  memoryCache: MemoryCache;
 
   /* State setters */
   setActivePageId: (pageId: string) => void;
@@ -31,10 +39,14 @@ interface PanelStore {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
+  setContent: (tabId: string, content: string) => void;
+  setPdfHighlights: (tabId: string, highlights: Annotation[]) => void;
 
   /* Getters */
   getLeftPanelTabs: () => Tab[];
   getMiddlePanelTabs: () => Tab[];
+  getContent: (tabId: string) => string | undefined;
+  getPdfHighlights: (tabId: string) => Annotation[] | undefined;
 
   /* Side effects */
   addTab: (
@@ -95,6 +107,10 @@ export const usePanelStore = create(
     isLoading: false,
     error: null,
     pageTabs: {},
+    memoryCache: {
+      content: {},
+      pdfHighlights: {},
+    },
 
     /* State setters */
     setActivePageId: (pageId) => set({ activePageId: pageId }),
@@ -103,6 +119,26 @@ export const usePanelStore = create(
     setLoading: (loading) => set({ isLoading: loading }),
     setError: (error) => set({ error }),
     clearError: () => set({ error: null }),
+    setContent: (tabId, content) =>
+      set((state) => ({
+        memoryCache: {
+          ...state.memoryCache,
+          content: {
+            ...state.memoryCache.content,
+            [tabId]: content,
+          },
+        },
+      })),
+    setPdfHighlights: (tabId, highlights) => 
+      set((state) => ({
+        memoryCache: {
+          ...state.memoryCache,
+          pdfHighlights: {
+            ...state.memoryCache.pdfHighlights,
+            [tabId]: highlights,
+          },
+        },
+      })),
 
     /* Getters for current active page */
     getLeftPanelTabs: () => {
@@ -119,6 +155,8 @@ export const usePanelStore = create(
         ? get().pageTabs[pageId]?.middlePanelTabs ?? []
         : [];
     },
+    getContent: (tabId) => get().memoryCache.content[tabId],
+    getPdfHighlights: (tabId) => get().memoryCache.pdfHighlights[tabId],
 
     /* Unified add/remove tab methods */
     addTab: async (pageId, pageType, panel) => {
@@ -139,16 +177,23 @@ export const usePanelStore = create(
 
         if (tabExists) {
           console.log("Tab already exists, skipping fetch");
+          if(panel === 'left') {
+            get().setLeftActiveTabId(pageId);
+          } else {
+            get().setMiddleActiveTabId(pageId);
+          }
           return;
         }
 
         console.log("Fetching new tab data-->", pageId, pageType, panel);
         const tab = await fetchPageData(pageId, pageType);
         
+        
         set((state) => {
           const updated = { ...existing };
           if (panel === 'left') {
             updated.leftPanelTabs = [...updated.leftPanelTabs, tab];
+            get().setLeftActiveTabId(tab.id);
           } else {
             updated.middlePanelTabs = [...updated.middlePanelTabs, tab];
             get().setMiddleActiveTabId(tab.id);
@@ -193,11 +238,18 @@ export const usePanelStore = create(
             get().setMiddleActiveTabId(get().getMiddlePanelTabs()[0].id);
           }
         }
+
+        // Clear memory cache for removed tab
+        const newMemoryCache = { ...state.memoryCache };
+        delete newMemoryCache.content[tabId];
+        delete newMemoryCache.pdfHighlights[tabId];
+
         return {
           pageTabs: {
             ...state.pageTabs,
             [activePageId]: updated,
           },
+          memoryCache: newMemoryCache,
         };
       });
     },

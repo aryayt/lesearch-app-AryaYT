@@ -9,6 +9,6 @@ export default function Editor() {
   const { resolvedTheme } = useTheme();
  
   // Renders the editor instance using a React component.
-  return <BlockNoteView editor={editor} theme={resolvedTheme === "dark" ? "dark" : "light"} />;
+  return <BlockNoteView editor={editor} theme={resolvedTheme === "dark" ? "dark" : "light"} data-theming-css-variables/>;
 }
  

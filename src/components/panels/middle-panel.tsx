@@ -9,18 +9,18 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useStore } from '@/store/useCollectionStore';
 
 const MiddlePanel = () => {
-  const { activePageId, getMiddlePanelTabs, removeTab, middleActiveTabId, setMiddleActiveTabId } = usePanelStore();
+  const { activePageId, getMiddlePanelTabs, removeTab, middleActiveTabId, setMiddleActiveTabId, getPdfHighlights } = usePanelStore();
   const { setCreation } = useStore();
   const tabs = getMiddlePanelTabs();
- 
 
   // Update activeTabId when activePageId changes
   useEffect(() => {
-    const tab = tabs.find(tab => tab.id === activePageId);
-    if (tab) {
+     const tab = tabs.find(tab => tab.id === middleActiveTabId);
+     if(tab) {
       setMiddleActiveTabId(tab.id);
-    }
-  }, [activePageId, tabs, setMiddleActiveTabId]);
+     }
+    
+  }, [setMiddleActiveTabId, middleActiveTabId, tabs]);
 
   const handleAddNote = () => {
     setCreation({ parentId: activePageId, type: "note", panel: 'middle' });
@@ -84,7 +84,7 @@ const MiddlePanel = () => {
         {tabs.map((tab: Tab) => (
           <TabsContent key={tab.id} value={tab.id} className="flex flex-col mt-0 h-full overflow-auto">
             {tab.type === 'pdf' && tab.pdfUrl ? (
-             <AnaraViewer pdfUrl={tab.pdfUrl} /> 
+             <AnaraViewer pdfUrl={tab.pdfUrl}  pdfHighlights={getPdfHighlights(tab.id) || []}  /> 
             ) : (
               <Editor />
             )}

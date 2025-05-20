@@ -10,8 +10,11 @@ import { Loader2 } from 'lucide-react'
 const DashboardLayout = ({children}: {children: ReactNode}) => {
   const {pageId} = useParams()
   const {allItems , setActiveItem} = useStore()
-  const {setActivePageId, addTab, getLeftPanelTabs, getMiddlePanelTabs, setMiddleActiveTabId} = usePanelStore()
+  const {setActivePageId, addTab, getLeftPanelTabs, getMiddlePanelTabs, setMiddleActiveTabId, setLeftActiveTabId} = usePanelStore()
   const [loading, setLoading] = useState(false);
+  const existingTabs = getLeftPanelTabs();
+  const existingMiddleTabs = getMiddlePanelTabs();
+
 
   useEffect(() => {
     if (!pageId) return; // Early return if no pageId
@@ -22,7 +25,6 @@ const DashboardLayout = ({children}: {children: ReactNode}) => {
       return;
     }
     setActiveItem(pageId as string);
-    setActivePageId(pageId as string);
     
     // Define async function inside the effect
     async function loadPageData() {
@@ -30,24 +32,27 @@ const DashboardLayout = ({children}: {children: ReactNode}) => {
       
       // Use optional chaining to safely access page properties
       if (page?.type) {
-         await addTab(pageId as string, page.type as 'pdf' | 'note', 'left');
+        await addTab(pageId as string, page.type as 'pdf' | 'note', 'left');
+        setLeftActiveTabId(pageId as string);
       } else {
         console.error('Page or page type is undefined');
       }
     }
-    const existingTabs = getLeftPanelTabs();
-    const existingMiddleTabs = getMiddlePanelTabs();
+
     // console.log(existingTabs, pageId);
     if(!existingTabs.find(tab => tab.id === pageId)) {
+      setActivePageId(pageId as string);
       loadPageData();
     }
+
+    console.log("existingMiddleTabs", existingMiddleTabs)
 
     if(existingMiddleTabs.length > 0) {
       setMiddleActiveTabId(existingMiddleTabs[0].id);
     }
     setLoading(false);
     // Call the async function
-  }, [pageId, allItems, setActiveItem, setActivePageId, addTab, getLeftPanelTabs, getMiddlePanelTabs, setMiddleActiveTabId]);
+  }, [pageId, allItems, existingMiddleTabs, existingTabs, setActiveItem, setActivePageId, addTab, setMiddleActiveTabId, setLeftActiveTabId]);
 
   return (
     <div className="h-full w-full flex">

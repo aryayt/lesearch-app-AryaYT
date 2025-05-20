@@ -145,8 +145,8 @@ const PDFContent = ({
   );
 };
 
-export const AnaraViewer = ({pdfUrl}: {pdfUrl: string}) => {
-  const [savedAnnotations, setSavedAnnotations] = React.useState<Annotation[]>([]);
+export const AnaraViewer = ({pdfUrl, pdfHighlights}: {pdfUrl: string, pdfHighlights: Annotation[]}) => {
+  const [savedAnnotations, setSavedAnnotations] = React.useState<Annotation[]>(pdfHighlights);
   const [focusedAnnotationId, setFocusedAnnotationId] = useState<string>();
 
   const handleAnnotationsChange = useCallback((annotations: Annotation[]) => {

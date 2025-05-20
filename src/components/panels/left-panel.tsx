@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { type Tab, usePanelStore } from '@/store/usePanelStore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { FilePen, FileText, Plus, X } from 'lucide-react';
@@ -9,18 +9,17 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useStore } from '@/store/useCollectionStore';
 
 const LeftPanel = () => {
-  const { activePageId, getLeftPanelTabs, removeTab, leftActiveTabId, setLeftActiveTabId } = usePanelStore();
+  const { 
+    activePageId, 
+    getLeftPanelTabs, 
+    removeTab, 
+    leftActiveTabId, 
+    setLeftActiveTabId,
+    getPdfHighlights 
+  } = usePanelStore();
   const { setCreation } = useStore();
   const tabs = getLeftPanelTabs();
- 
 
-  // Update activeTabId when activePageId changes
-  useEffect(() => {
-    const tab = tabs.find(tab => tab.id === activePageId);
-    if (tab) {
-      setLeftActiveTabId(tab.id);
-    }
-  }, [activePageId, tabs, setLeftActiveTabId]);
 
   const handleAddNote = () => {
     setCreation({ parentId: activePageId, type: "note", panel: 'left' });
@@ -76,7 +75,10 @@ const LeftPanel = () => {
         {tabs.map((tab: Tab) => (
           <TabsContent key={tab.id} value={tab.id} className="flex flex-col mt-0 h-full overflow-auto">
             {tab.type === 'pdf' && tab.pdfUrl ? (
-             <AnaraViewer pdfUrl={tab.pdfUrl} /> 
+             <AnaraViewer 
+               pdfUrl={tab.pdfUrl} 
+               pdfHighlights={getPdfHighlights(tab.id) || []} 
+             /> 
             ) : (
               <Editor />
             )}

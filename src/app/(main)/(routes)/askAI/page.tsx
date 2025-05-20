@@ -32,7 +32,7 @@ const HomePage = () => {
             </div>
             <h2 className="font-medium text-sm">Write</h2>
             <p className="text-xs text-muted-foreground text-center">
-              Write and cite with AI
+              Write and Cite with AI
             </p>
           </div>
 

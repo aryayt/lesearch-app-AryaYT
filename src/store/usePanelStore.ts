@@ -69,39 +69,110 @@ interface PanelStore {
   ) => void;
 }
 
-// Fetch and normalize page data from Supabase
+/**
+ * Fetches and normalizes page data from Supabase
+ * 
+ * This function retrieves PDF or Note data from Supabase using the provided ID.
+ * It includes comprehensive error handling for common database query issues:
+ * 
+ * 1. ID not found - When no records match the provided ID
+ * 2. Duplicate IDs - When multiple records share the same ID (database integrity issue)
+ * 3. Missing required fields - When critical fields like pdf_url are missing
+ * 4. Database connection errors - When Supabase operations fail
+ * 
+ * TROUBLESHOOTING:
+ * - If you see "not found" errors: Verify the ID exists in the database
+ * - If you see "multiple found" errors: Check database for duplicate entries with same ID
+ * - If you see empty error objects ({}): Check Supabase connection and permissions
+ * 
+ * @param pageId - The unique identifier of the PDF or Note to fetch
+ * @param pageType - The type of resource to fetch ('pdf' or 'note')
+ * @returns Promise<Tab> - Normalized tab data including all required fields
+ * @throws Error with descriptive message when fetch fails
+ */
 async function fetchPageData(
   pageId: string,
   pageType: 'pdf' | 'note'
 ): Promise<Tab> {
-  const supabase = createClient();
-  if (pageType === 'pdf') {
-    const { data, error } = await supabase
-      .from('pdfs')
-      .select('id,name,pdf_url')
-      .eq('id', pageId)
-      .single();
-    if (error || !data) throw error || new Error('PDF not found');
+  try {
+    const supabase = createClient();
+    
+    if (pageType === 'pdf') {
+      // First retrieve all matching records to better diagnose issues
+      const { data: allMatches, error: matchError } = await supabase
+        .from('pdfs')
+        .select('id,name,pdf_url')
+        .eq('id', pageId);
+        
+      if (matchError) {
+        console.error('Supabase PDF query error:', matchError);
+        throw new Error(`Database error while searching for PDF: ${matchError.message || 'Unknown error'}`);
+      }
+      
+      // Handle the cases of no matches or multiple matches explicitly
+      if (!allMatches || allMatches.length === 0) {
+        console.error(`No PDF found with ID "${pageId}"`);
+        throw new Error(`PDF with ID "${pageId}" not found. Verify the ID is correct and the PDF exists in the database.`);
+      }
+      
+      if (allMatches.length > 1) {
+        console.error(`Multiple PDFs (${allMatches.length}) found with the same ID "${pageId}"`);
+        throw new Error(`Database integrity error: Multiple PDFs found with ID "${pageId}". Please contact the database administrator.`);
+      }
+      
+      // If we get here, we have exactly one match
+      const data = allMatches[0];
+      
+      if (!data.pdf_url) {
+        throw new Error(`PDF URL is missing for PDF with ID "${pageId}"`);
+      }
+      
+      return {
+        id: data.id,
+        name: data.name,
+        type: 'pdf',
+        pdfUrl: data.pdf_url,
+      };
+    }
+
+    // First retrieve all matching records to better diagnose issues
+    const { data: allMatches, error: matchError } = await supabase
+      .from('notes')
+      .select('id,name,content')
+      .eq('id', pageId);
+      
+    if (matchError) {
+      console.error('Supabase Note query error:', matchError);
+      throw new Error(`Database error while searching for Note: ${matchError.message || 'Unknown error'}`);
+    }
+    
+    // Handle the cases of no matches or multiple matches explicitly
+    if (!allMatches || allMatches.length === 0) {
+      console.error(`No Note found with ID "${pageId}"`);
+      throw new Error(`Note with ID "${pageId}" not found. Verify the ID is correct and the note exists in the database.`);
+    }
+    
+    if (allMatches.length > 1) {
+      console.error(`Multiple Notes (${allMatches.length}) found with the same ID "${pageId}"`);
+      throw new Error(`Database integrity error: Multiple Notes found with ID "${pageId}". Please contact the database administrator.`);
+    }
+    
+    // If we get here, we have exactly one match
+    const data = allMatches[0];
+    
     return {
       id: data.id,
       name: data.name,
-      type: 'pdf',
-      pdfUrl: data.pdf_url,
+      type: 'note',
+      content: data.content || '', // Ensure content is never undefined
     };
+  } catch (err) {
+    // Rethrow with more context if it's not already an Error object
+    if (err instanceof Error) {
+      throw err;
+    }
+    throw new Error(`Error fetching ${pageType} with ID "${pageId}": ${String(err)}`);
   }
-
-  const { data, error } = await supabase
-    .from('notes')
-    .select('id,name,content')
-    .eq('id', pageId)
-    .single();
-  if (error || !data) throw error || new Error('Note not found');
-  return {
-    id: data.id,
-    name: data.name,
-    type: 'note',
-    content: data.content,
-  };
 }
 
 type PersistedState = Pick<PanelStore, 'pageTabs' | 'activePageId' | 'leftActiveTabId' | 'panelVisibility'>;
@@ -184,7 +255,9 @@ export const usePanelStore = create(
       set({ isLoading: true, error: null });
       try {
         const activePageId = get().activePageId;
-        if (!activePageId) return;
+        if (!activePageId) {
+          throw new Error('No active page selected. Please select a page before adding tabs.');
+        }
 
         // Check if tab already exists in the specified panel
         const existing = get().pageTabs[activePageId] || {
@@ -207,8 +280,16 @@ export const usePanelStore = create(
         }
 
         console.log("Fetching new tab data-->", pageId, pageType, panel);
-        const tab = await fetchPageData(pageId, pageType);
         
+        if (!pageId) {
+          throw new Error('Invalid pageId: Page ID is required');
+        }
+        
+        if (!pageType || !['pdf', 'note'].includes(pageType)) {
+          throw new Error(`Invalid pageType: ${pageType}. Must be 'pdf' or 'note'`);
+        }
+        
+        const tab = await fetchPageData(pageId, pageType);
         
         set((state) => {
           const updated = { ...existing };
@@ -238,8 +319,15 @@ export const usePanelStore = create(
           };
         });
       } catch (err) {
-        console.error('Error adding tab:', err);
-        set({ error: err instanceof Error ? err.message : String(err) });
+        // Create a more descriptive error message
+        const errorMessage = err instanceof Error 
+          ? err.message 
+          : (typeof err === 'object' && err !== null && Object.keys(err).length === 0 
+              ? 'Unknown error occurred while adding tab. Please check your network connection and try again.' 
+              : String(err));
+              
+        console.error('Error adding tab:', err, 'Message:', errorMessage);
+        set({ error: errorMessage });
       } finally {
         set({ isLoading: false });
       }

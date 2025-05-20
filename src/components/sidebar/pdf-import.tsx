@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {  useStore } from "@/store/useCollectionStore";
+import { useStore } from "@/store/useCollectionStore";
 import { useUserStore } from "@/store/userStore";
 
 interface PDFImportProps {
@@ -35,7 +35,11 @@ export function PDFImport({ isOpen, onClose }: PDFImportProps) {
     }
   };
 
-  const handleImport = async () => {
+  const handleImport = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+
     const file = fileInputRef.current?.files?.[0];
     if (!file) {
       toast.error("Please select a PDF file");
@@ -56,9 +60,9 @@ export function PDFImport({ isOpen, onClose }: PDFImportProps) {
       setIsUploading(true);
 
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('userId', user?.id);
-      
+      formData.append("file", file);
+      formData.append("userId", user?.id);
+
       const id = await createItem(fileName, null, "pdf");
 
       if (!id) {
@@ -66,30 +70,30 @@ export function PDFImport({ isOpen, onClose }: PDFImportProps) {
         return;
       }
 
-      formData.append('id', id);
+      formData.append("id", id);
 
       // Send to server-side API for processing
-      const response = await fetch('/api/documents/upload', {
-        method: 'POST',
+      const response = await fetch("/api/documents/upload", {
+        method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
         deleteItem(id, "pdf");
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to upload document');
+        throw new Error(errorData.error || "Failed to upload document");
       }
-            
+
       // Add the PDF name and id to the collection store
-      
+
       // Close the dialog
       onClose();
-      
+
       // Navigate to the PDF viewer
       // Using window.location.href instead of router.push to force a full page reload
       // This ensures the Zustand store is properly rehydrated from localStorage
       window.location.href = `/documents/${id}`;
-      
+
       toast.success("PDF imported successfully");
     } catch (error) {
       console.error("Error importing PDF:", error);
@@ -108,38 +112,41 @@ export function PDFImport({ isOpen, onClose }: PDFImportProps) {
             Upload a PDF file to view and manage it in your documents.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="pdf-file">PDF File</Label>
-            <div className="flex items-center gap-2">
+        <form onSubmit={handleImport}>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="pdf-file">PDF File</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="pdf-file"
+                  type="file"
+                  accept=".pdf"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="flex-1"
+                />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="pdf-name">Name</Label>
               <Input
-                id="pdf-file"
-                type="file"
-                accept=".pdf"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                className="flex-1"
+                id="pdf-name"
+                value={fileName}
+                onChange={(e) => setFileName(e.target.value)}
+                placeholder="Enter a name for the PDF"
+                autoFocus
               />
             </div>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="pdf-name">Name</Label>
-            <Input
-              id="pdf-name"
-              value={fileName}
-              onChange={(e) => setFileName(e.target.value)}
-              placeholder="Enter a name for the PDF"
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleImport} disabled={isUploading}>
-            {isUploading ? "Importing..." : "Import"}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isUploading}>
+              {isUploading ? "Importing..." : "Import"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

@@ -1,7 +1,7 @@
 "use client";
 import type { ReactNode } from "react";
 import { useParams } from "next/navigation";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useStore } from "@/store/useCollectionStore";
 import { usePanelStore } from "@/store/usePanelStore";
 import { Loader2 } from "lucide-react";
@@ -12,23 +12,24 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
   const panelStore = usePanelStore();
   const [loading, setLoading] = useState(false);
   const processedRef = useRef(new Set<string>());
+  const isLoadingRef = useRef(false);
 
-  // Destructure the needed functions from panelStore
+  // Get panel functions directly
   const { setActivePageId, addTab, setMiddleActiveTabId, setLeftActiveTabId } =
     panelStore;
 
-  // Create memoized handlers for getting panel tabs
-  const getTabsInfo = useCallback(() => {
-    return {
-      leftTabs: panelStore.getLeftPanelTabs(),
-      middleTabs: panelStore.getMiddlePanelTabs(),
-    };
-  }, [panelStore]);
-
+  // Run effect only once per pageId
   useEffect(() => {
-    if (!pageId || processedRef.current.has(pageId as string)) return;
+    if (
+      !pageId ||
+      processedRef.current.has(pageId as string) ||
+      isLoadingRef.current
+    ) {
+      return;
+    }
 
-    const handlePageChange = async () => {
+    const loadPage = async () => {
+      isLoadingRef.current = true;
       setLoading(true);
 
       try {
@@ -38,11 +39,13 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        // Get tabs information
-        const { leftTabs, middleTabs } = getTabsInfo();
-
+        // Set active states
         setActiveItem(pageId as string);
         setActivePageId(pageId as string);
+
+        // Get tab information once here, not inside an effect
+        const leftTabs = panelStore.getLeftPanelTabs();
+        const middleTabs = panelStore.getMiddlePanelTabs();
 
         // Add tab if needed
         if (page.type && !leftTabs.find((tab) => tab.id === pageId)) {
@@ -51,20 +54,21 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
         }
 
         // Set middle tab if available
-        if (middleTabs.length > 0) {
+        if (middleTabs && middleTabs.length > 0) {
           setMiddleActiveTabId(middleTabs[0].id);
         }
 
-        // Mark this pageId as processed
+        // Mark as processed
         processedRef.current.add(pageId as string);
       } catch (error) {
-        console.error("Error in DashboardLayout effect:", error);
+        console.error("Error loading page:", error);
       } finally {
+        isLoadingRef.current = false;
         setLoading(false);
       }
     };
 
-    handlePageChange();
+    loadPage();
   }, [
     pageId,
     allItems,
@@ -73,7 +77,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
     addTab,
     setMiddleActiveTabId,
     setLeftActiveTabId,
-    getTabsInfo,
+    panelStore,
   ]);
 
   return (

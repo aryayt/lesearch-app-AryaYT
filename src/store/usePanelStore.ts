@@ -9,6 +9,12 @@ interface MemoryCache {
   pdfHighlights: Record<string, Annotation[]>;
 }
 
+// Panel visibility control
+interface PanelVisibility {
+  showMiddlePanel: boolean;
+  showRightPanel: boolean;
+}
+
 // Unified Tab type for UI
 export interface Tab {
   id: string;
@@ -31,6 +37,7 @@ interface PanelStore {
     { leftPanelTabs: Tab[]; middlePanelTabs: Tab[] }
   >;
   memoryCache: MemoryCache;
+  panelVisibility: Record<string, PanelVisibility>;
 
   /* State setters */
   setActivePageId: (pageId: string) => void;
@@ -41,12 +48,14 @@ interface PanelStore {
   clearError: () => void;
   setContent: (tabId: string, content: string) => void;
   setPdfHighlights: (tabId: string, highlights: Annotation[]) => void;
+  setPanelVisibility: (pageId: string, visibility: PanelVisibility) => void;
 
   /* Getters */
   getLeftPanelTabs: () => Tab[];
   getMiddlePanelTabs: () => Tab[];
   getContent: (tabId: string) => string | undefined;
   getPdfHighlights: (tabId: string) => Annotation[] | undefined;
+  getPanelVisibility: (pageId: string) => PanelVisibility;
 
   /* Side effects */
   addTab: (
@@ -95,7 +104,7 @@ async function fetchPageData(
   };
 }
 
-type PersistedState = Pick<PanelStore, 'pageTabs' | 'activePageId' | 'leftActiveTabId'>;
+type PersistedState = Pick<PanelStore, 'pageTabs' | 'activePageId' | 'leftActiveTabId' | 'panelVisibility'>;
 
 export const usePanelStore = create(
   persist<PanelStore, [], [], PersistedState>(
@@ -107,6 +116,7 @@ export const usePanelStore = create(
     isLoading: false,
     error: null,
     pageTabs: {},
+    panelVisibility: {},
     memoryCache: {
       content: {},
       pdfHighlights: {},
@@ -139,6 +149,13 @@ export const usePanelStore = create(
           },
         },
       })),
+    setPanelVisibility: (pageId, visibility) =>
+      set((state) => ({
+        panelVisibility: {
+          ...state.panelVisibility,
+          [pageId]: visibility,
+        },
+      })),
 
     /* Getters for current active page */
     getLeftPanelTabs: () => {
@@ -157,6 +174,9 @@ export const usePanelStore = create(
     },
     getContent: (tabId) => get().memoryCache.content[tabId],
     getPdfHighlights: (tabId) => get().memoryCache.pdfHighlights[tabId],
+    getPanelVisibility: (pageId) => {
+      return get().panelVisibility[pageId] || { showMiddlePanel: true, showRightPanel: true };
+    },
 
     /* Unified add/remove tab methods */
     addTab: async (pageId, pageType, panel) => {
@@ -261,6 +281,7 @@ export const usePanelStore = create(
       pageTabs: state.pageTabs,
       activePageId: state.activePageId,
       leftActiveTabId: state.leftActiveTabId,
+      panelVisibility: state.panelVisibility,
     }),
   }
   )

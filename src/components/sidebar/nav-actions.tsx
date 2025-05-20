@@ -36,7 +36,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-// import { usePanelStore } from "@/store/usePanelStore";
+import { usePanelStore } from "@/store/usePanelStore";
+import { useParams } from "next/navigation";
 
 const data = [
   {
@@ -115,41 +116,60 @@ const data = [
 
 export function NavActions() {
   const [isOpen, setIsOpen] = React.useState(false);
-  // const {  setPanelVisibility } = usePanelStore();
-  // const { pageData } = usePanelStore();
+  const { activePageId, setPanelVisibility, getPanelVisibility } =
+    usePanelStore();
+  const params = useParams();
 
-  const pagePanelVisibility = { showMiddlePanel: true, showRightPanel: true };
+  // Use either the active page ID from the store, or the URL param as fallback
+  const pageId = activePageId || (params?.pageId as string);
+  const pagePanelVisibility = getPanelVisibility(pageId);
+
+  const toggleMiddlePanel = () => {
+    if (!pageId) return;
+
+    setPanelVisibility(pageId, {
+      showMiddlePanel: !pagePanelVisibility.showMiddlePanel,
+      showRightPanel: pagePanelVisibility.showRightPanel,
+    });
+  };
+
+  const toggleRightPanel = () => {
+    if (!pageId) return;
+
+    setPanelVisibility(pageId, {
+      showMiddlePanel: pagePanelVisibility.showMiddlePanel,
+      showRightPanel: !pagePanelVisibility.showRightPanel,
+    });
+  };
 
   return (
     <div className="flex items-center gap-2 text-sm">
       {/* Panel Toggles */}
       <Button
-        title={pagePanelVisibility.showMiddlePanel ? "Close PDF Panel" : "Open PDF Panel"}
+        title={
+          pagePanelVisibility.showMiddlePanel
+            ? "Close PDF Panel"
+            : "Open PDF Panel"
+        }
         aria-label="Toggle PDF Panel"
         variant="ghost"
         size="icon"
         className="size-7"
-        // onClick={() => setPanelVisibility(pageData?.id as string, { 
-        //   showMiddlePanel: !pagePanelVisibility.showMiddlePanel, 
-        //   showRightPanel: pagePanelVisibility.showRightPanel 
-        // })}
+        onClick={toggleMiddlePanel}
       >
-        {pagePanelVisibility.showMiddlePanel ? (
-          <FileX />
-        ) : (
-          <FileText />
-        )}
+        {pagePanelVisibility.showMiddlePanel ? <FileX /> : <FileText />}
       </Button>
       <Button
         variant="ghost"
         size="icon"
         className="size-7"
-        title={pagePanelVisibility.showRightPanel ? "Close Chat Bot" : "Open Chat Bot"}
+        title={
+          pagePanelVisibility.showRightPanel
+            ? "Close Chat Bot"
+            : "Open Chat Bot"
+        }
         aria-label="Toggle Chat Bot"
-        // onClick={() => setPanelVisibility(pageData?.id as string, { 
-        //   showRightPanel: !pagePanelVisibility.showRightPanel, 
-        //   showMiddlePanel: pagePanelVisibility.showMiddlePanel 
-        // })}
+        onClick={toggleRightPanel}
       >
         {pagePanelVisibility.showRightPanel ? (
           // X icon for open state
@@ -179,7 +199,10 @@ export function NavActions() {
           <Sidebar collapsible="none" className="bg-transparent">
             <SidebarContent>
               {data.map((group) => (
-                <SidebarGroup key={group.id} className="border-b last:border-none">
+                <SidebarGroup
+                  key={group.id}
+                  className="border-b last:border-none"
+                >
                   <SidebarGroupContent className="gap-0">
                     <SidebarMenu>
                       {group.items.map((item) => (

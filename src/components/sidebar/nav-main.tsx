@@ -27,12 +27,15 @@ export function NavMain() {
   const isAskAI = pathname === "/askAI" || pathname === "/askAI/"
   const isGraphView = pathname === "/graphview" || pathname === "/graphview/"
   const [importPdfOpen, setImportPdfOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const { setCreation } = useStore();
+
+  
   return (
     <SidebarMenu>
       {/* Search Item */}
       <SidebarMenuItem title="Create">
-        <DropdownMenu>
+        <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <DropdownMenuTrigger asChild>
           <SidebarMenuButton>
             <Plus />
@@ -42,16 +45,34 @@ export function NavMain() {
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem 
             className="flex items-center gap-2 cursor-pointer"
-            onClick={() => setImportPdfOpen(true)}
+            onSelect={(e) => {
+              e.preventDefault();
+              setImportPdfOpen(true);
+              setDropdownOpen(false);
+            }}
           >
             <ImportIcon className="h-4 w-4" />
             <span>Import PDF</span>
           </DropdownMenuItem>
-          <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => setCreation({ parentId: null, type: "note" })}>
+          <DropdownMenuItem 
+            className="flex items-center gap-2 cursor-pointer" 
+            onSelect={(e) => {
+              e.preventDefault();
+              setCreation({ parentId: null, type: "note" });
+              setDropdownOpen(false);
+            }}
+          >
             <FilePlusIcon className="h-4 w-4" />
             <span>Create Page</span>
           </DropdownMenuItem>
-          <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => setCreation({ parentId: null, type: "folder" })}>
+          <DropdownMenuItem 
+            className="flex items-center gap-2 cursor-pointer" 
+            onSelect={(e) => {
+              e.preventDefault();
+              setCreation({ parentId: null, type: "folder" });
+              setDropdownOpen(false);
+            }}
+          >
             <FolderPlusIcon className="h-4 w-4" />
             <span>Create Workspace</span>
           </DropdownMenuItem>

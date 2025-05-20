@@ -16,7 +16,7 @@ const HomePage = () => {
         {/* Welcome Header */}
         <div className="mb-8 text-center animate-fade-in">
           <h1 className="text-3xl font-bold mb-1">
-            Welcome back, <span className="text-primary">{firstname || "User"}</span>
+            ASK AI, <span className="text-primary">{firstname || "User"}</span>
           </h1>
           <p className="text-muted-foreground text-sm">
             Import documents and videos, start writing, or create a new recording

@@ -35,25 +35,18 @@ export function NavMain() {
   const isAskAI = pathname === "/askAI" || pathname === "/askAI/";
   const isGraphView = pathname === "/graphview" || pathname === "/graphview/";
   const [importPdfOpen, setImportPdfOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const { setCreation } = useStore();
 
-  // Use useCallback for dropdown handlers to prevent recreating functions on every render
-  const handleDropdownOpenChange = useCallback((open: boolean) => {
-    setDropdownOpen(open);
-  }, []);
-
+  // Use callbacks for event handlers to prevent recreation on renders
   const handleImportPdf = useCallback((e: Event) => {
     e.preventDefault();
     setImportPdfOpen(true);
-    setDropdownOpen(false);
   }, []);
 
   const handleCreatePage = useCallback(
     (e: Event) => {
       e.preventDefault();
       setCreation({ parentId: null, type: "note" });
-      setDropdownOpen(false);
     },
     [setCreation]
   );
@@ -62,7 +55,6 @@ export function NavMain() {
     (e: Event) => {
       e.preventDefault();
       setCreation({ parentId: null, type: "folder" });
-      setDropdownOpen(false);
     },
     [setCreation]
   );
@@ -71,10 +63,7 @@ export function NavMain() {
     <SidebarMenu>
       {/* Search Item */}
       <SidebarMenuItem title="Create">
-        <DropdownMenu
-          open={dropdownOpen}
-          onOpenChange={handleDropdownOpenChange}
-        >
+        <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton>
               <Plus />

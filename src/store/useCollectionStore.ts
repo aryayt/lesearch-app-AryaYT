@@ -7,7 +7,6 @@ export type FileItem = {
 	name: string;
 	parentId: string | null;
 	type: "folder" | "pdf" | "note";
-	content_id?: string;
 };
 
 // Zustand Store for managing files, dragged item, drop target, etc.
@@ -30,7 +29,6 @@ type Store = {
 		name: string,
 		parentId: string | null,
 		type: FileItem["type"],
-		content_id?: string,
 	) => Promise<string>;
 	createNote: (id: string, name: string) => Promise<string>;
 	handleDrop: (draggedItem: FileItem | null, targetId: string | null) => void;

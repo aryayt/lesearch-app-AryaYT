@@ -83,7 +83,7 @@ async function fetchPageData(
 
   const { data, error } = await supabase
     .from('notes')
-    .select('id,name,content')
+    .select('id,name')
     .eq('id', pageId)
     .single();
   if (error || !data) throw error || new Error('Note not found');
@@ -91,7 +91,6 @@ async function fetchPageData(
     id: data.id,
     name: data.name,
     type: 'note',
-    content: data.content,
   };
 }
 
@@ -185,7 +184,7 @@ export const usePanelStore = create(
           return;
         }
 
-        console.log("Fetching new tab data-->", pageId, pageType, panel);
+        // console.log("Fetching new tab data-->", pageId, pageType, panel);
         const tab = await fetchPageData(pageId, pageType);
         
         

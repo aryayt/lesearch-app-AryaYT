@@ -39,6 +39,7 @@
     "framer-motion": "^12.5.0",
     "google-auth-library": "^9.15.1",
     "ldrs": "^1.1.7",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.483.0",
     "next": "^15.3.2",
     "next-auth": "^4.24.11",
@@ -62,6 +63,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/lodash": "^4.17.17",
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^19",

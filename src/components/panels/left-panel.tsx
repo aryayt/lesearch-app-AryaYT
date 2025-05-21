@@ -3,11 +3,12 @@ import { type Tab, usePanelStore } from '@/store/usePanelStore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { FilePen, FileText, Plus, X } from 'lucide-react';
 import { Button } from '../ui/button';
-import Editor from '../blocknote/editor';
 import { AnaraViewer } from '../anara/anara';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { useStore } from '@/store/useCollectionStore';
-
+import BlockNoteEditor from '../blocknote/BlockNoteEditor';
+import { SaveStatus } from '../sidebar/save-status';
+import { useDocStore } from '@/store/useDocStore';
 const LeftPanel = () => {
   const { 
     activePageId, 
@@ -19,7 +20,7 @@ const LeftPanel = () => {
   } = usePanelStore();
   const { setCreation } = useStore();
   const tabs = getLeftPanelTabs();
-
+  const { saveStatus } = useDocStore();
 
   const handleAddNote = () => {
     setCreation({ parentId: activePageId, type: "note", panel: 'left' });
@@ -57,6 +58,7 @@ const LeftPanel = () => {
             </div>
           ))}
         </div>
+        <SaveStatus status={saveStatus} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -80,7 +82,7 @@ const LeftPanel = () => {
                pdfHighlights={getPdfHighlights(tab.id) || []} 
              /> 
             ) : (
-              <Editor />
+              <BlockNoteEditor docid={tab.id} />
             )}
           </TabsContent>
         ))}

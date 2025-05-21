@@ -1,66 +1,96 @@
-"use client"
-import type { ReactNode } from 'react'
-import { useParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { useStore } from '@/store/useCollectionStore'
-import { usePanelStore } from '@/store/usePanelStore'
-import { Loader2 } from 'lucide-react'
+"use client";
+import type { ReactNode } from "react";
+import { useParams } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
+import { useStore } from "@/store/useCollectionStore";
+import { usePanelStore } from "@/store/usePanelStore";
+import { Loader2 } from "lucide-react";
 
-
-const DashboardLayout = ({children}: {children: ReactNode}) => {
-  const {pageId} = useParams()
-  const {allItems , setActiveItem} = useStore()
-  const {setActivePageId, addTab, getLeftPanelTabs, getMiddlePanelTabs, setMiddleActiveTabId, setLeftActiveTabId} = usePanelStore()
+const DashboardLayout = ({ children }: { children: ReactNode }) => {
+  const { pageId } = useParams();
+  const { allItems, setActiveItem } = useStore();
+  const panelStore = usePanelStore();
   const [loading, setLoading] = useState(false);
-  const existingTabs = getLeftPanelTabs();
-  const existingMiddleTabs = getMiddlePanelTabs();
+  const processedRef = useRef(new Set<string>());
+  const isLoadingRef = useRef(false);
 
+  // Get panel functions directly
+  const { setActivePageId, addTab, setMiddleActiveTabId, setLeftActiveTabId } =
+    panelStore;
 
+  // Run effect only once per pageId
   useEffect(() => {
-    if (!pageId) return; // Early return if no pageId
-    setLoading(true);
-    const page = allItems.find(item => item.id === pageId);
-    if (!page) {
-      console.log('Page not found in allItems:', pageId);
+    if (
+      !pageId ||
+      processedRef.current.has(pageId as string) ||
+      isLoadingRef.current
+    ) {
       return;
     }
-    setActiveItem(pageId as string);
-    
-    // Define async function inside the effect
-    async function loadPageData() {
-      // Set active item in collection store to highlight it in the sidebar
-      
-      // Use optional chaining to safely access page properties
-      if (page?.type) {
-        await addTab(pageId as string, page.type as 'pdf' | 'note', 'left');
-        setLeftActiveTabId(pageId as string);
-      } else {
-        console.error('Page or page type is undefined');
+
+    const loadPage = async () => {
+      isLoadingRef.current = true;
+      setLoading(true);
+
+      try {
+        const page = allItems.find((item) => item.id === pageId);
+        if (!page) {
+          console.log("Page not found in allItems:", pageId);
+          return;
+        }
+
+        // Set active states
+        setActiveItem(pageId as string);
+        setActivePageId(pageId as string);
+
+        // Get tab information once here, not inside an effect
+        const leftTabs = panelStore.getLeftPanelTabs();
+        const middleTabs = panelStore.getMiddlePanelTabs();
+
+        // Add tab if needed
+        if (page.type && !leftTabs.find((tab) => tab.id === pageId)) {
+          await addTab(pageId as string, page.type as "pdf" | "note", "left");
+          setLeftActiveTabId(pageId as string);
+        }
+
+        // Set middle tab if available
+        if (middleTabs && middleTabs.length > 0) {
+          setMiddleActiveTabId(middleTabs[0].id);
+        }
+
+        // Mark as processed
+        processedRef.current.add(pageId as string);
+      } catch (error) {
+        console.error("Error loading page:", error);
+      } finally {
+        isLoadingRef.current = false;
+        setLoading(false);
       }
-    }
+    };
 
-    // console.log(existingTabs, pageId);
-    if(!existingTabs.find(tab => tab.id === pageId)) {
-      setActivePageId(pageId as string);
-      loadPageData();
-    }
-
-    console.log("existingMiddleTabs", existingMiddleTabs)
-
-    if(existingMiddleTabs.length > 0) {
-      setMiddleActiveTabId(existingMiddleTabs[0].id);
-    }
-    setLoading(false);
-    // Call the async function
-  }, [pageId, allItems, existingMiddleTabs, existingTabs, setActiveItem, setActivePageId, addTab, setMiddleActiveTabId, setLeftActiveTabId]);
+    loadPage();
+  }, [
+    pageId,
+    allItems,
+    setActiveItem,
+    setActivePageId,
+    addTab,
+    setMiddleActiveTabId,
+    setLeftActiveTabId,
+    panelStore,
+  ]);
 
   return (
     <div className="h-full w-full flex">
-      {loading ? <div className="flex items-center justify-center h-full w-full">
-        <Loader2 className="w-4 h-4 animate-spin" />
-      </div> : children}
+      {loading ? (
+        <div className="flex items-center justify-center h-full w-full">
+          <Loader2 className="w-4 h-4 animate-spin" />
+        </div>
+      ) : (
+        children
+      )}
     </div>
-  )
-}
+  );
+};
 
-export default DashboardLayout
+export default DashboardLayout;

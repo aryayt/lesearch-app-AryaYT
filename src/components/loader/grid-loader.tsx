@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef } from "react";
 
 interface GridLoaderAltProps {
-  size?: string
-  speed?: string
-  color?: string
-  className?: string
+  size?: string;
+  speed?: string;
+  color?: string;
+  className?: string;
 }
 
 export default function GridLoade({
@@ -15,28 +15,27 @@ export default function GridLoade({
   color = "black",
   className = "",
 }: GridLoaderAltProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!containerRef.current) return
+    if (!containerRef.current) return;
 
     import("ldrs").then(({ grid }) => {
-      grid.register()
+      grid.register();
 
       // Create the element programmatically
-      const gridElement = document.createElement("l-grid")
-      gridElement.setAttribute("size", size)
-      gridElement.setAttribute("speed", speed)
-      gridElement.setAttribute("color", color)
+      const gridElement = document.createElement("l-grid");
+      gridElement.setAttribute("size", size);
+      gridElement.setAttribute("speed", speed);
+      gridElement.setAttribute("color", color);
 
       // Clear container and append the new element
       if (containerRef.current) {
-          containerRef.current.innerHTML = ""
-        containerRef.current.appendChild(gridElement)
+        containerRef.current.innerHTML = "";
+        containerRef.current.appendChild(gridElement);
       }
-    })
-  }, [size, speed, color])
+    });
+  }, [size, speed, color]);
 
-  return <div ref={containerRef} className={className}></div>
+  return <div ref={containerRef} className={className} />;
 }
-

@@ -200,7 +200,7 @@ export function FileNode({
             ) : (
               <FolderOpen />
             )}
-            {childFiles.length > 0 && file.type === "folder" && (
+            {(childFiles.length > 0 || file.type === "folder") && (
               <SidebarMenuAction
                 showOnHover
                 type="button"

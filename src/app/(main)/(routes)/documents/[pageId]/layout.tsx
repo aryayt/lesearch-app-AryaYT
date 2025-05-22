@@ -25,6 +25,8 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       processedRef.current.has(pageId as string) ||
       isLoadingRef.current
     ) {
+      setActiveItem(null);
+      setActivePageId("");
       return;
     }
 

@@ -38,26 +38,17 @@ export function NavMain() {
   const { setCreation } = useStore();
 
   // Use callbacks for event handlers to prevent recreation on renders
-  const handleImportPdf = useCallback((e: Event) => {
-    e.preventDefault();
+  const handleImportPdf = useCallback(() => {
     setImportPdfOpen(true);
   }, []);
 
-  const handleCreatePage = useCallback(
-    (e: Event) => {
-      e.preventDefault();
-      setCreation({ parentId: null, type: "note" });
-    },
-    [setCreation]
-  );
+  const handleCreatePage = useCallback(() => {
+    setCreation({ parentId: null, type: "note" });
+  }, [setCreation]);
 
-  const handleCreateWorkspace = useCallback(
-    (e: Event) => {
-      e.preventDefault();
-      setCreation({ parentId: null, type: "folder" });
-    },
-    [setCreation]
-  );
+  const handleCreateWorkspace = useCallback(() => {
+    setCreation({ parentId: null, type: "folder" });
+  }, [setCreation]);
 
   return (
     <SidebarMenu>
@@ -73,21 +64,21 @@ export function NavMain() {
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem
               className="flex items-center gap-2 cursor-pointer"
-              onSelect={handleImportPdf}
+              onClick={handleImportPdf}
             >
               <ImportIcon className="h-4 w-4" />
               <span>Import PDF</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="flex items-center gap-2 cursor-pointer"
-              onSelect={handleCreatePage}
+              onClick={handleCreatePage}
             >
               <FilePlusIcon className="h-4 w-4" />
               <span>Create Page</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="flex items-center gap-2 cursor-pointer"
-              onSelect={handleCreateWorkspace}
+              onClick={handleCreateWorkspace}
             >
               <FolderPlusIcon className="h-4 w-4" />
               <span>Create Workspace</span>

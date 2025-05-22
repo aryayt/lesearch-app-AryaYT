@@ -31,10 +31,31 @@ import { Button } from "@/components/ui/button"
 import { useTheme } from "next-themes";
 import { SettingsDialog } from "../dialog/settings-dialog"
 import SignOutDialog from "../dialog/signout-dialog"
+import { Skeleton } from "../ui/skeleton"
 export default function SidebarUser() {
   const { isMobile } = useSidebar()
-  const { fullname, image, email } = useUserStore();
+  const {user, fullname, image, email } = useUserStore();
     const { resolvedTheme: theme, setTheme } = useTheme();
+
+    if(!user || !fullname || !image || !email) {
+      return (
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            >
+              <Skeleton className="h-8 w-8 rounded-lg" />
+              <div className="grid flex-1 gap-1 text-left">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+              <Skeleton className="ml-auto h-4 w-4" />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      );
+    }
 
   return (
     <SidebarMenu>

@@ -14,6 +14,23 @@ import { Button } from "@/components/ui/button";
 import { type FileItem, useStore } from "@/store/useCollectionStore"; // Import Zustand store
 import { usePanelStore } from "@/store/usePanelStore";
 import { useRouter } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Add this component at the top level of the file
+function FileNodeSkeleton({ level = 0, isCollection = false }) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2 px-2 py-1.5 rounded-md",
+        level > 0 && "ml-4"
+      )}
+    >
+      <Skeleton className="h-4 w-4" /> {/* Icon skeleton */}
+      <Skeleton className="h-4 w-32" /> {/* Name skeleton */}
+      {isCollection && <Skeleton className="ml-auto h-4 w-4" />} {/* Collection indicator skeleton */}
+    </div>
+  );
+}
 
 export function NavWorkspaces() {
   // Accessing Zustand store state and actions
@@ -195,6 +212,18 @@ export function NavWorkspaces() {
     toast.success(`Added new note: "${newName}"}`);
   };
 
+  if(isWorkspacesLoading || isCollectionsLoading) {
+    return (
+      <div className="space-y-1">
+        <FileNodeSkeleton />
+        <FileNodeSkeleton />
+        <FileNodeSkeleton level={1} />
+        <FileNodeSkeleton level={1} />
+        <FileNodeSkeleton />
+      </div>
+    )
+  }
+
   return (
     <div>
       {/* Workspaces Section */}
@@ -204,13 +233,7 @@ export function NavWorkspaces() {
           <SidebarGroupContent>
             <SidebarMenu>
               <div className={cn("w-full p-2")}>
-                {/* If there are no workspaces */}
-                {isWorkspacesLoading ? (
-                  <div className="text-muted-foreground text-sm px-2">
-                    Loading workspaces...
-                  </div>
-                ) : (
-                  rootWorkspaces.map((file) => (
+                  {rootWorkspaces.map((file) => (
                     <FileNode
                       key={file.id}
                       file={file}
@@ -228,8 +251,8 @@ export function NavWorkspaces() {
                       }
                       onRequestCreate={(newItem) => setCreation(newItem)}
                     />
-                  ))
-                )}
+                  ))}
+                
               </div>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -242,12 +265,7 @@ export function NavWorkspaces() {
         <SidebarGroupContent>
           <SidebarMenu className="w-full gap-0">
             <div className={cn("w-full p-2")}>
-              {/* If there are no collections */}
-              {isCollectionsLoading ? (
-                <div className="text-muted-foreground text-sm px-2">
-                  Loading collections...
-                </div>
-              ) : rootCollections.length === 0 ? (
+                  {rootCollections.length === 0 ? (
                 <div className="text-muted-foreground text-sm px-2">
                   No files yet
                 </div>

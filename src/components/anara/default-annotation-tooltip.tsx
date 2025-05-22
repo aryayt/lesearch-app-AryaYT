@@ -1,5 +1,5 @@
 import { useAnnotationActions } from "./useAnnotationActions";
-import type { Annotation } from "@anaralabs/lector";
+import type { Annotation } from "@/anaralabs/lector";
 
 interface DefaultAnnotationTooltipContentProps {
   annotation: Annotation;

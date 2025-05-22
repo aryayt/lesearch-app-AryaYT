@@ -1,7 +1,7 @@
 import { 
   type Annotation,
   useAnnotations,
-} from "@anaralabs/lector";
+} from "@/anaralabs/lector";
 import  { useCallback, useState } from "react";
 
 export const SelectionTooltipContent = ({ onHighlight }: { onHighlight: () => void }) => {
@@ -73,16 +73,16 @@ export const TooltipContent = ({ annotation, onClose }: TooltipContentProps) => 
 
   const handleSaveComment = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    updateAnnotation(annotation.id, { comment });
+    updateAnnotation(annotation.documentId, annotation.id, { comment });
     setIsEditing(false);
     onClose?.();
-  }, [annotation.id, comment, updateAnnotation, onClose]);
+  }, [annotation.id, annotation.documentId, comment, updateAnnotation, onClose]);
 
   const handleColorChange = useCallback((e: React.MouseEvent, color: string) => {
     e.stopPropagation();
-    updateAnnotation(annotation.id, { color });
+    updateAnnotation(annotation.documentId, annotation.id, { color });
     onClose?.();
-  }, [annotation.id, updateAnnotation, onClose]);
+  }, [annotation.id, annotation.documentId, updateAnnotation, onClose]);
 
   const handleStartEditing = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -96,9 +96,9 @@ export const TooltipContent = ({ annotation, onClose }: TooltipContentProps) => 
 
   const handleDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    deleteAnnotation(annotation.id);
+    deleteAnnotation(annotation.documentId, annotation.id);
     onClose?.();
-  }, [annotation.id, deleteAnnotation, onClose]);
+  }, [annotation.id, annotation.documentId, deleteAnnotation, onClose]);
 
   const colors = [
     "rgba(255, 255, 0, 0.3)", // Yellow

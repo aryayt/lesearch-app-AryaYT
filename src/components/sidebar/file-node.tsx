@@ -200,21 +200,23 @@ export function FileNode({
             ) : (
               <FolderOpen />
             )}
-            <SidebarMenuAction
-              showOnHover
-              type="button"
-              // variant="ghost"
-              aria-label="Toggle Folder"
-              // size="icon"
-              className={cn(
+            {childFiles.length > 0 && file.type === "folder" && (
+              <SidebarMenuAction
+                showOnHover
+                type="button"
+                // variant="ghost"
+                aria-label="Toggle Folder"
+                // size="icon"
+                className={cn(
                 "absolute left-2 flex items-center justify-center z-10 transition-opacity",
                 "opacity-0 hover:opacity-100",
                 "bg-sidebar-accent text-sidebar-accent-foreground rounded-full"
               )}
               onClick={toggleOpen}
             >
-              {isOpen ? <ChevronDown /> : <ChevronRight />}
-            </SidebarMenuAction>
+                {isOpen ? <ChevronDown /> : <ChevronRight />}
+              </SidebarMenuAction>
+            )}
             <button
               type="button"
               className="ml-2 flex-1 truncate bg-transparent border-none p-0 text-left cursor-pointer"

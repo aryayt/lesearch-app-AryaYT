@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { useStore } from "@/store/useCollectionStore";
-import { BlockNoteEditor } from "@blocknote/core";
+import  BlockEditor  from '@/components/blocknote/BlockNoteEditor'
 import { toast } from "sonner";
 import debounce from "lodash/debounce";
 
@@ -142,7 +142,7 @@ const LeftPanel = () => {
                 pdfHighlights={getPdfHighlights(tab.id) || []}
               />
             ) : (
-              <NoteEditorWrapper tabId={tab.id} />
+              <BlockEditor tabId={tab.id} />
             )}
           </TabsContent>
         ))}

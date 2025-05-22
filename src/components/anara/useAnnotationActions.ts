@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 
-import type { Annotation } from "@anaralabs/lector";
-import { useAnnotations } from "@anaralabs/lector";
+import type { Annotation } from "@/anaralabs/lector";
+import { useAnnotations } from "@/anaralabs/lector";
 
 interface UseAnnotationActionsProps {
   annotation: Annotation;
@@ -28,17 +28,17 @@ export const useAnnotationActions = ({
   const [isEditing, setIsEditing] = useState(false);
 
   const handleSaveComment = useCallback(() => {
-    updateAnnotation(annotation.id, { comment });
+    updateAnnotation(annotation.documentId, annotation.id, { comment });
     setIsEditing(false);
     onClose?.();
-  }, [annotation.id, comment, updateAnnotation, onClose]);
+  }, [annotation.id, annotation.documentId, comment, updateAnnotation, onClose]);
 
   const handleColorChange = useCallback(
     (color: string) => {
-      updateAnnotation(annotation.id, { color });
+      updateAnnotation(annotation.documentId, annotation.id, { color });
       onClose?.();
     },
-    [annotation.id, updateAnnotation, onClose]
+    [annotation.id, annotation.documentId, updateAnnotation, onClose]
   );
 
   const handleCancelEdit = useCallback(() => {

@@ -3,10 +3,9 @@ import Editor from './editor'
 import { useDocStore } from '@/store/useDocStore'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDocRealtime } from '@/store/use-doc-realtime'
-const BlockNoteEditor = ({ docid }: { docid: string }) => {
+const BlockEditor = ({ docid }: { docid: string }) => {
   const { doc, updateDocAsync, getDocAsync } = useDocStore();
   const [loading, setLoading] = useState(true);
-    console.log("doc id", docid)
   useDocRealtime();
   useEffect(() => {
     getDocAsync(docid);
@@ -38,4 +37,4 @@ function DocumentSkeleton() {
     );
   }
 
-export default BlockNoteEditor
+export default BlockEditor

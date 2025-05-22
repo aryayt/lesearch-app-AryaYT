@@ -10,64 +10,106 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog"
 import {
-  File,
   FileText,
-  Folder,
-  Calendar,
   Search,
-  ListFilter,
-  X,
-  ArrowRight,
-  LayoutDashboard
+  FilePen,
+  MoreHorizontal,
+  ArrowUpRight,
+  ListX,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
+import { useStore } from "@/store/useCollectionStore";
+import { usePanelStore } from "@/store/usePanelStore";
+import { useRouter } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function SearchDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState("")
   const [selectedCategory, setSelectedCategory] = React.useState("all")
+  const { allItems } = useStore();
+  const { addTab } = usePanelStore();
+  const router = useRouter();
 
-  // Sample data - in a real app, this would come from your database
-  const recentSearches = [
-    "Marketing plan", "Q1 budget", "Team meeting notes", "Roadmap"
-  ]
+  // Get folder path for an item
+  const getFolderPath = React.useCallback((item: typeof allItems[0]): string => {
+    if (!item.parentId) return "";
+    
+    const path: string[] = [];
+    let currentId = item.parentId;
+    
+    while (currentId) {
+      const parent = allItems.find(i => i.id === currentId);
+      if (!parent) break;
+      path.unshift(parent.name);
+      currentId = parent.parentId || "";
+    }
+    
+    return path.length > 0 ? path.join(" / ") : "";
+  }, [allItems]);
 
-  const recentPages = [
-    { id: 1, title: "Q1 2024 Goals", type: "page", lastUpdated: "2h ago", icon: <FileText className="w-4 h-4" /> },
-    { id: 2, title: "Team Weekly Tasks", type: "database", lastUpdated: "1d ago", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { id: 3, title: "Product Roadmap", type: "page", lastUpdated: "3d ago", icon: <FileText className="w-4 h-4" /> },
-    { id: 4, title: "Meeting Notes", type: "folder", lastUpdated: "5d ago", icon: <Folder className="w-4 h-4" /> }
-  ]
+  // Filter items based on search query and category
+  const filteredItems = React.useMemo(() => {
+    if (!search) return [];
+    
+    const query = search.toLowerCase();
+    return allItems.filter(item => {
+      const matchesSearch = item.name.toLowerCase().includes(query);
+      const matchesCategory = selectedCategory === "all" || item.type === selectedCategory;
+      const isFile = item.type === "pdf" || item.type === "note";
+      return matchesSearch && matchesCategory && isFile;
+    });
+  }, [search, selectedCategory, allItems]);
 
-  // This would be your search results from an actual query
-  const searchResults = {
-    pages: [
-      { id: 1, title: "Development Plan", description: "Tech stack overview and milestones", icon: <FileText className="w-4 h-4" /> },
-      { id: 2, title: "Design System", description: "Components and design guidelines", icon: <FileText className="w-4 h-4" /> },
-      { id: 3, title: "Marketing Plan Templates", description: "Templates for different campaigns", icon: <FileText className="w-4 h-4" /> }
-    ],
-    databases: [
-      { id: 1, title: "Tasks DB", description: "All project tasks and assignments", icon: <LayoutDashboard className="w-4 h-4" /> },
-      { id: 2, title: "Content Calendar", description: "Publishing schedule and status", icon: <Calendar className="w-4 h-4" /> }
-    ],
-    files: [
-      { id: 1, title: "Presentation.pdf", description: "Sales pitch deck for new clients", icon: <File className="w-4 h-4" /> },
-      { id: 2, title: "Logo Assets.zip", description: "Brand logos in different formats", icon: <File className="w-4 h-4" /> }
-    ]
-  }
+  // Group items by type for display
+  const groupedResults = React.useMemo(() => {
+    const groups = {
+      pages: [] as typeof allItems,
+      files: [] as typeof allItems
+    };
+
+    for (const item of filteredItems) {
+      if (item.type === "note") {
+        groups.pages.push(item);
+      } else if (item.type === "pdf") {
+        groups.files.push(item);
+      }
+    }
+
+    return groups;
+  }, [filteredItems]);
+
+  const handleItemClick = (item: typeof allItems[0], e?: React.MouseEvent) => {
+    // If the click originated from a dropdown menu item, don't navigate
+    if (e?.target instanceof HTMLElement && e.target.closest('[role="menuitem"]')) {
+      return;
+    }
+    router.push(`/documents/${item.id}`);
+    setOpen(false);
+  };
+
+  const handleOpenInPanel = (item: typeof allItems[0], panel: "left" | "middle") => {
+    if (item.type === "pdf" || item.type === "note") {
+      addTab(item.id, item.type, panel);
+      setOpen(false);
+    }
+  };
 
   const categories = [
     { id: "all", name: "All", icon: <Search className="w-4 h-4" /> },
-    { id: "pages", name: "Pages", icon: <FileText className="w-4 h-4" /> },
-    { id: "databases", name: "Databases", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { id: "files", name: "Files", icon: <File className="w-4 h-4" /> }
-  ]
+    { id: "note", name: "Notes", icon: <FilePen className="w-4 h-4" /> },
+    { id: "pdf", name: "Pdfs", icon: <FileText className="w-4 h-4" /> }
+  ];
 
-
-  const showResults = search.length > 0
+  const showResults = search.length > 0;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -77,10 +119,10 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
           <DialogTitle>Search</DialogTitle>
         </VisuallyHidden.Root>
       </DialogHeader>
-      <DialogContent className="sm:max-w-[650px] p-0 gap-0">
+      <DialogContent className="sm:max-w-[600px] p-0 gap-0">
         <div className="flex flex-col h-[600px]">
           <Command className="rounded-t-lg border-none" shouldFilter={false}>
-            <div className="flex items-center px-3 border-b">
+            <div className="flex items-center px-3 border-b mr-3 w-11/12">
               <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
               <Command.Input
                 placeholder="Search..."
@@ -95,7 +137,7 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                   className="h-8 px-2 text-muted-foreground" 
                   onClick={() => setSearch("")}
                 >
-                  <X className="h-4 w-4" />
+                  <ListX className="h-4 w-4" />
                 </Button>
               )}
             </div>
@@ -115,10 +157,6 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                     {category.name}
                   </Button>
                 ))}
-                <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5">
-                  <ListFilter className="w-4 h-4" />
-                  Filters
-                </Button>
               </div>
             </div>
 
@@ -126,101 +164,138 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
               <ScrollArea className="h-[450px]">
                 {!showResults ? (
                   <>
-                    {/* Recent searches */}
-                    <div className="px-3 pt-4">
-                      <div className="text-sm font-medium text-muted-foreground mb-2 flex items-center justify-between">
-                        <span>Recent searches</span>
-                        <Button variant="ghost" size="sm" className="text-xs h-6 px-2">
-                          Clear
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {recentSearches.map((search) => (
-                          <Button 
-                            key={search} 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-8 text-xs"
-                            onClick={() => setSearch(search)}
-                          >
-                            {search}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-
                     {/* Recent pages */}
                     <div className="px-3 pt-2 pb-4">
                       <div className="text-sm font-medium text-muted-foreground mb-2">
                         Recent pages
                       </div>
                       <div className="space-y-1">
-                        {recentPages.map((page) => (
-                          <Command.Item
-                            key={page.id}
-                            className="px-2 py-1.5 rounded-md cursor-pointer flex items-center justify-between"
-                          >
-                            <div className="flex items-center gap-2">
-                              {page.icon}
-                              <span>{page.title}</span>
-                              <Badge variant="outline" className="ml-2 text-xs font-normal">
-                                {page.type}
-                              </Badge>
-                            </div>
-                            <span className="text-xs text-muted-foreground">{page.lastUpdated}</span>
-                          </Command.Item>
-                        ))}
+                        {allItems
+                          .filter(item => item.type === "pdf" || item.type === "note")
+                          .slice(0, 4)
+                          .map((item) => (
+                            <Command.Item
+                              key={item.id}
+                              className="group px-2 py-1.5 rounded-md cursor-pointer flex items-center justify-between"
+                              onSelect={() => handleItemClick(item)}
+                            >
+                              <div className="flex items-center gap-2">
+                                {item.type === "note" ? (
+                                  <FilePen className="w-4 h-4" />
+                                ) : (
+                                  <FileText className="w-4 h-4" />
+                                )}
+                                <div className="flex flex-col">
+                                  <span>{item.name}</span>
+                                  {getFolderPath(item) ? (
+                                    <span className="text-xs text-muted-foreground">
+                                      {getFolderPath(item)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">
+                                      My Collection
+                                    </span>
+                                  )}
+                                </div>
+                                <Badge variant="outline" className="ml-2 text-xs font-normal">
+                                  {item.type}
+                                </Badge>
+                              </div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onSelect={() => {
+                                      handleOpenInPanel(item, "left");
+                                    }}
+                                  >
+                                    <ArrowUpRight className="mr-2 h-4 w-4" />
+                                    Open in Left Panel
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onSelect={() => {
+                                      handleOpenInPanel(item, "middle");
+                                    }}
+                                  >
+                                    <ArrowUpRight className="mr-2 h-4 w-4" />
+                                    Open in Middle Panel
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </Command.Item>
+                          ))}
                       </div>
                     </div>
                   </>
                 ) : (
                   <>
                     {/* Pages results */}
-                    {(selectedCategory === "all" || selectedCategory === "pages") && (
+                    {(selectedCategory === "all" || selectedCategory === "note") && groupedResults.pages.length > 0 && (
                       <div className="px-3 pt-4 pb-2">
                         <div className="text-sm font-medium text-muted-foreground mb-2">
                           Pages
                         </div>
                         <div className="space-y-1">
-                          {searchResults.pages.map((result) => (
+                          {groupedResults.pages.map((item) => (
                             <Command.Item
-                              key={result.id}
-                              className="px-2 py-2 rounded-md cursor-pointer flex items-center justify-between"
+                              key={item.id}
+                              className="group px-2 py-2 rounded-md cursor-pointer flex items-center justify-between"
+                              onSelect={() => handleItemClick(item)}
                             >
                               <div className="flex items-center gap-2">
-                                {result.icon}
+                                <FilePen className="w-4 h-4" />
                                 <div className="flex flex-col">
-                                  <span className="text-sm">{result.title}</span>
-                                  <span className="text-xs text-muted-foreground">{result.description}</span>
+                                  <span className="text-sm">{item.name}</span>
+                                  {getFolderPath(item) ? (
+                                    <span className="text-xs text-muted-foreground">
+                                      {getFolderPath(item)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">
+                                      My Collection
+                                    </span>
+                                  )}
                                 </div>
                               </div>
-                              <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                            </Command.Item>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Databases results */}
-                    {(selectedCategory === "all" || selectedCategory === "databases") && (
-                      <div className="px-3 pt-4 pb-2">
-                        <div className="text-sm font-medium text-muted-foreground mb-2">
-                          Databases
-                        </div>
-                        <div className="space-y-1">
-                          {searchResults.databases.map((result) => (
-                            <Command.Item
-                              key={result.id}
-                              className="px-2 py-2 rounded-md cursor-pointer flex items-center justify-between"
-                            >
-                              <div className="flex items-center gap-2">
-                                {result.icon}
-                                <div className="flex flex-col">
-                                  <span className="text-sm">{result.title}</span>
-                                  <span className="text-xs text-muted-foreground">{result.description}</span>
-                                </div>
-                              </div>
-                              <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onSelect={() => {
+                                      handleOpenInPanel(item, "left");
+                                    }}
+                                  >
+                                    <ArrowUpRight className="mr-2 h-4 w-4" />
+                                    Open in Left Panel
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onSelect={() => {
+                                      handleOpenInPanel(item, "middle");
+                                    }}
+                                  >
+                                    <ArrowUpRight className="mr-2 h-4 w-4" />
+                                    Open in Middle Panel
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </Command.Item>
                           ))}
                         </div>
@@ -228,40 +303,77 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                     )}
 
                     {/* Files results */}
-                    {(selectedCategory === "all" || selectedCategory === "files") && (
+                    {(selectedCategory === "all" || selectedCategory === "pdf") && groupedResults.files.length > 0 && (
                       <div className="px-3 pt-4 pb-2">
                         <div className="text-sm font-medium text-muted-foreground mb-2">
                           Files
                         </div>
                         <div className="space-y-1">
-                          {searchResults.files.map((result) => (
+                          {groupedResults.files.map((item) => (
                             <Command.Item
-                              key={result.id}
-                              className="px-2 py-2 rounded-md cursor-pointer flex items-center justify-between"
+                              key={item.id}
+                              className="group px-2 py-2 rounded-md cursor-pointer flex items-center justify-between"
+                              onSelect={() => handleItemClick(item)}
                             >
                               <div className="flex items-center gap-2">
-                                {result.icon}
+                                <FileText className="w-4 h-4" />
                                 <div className="flex flex-col">
-                                  <span className="text-sm">{result.title}</span>
-                                  <span className="text-xs text-muted-foreground">{result.description}</span>
+                                  <span className="text-sm">{item.name}</span>
+                                  {getFolderPath(item) ? (
+                                    <span className="text-xs text-muted-foreground">
+                                      {getFolderPath(item)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">
+                                      My Collection
+                                    </span>
+                                  )}
                                 </div>
                               </div>
-                              <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onSelect={() => {
+                                      handleOpenInPanel(item, "left");
+                                    }}
+                                  >
+                                    <ArrowUpRight className="mr-2 h-4 w-4" />
+                                    Open in Left Panel
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onSelect={() => {
+                                      handleOpenInPanel(item, "middle");
+                                    }}
+                                  >
+                                    <ArrowUpRight className="mr-2 h-4 w-4" />
+                                    Open in Middle Panel
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </Command.Item>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    {/* Create suggestion at the bottom */}
-                    <div className="px-3 pt-4 pb-6">
-                      <div className="px-2 py-3 rounded-md border border-dashed flex items-center justify-center gap-1.5 text-sm text-muted-foreground">
-                        <span>Create new page with</span>
-                        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                          {search}
-                        </kbd>
+                    {/* No results */}
+                    {filteredItems.length === 0 && (
+                      <div className="px-3 pt-4 pb-6">
+                        <div className="px-2 py-3 rounded-md border border-dashed flex items-center justify-center gap-1.5 text-sm text-muted-foreground">
+                          No results found for &ldquo;{search}&rdquo;
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </>
                 )}
               </ScrollArea>
@@ -292,13 +404,6 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                 </kbd>
                 <span>Close</span>
               </div>
-            </div>
-            <div>
-              <span className="text-xs">Press</span>
-              <kbd className="ml-1 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                Tab
-              </kbd>
-              <span className="ml-1 text-xs">to filter</span>
             </div>
           </div>
         </div>

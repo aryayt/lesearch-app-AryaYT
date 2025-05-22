@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { createClient } from '@/lib/supabase/client';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type{ Annotation } from '@anaralabs/lector';
+import type{ Annotation } from '@/anaralabs/lector';
 
 // Memory cache for large data
 interface MemoryCache {
@@ -67,7 +67,9 @@ interface PanelStore {
     tabId: string,
     panel: 'left' | 'middle'
   ) => void;
+  removeTabFromAllPanels: (tabId: string) => void;
 }
+
 
 /**
  * Fetches and normalizes page data from Supabase
@@ -387,6 +389,65 @@ export const usePanelStore = create(
           },
           memoryCache: newMemoryCache,
           // Preserve existing active tab IDs to prevent panel selection issues
+          leftActiveTabId: newLeftActiveTabId,
+          middleActiveTabId: newMiddleActiveTabId,
+        };
+      });
+    },
+    removeTabFromAllPanels: (tabId: string) => {
+      set((state) => {
+        // Create a new pageTabs object to store the updated state
+        const updatedPageTabs = { ...state.pageTabs };
+        
+        // Iterate through all pages
+        for (const pageId of Object.keys(updatedPageTabs)) {
+          const page = updatedPageTabs[pageId];
+          
+          // Filter out the tab from left panel
+          if (page.leftPanelTabs) {
+            page.leftPanelTabs = page.leftPanelTabs.filter(tab => tab.id !== tabId);
+          }
+          
+          // Filter out the tab from middle panel
+          if (page.middlePanelTabs) {
+            page.middlePanelTabs = page.middlePanelTabs.filter(tab => tab.id !== tabId);
+          }
+        }
+
+        // Clear memory cache for the removed tab
+        const newMemoryCache = { ...state.memoryCache };
+        delete newMemoryCache.content[tabId];
+        delete newMemoryCache.pdfHighlights[tabId];
+
+        // Update active tab IDs if needed
+        let newLeftActiveTabId = state.leftActiveTabId;
+        let newMiddleActiveTabId = state.middleActiveTabId;
+
+        // If the removed tab was active in left panel, select another tab
+        if (state.leftActiveTabId === tabId) {
+          const activePageId = state.activePageId;
+          if (activePageId && updatedPageTabs[activePageId]?.leftPanelTabs.length > 0) {
+            newLeftActiveTabId = updatedPageTabs[activePageId].leftPanelTabs[0].id;
+            setTimeout(() => get().setLeftActiveTabId(newLeftActiveTabId), 50);
+          } else {
+            newLeftActiveTabId = "";
+          }
+        }
+
+        // If the removed tab was active in middle panel, select another tab
+        if (state.middleActiveTabId === tabId) {
+          const activePageId = state.activePageId;
+          if (activePageId && updatedPageTabs[activePageId]?.middlePanelTabs.length > 0) {
+            newMiddleActiveTabId = updatedPageTabs[activePageId].middlePanelTabs[0].id;
+            setTimeout(() => get().setMiddleActiveTabId(newMiddleActiveTabId), 50);
+          } else {
+            newMiddleActiveTabId = "";
+          }
+        }
+
+        return {
+          pageTabs: updatedPageTabs,
+          memoryCache: newMemoryCache,
           leftActiveTabId: newLeftActiveTabId,
           middleActiveTabId: newMiddleActiveTabId,
         };

@@ -87,7 +87,7 @@ export function FileNode({
     isDeleting,
     moveToCollection,
   } = useStore();
-  const { activePageId, addTab } = usePanelStore();
+  const { activePageId, addTab, removeTabFromAllPanels } = usePanelStore();
   const router = useRouter();
   const isOpen = openFolders.has(file.id);
   const isDragging = draggedItem?.id === file.id;
@@ -164,7 +164,7 @@ export function FileNode({
         )}
         onDragOver={(e) => {
           e.preventDefault();
-          // Only update the drop target if the dragged item is different and not the same as the current drop target
+          // Only  update the drop target if the dragged item is different and not the same as the current drop target
           if (
             draggedItem &&
             draggedItem.id !== file.id &&
@@ -308,7 +308,7 @@ export function FileNode({
       >
         <CollapsibleContent>
           <div className="border-l border-border ml-4 pl-2">
-            {childFiles.length > 0 ? (
+            {(childFiles.length > 0) ? (
               childFiles.map((child) => (
                 <FileNode
                   key={child.id}
@@ -327,7 +327,7 @@ export function FileNode({
                 />
               ))
             ) : (
-              <div className="ml-4 py-1 italic text-sm text-muted-foreground truncate">
+              file.type==="folder" && <div className="ml-4 py-1 italic text-sm text-muted-foreground truncate">
                 No files inside
               </div>
             )}
@@ -357,7 +357,13 @@ export function FileNode({
                 variant="destructive"
                 onClick={async () => {
                   try {
-                    await deleteItem(file.id, file.type);
+                    const id = await deleteItem(file.id, file.type);
+                    if(id ){
+                      removeTabFromAllPanels(id);
+                    }
+                    if(id === "main"){
+                      router.push('/documents');
+                    }
                     toast.success(`${file.name} deleted successfully`);
                     setIsDeleteDialogOpen(false);
                   } catch (error) {

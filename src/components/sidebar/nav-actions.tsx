@@ -10,7 +10,6 @@ import {
   CornerUpLeft,
   CornerUpRight,
   FileText,
-  FileX,
   GalleryVerticalEnd,
   LineChart,
   Link,
@@ -40,8 +39,6 @@ import {
 import { usePanelStore } from "@/store/usePanelStore";
 import { useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { SearchDialog } from "@/components/dialog/searchDialog";
-import { useState } from "react";
 
 const data = [
   {
@@ -119,27 +116,14 @@ const data = [
 ];
 
 export function NavActions() {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [showSearchDialog, setShowSearchDialog] = useState(false);
-
-  const { activePageId, setPanelVisibility, getPanelVisibility } =
-    usePanelStore();
+  const { activePageId, setPanelVisibility, getPanelVisibility } = usePanelStore();
   const params = useParams();
 
   // Use either the active page ID from the store, or the URL param as fallback
   const pageId = activePageId || (params?.pageId as string);
   const pagePanelVisibility = getPanelVisibility(pageId);
 
-  // Toggle functions for each panel - now separated to ensure each button only controls its own panel
-
-  // The FileText/FileX icon is now dedicated to adding PDFs/documents to the left panel
-  // This functionality would connect with your existing document selection flow
-  const toggleDocumentSelection = () => {
-    // Open the search dialog
-    setShowSearchDialog(true);
-  };
-
-  // The Columns3 icon now exclusively controls the middle panel
+  // Toggle functions for each panel
   const toggleMiddlePanel = () => {
     if (!pageId) return;
 
@@ -149,7 +133,6 @@ export function NavActions() {
     });
   };
 
-  // The MessageCircle icon now exclusively controls the right chat panel
   const toggleRightPanel = () => {
     if (!pageId) return;
 
@@ -161,18 +144,7 @@ export function NavActions() {
 
   return (
     <div className="flex items-center gap-2 text-sm">
-      {/* Document Selection Button (Now separate from panel controls) */}
-      <SearchDialog>
-        <Button
-          title="Open PDF or Document"
-          aria-label="Open PDF or Document"
-          variant="ghost"
-          size="icon"
-          className="size-7"
-        >
-          <FileText />
-        </Button>
-      </SearchDialog>
+
 
       {/* Middle Panel Toggle with Columns3 icon */}
       <Button
@@ -224,11 +196,8 @@ export function NavActions() {
           <MessageCircle className="text-muted-foreground" />
         )}
       </Button>
-      <div className="hidden font-medium text-muted-foreground md:inline-block">
-        Edit Oct 08
-      </div>
 
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <Popover>
         <PopoverTrigger asChild>
           <Button
             variant="ghost"

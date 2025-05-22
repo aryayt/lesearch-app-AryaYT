@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { createClient } from "@/lib/supabase/client";
 import { useUserStore } from "./userStore";
-
+import { usePanelStore } from "./usePanelStore";
 export type FileItem = {
 	id: string;
 	name: string;
@@ -36,9 +36,24 @@ type Store = {
 	fetchFilesAndFolders: () => Promise<void>;
 	addFile: (file: FileItem) => Promise<string>;
 	updateFile: (id: string, updates: Partial<FileItem>) => Promise<void>;
-	deleteItem: (id: string, type: FileItem["type"]) => Promise<void>;
+	deleteItem: (id: string, type: FileItem["type"]) => Promise<string>;
 	setActiveItem: (itemId: string | null) => void; // Method to set the active item
 	moveToCollection: (id: string) => Promise<void>;
+};
+
+// Helper function to find all parent folders
+const findParentFolders = (items: FileItem[], itemId: string | null): string[] => {
+	if (!itemId) return [];
+	
+	const parentFolders: string[] = [];
+	let currentItem = items.find(item => item.id === itemId);
+	
+	while (currentItem?.parentId) {
+		parentFolders.push(currentItem.parentId);
+		currentItem = items.find(item => item.id === currentItem?.parentId);
+	}
+	
+	return parentFolders;
 };
 
 export const useStore = create<Store>((set, get) => ({
@@ -53,7 +68,17 @@ export const useStore = create<Store>((set, get) => ({
 	setDraggedItem: (item) => set({ draggedItem: item }),
 	setDropTarget: (targetId) => set({ dropTarget: targetId }),
 	setCreation: (newCreation) => set({ creation: newCreation }),
-	setActiveItem: (itemId) => set({ activeItemId: itemId }),
+	setActiveItem: (itemId) => {
+		// Find all parent folders
+		const parentFolders = findParentFolders(get().allItems, itemId);
+		
+		// Open all parent folders
+		for (const folderId of parentFolders) {
+			get().setOpenFolders(folderId, true);
+		}
+		
+		set({ activeItemId: itemId });
+	},
 	moveToCollection: async (id) => {
 		const supabase = createClient();
 		try {
@@ -113,6 +138,7 @@ export const useStore = create<Store>((set, get) => ({
 
   deleteItem: async (id, type) => {
     const supabase = createClient();
+	const {activePageId} = usePanelStore.getState();
     set({ isDeleting: true });
   
     try {
@@ -162,10 +188,16 @@ export const useStore = create<Store>((set, get) => ({
       set((state) => ({
         allItems: state.allItems.filter((item) => item.id !== id),
       }));
-  
+
+	  if(activePageId === id){
+		usePanelStore.getState().setActivePageId("");
+		return "main";
+	  }
       console.log("File and record successfully deleted.");
+	  return id;
     } catch (err) {
       console.error("Error during file deletion process:", err);
+	  throw new Error("Error during file deletion process.");
     } finally {
       // Step 5: Reset deleting state
       set({ isDeleting: false });

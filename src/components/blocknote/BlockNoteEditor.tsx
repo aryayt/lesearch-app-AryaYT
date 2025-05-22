@@ -1,19 +1,35 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import Editor from './editor'
 import { useDocStore } from '@/store/useDocStore'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useDocRealtime } from '@/store/use-doc-realtime'
+import GridLoader from '../loader/grid-loader'
+import { useTheme } from 'next-themes'
+
+
 const BlockEditor = ({ docid }: { docid: string }) => {
-  const { doc, updateDocAsync, getDocAsync } = useDocStore();
-  const [loading, setLoading] = useState(true);
+  const { docs, loadingDocs, updateDocAsync, getDocAsync, clearDoc } = useDocStore();
+  const doc = docs[docid];
+  const isInitialLoading = loadingDocs[docid];
+  const { resolvedTheme } = useTheme();
+
   useDocRealtime();
+
   useEffect(() => {
     getDocAsync(docid);
-    setLoading(false);
-  }, [docid, getDocAsync]);
+    
+    // Cleanup when component unmounts or docid changes
+    return () => {
+      clearDoc(docid);
+    };
+  }, [docid, getDocAsync, clearDoc]);
 
-  if (loading) {
-    return <DocumentSkeleton />;
+  // Only show loading skeleton on initial fetch
+  if (isInitialLoading && !doc) {
+    return (
+      <div className="h-full w-full flex justify-center items-center">
+      <GridLoader size="80" color={`${resolvedTheme==="light"?'#000000':'#ffffff'}`} />
+    </div>
+    );
   }
 
   return (
@@ -24,17 +40,5 @@ const BlockEditor = ({ docid }: { docid: string }) => {
   )
 }
 
-function DocumentSkeleton() {
-    return (
-        <div className="mx-auto mt-10 md:max-w-3xl lg:max-w-4xl">
-          <div className="space-y-4 pl-8 pt-4">
-            <Skeleton className="h-14 w-[50%]" />
-            <Skeleton className="h-4 w-[80%]" />
-            <Skeleton className="h-4 w-[40%]" />
-            <Skeleton className="h-4 w-[60%]" />
-          </div>
-        </div>
-    );
-  }
 
 export default BlockEditor

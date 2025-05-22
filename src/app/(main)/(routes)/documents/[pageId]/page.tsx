@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import LeftPanel from "@/components/panels/left-panel";
 import {
   Panel,
@@ -12,17 +12,14 @@ import RightPanel from "@/components/panels/right-panel";
 import { usePanelStore } from "@/store/usePanelStore";
 import { useParams } from "next/navigation";
 import { useRef } from "react";
-import { SearchDialog } from "@/components/dialog/searchDialog";
-import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+
 
 const DashboardPage = () => {
-  const { activePageId, getPanelVisibility, setActivePageId } = usePanelStore();
+  const {  getPanelVisibility, setActivePageId } = usePanelStore();
   const params = useParams();
   const pageId = params?.pageId as string;
   const leftPanelRef = useRef<ImperativePanelHandle>(null);
   const middlePanelRef = useRef<ImperativePanelHandle>(null);
-  const [showSearchDialog, setShowSearchDialog] = useState(false);
 
   // Set the active page ID when the component mounts
   useEffect(() => {

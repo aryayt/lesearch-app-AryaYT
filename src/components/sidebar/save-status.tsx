@@ -28,7 +28,7 @@ interface StatusConfig {
     },
     success: {
       Icon: CheckCircle2Icon,
-      text: "Save success",
+      text: "Saved",
       className: "text-green-600",
     },
     failed: {

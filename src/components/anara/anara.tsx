@@ -17,6 +17,8 @@ import {
 } from "@/anaralabs/lector";
 import React, { useCallback, useEffect, useState } from "react";
 import "pdfjs-dist/web/pdf_viewer.css";
+import { useTheme } from "next-themes";
+import GridLoader from "../loader/grid-loader";
 
 import { GlobalWorkerOptions } from "pdfjs-dist";
 import ZoomMenu from "./zoom-menu";
@@ -99,6 +101,8 @@ const PDFContent = ({
 
     jumpToHighlightRects(annotation.highlights, "pixels", "center", -50);
   }, [focusedAnnotationId, getAnnotations, jumpToHighlightRects, documentId]);
+
+  
   const handlePagesClick = useCallback(
     (e: React.MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -155,31 +159,38 @@ const PDFContent = ({
 };
 
 export const AnaraViewer = ({
+  pdfId,
   pdfUrl,
   pdfHighlights,
 }: {
+  pdfId: string;
   pdfUrl: string;
   pdfHighlights: Annotation[];
 }) => {
   const [focusedAnnotationId, setFocusedAnnotationId] = useState<string>();
-  const { getPdfAsync, updatePdfHighlightsAsync, pdf } = usePdfStore();
-  const documentId = React.useMemo(() => {
-    // Use the PDF URL as a unique identifier for the document
-    return btoa(pdfUrl);
-  }, [pdfUrl]);
+  const { getPdfAsync, updatePdfHighlightsAsync, pdfs, loadingPdfs, clearPdf } = usePdfStore();
+  const { resolvedTheme } = useTheme();
+
+  const pdf = pdfs[pdfId];
+  const isLoading = loadingPdfs[pdfId];
 
   // Load PDF data on mount
   React.useEffect(() => {
-    getPdfAsync(documentId);
-  }, [documentId, getPdfAsync]);
+    getPdfAsync(pdfId);
+    
+    // Cleanup when component unmounts or pdfId changes
+    return () => {
+      clearPdf(pdfId);
+    };
+  }, [pdfId, getPdfAsync, clearPdf]);
 
   const handleAnnotationsChange = useCallback((annotations: Annotation[]) => {
     try {
-      updatePdfHighlightsAsync(documentId, annotations);
+      updatePdfHighlightsAsync(pdfId, annotations);
     } catch (error) {
       console.error("Error saving annotations:", error);
     }
-  }, [documentId, updatePdfHighlightsAsync]);
+  }, [pdfId, updatePdfHighlightsAsync]);
 
   const handleAnnotationClick = useCallback((annotation: Annotation | null) => {
     setFocusedAnnotationId(annotation?.id);
@@ -187,6 +198,14 @@ export const AnaraViewer = ({
 
   // Use highlights from store if available, otherwise use props
   const currentHighlights = pdf?.highlights || pdfHighlights;
+
+  if (isLoading && !pdf) {
+    return (
+      <div className="h-full w-full flex justify-center items-center">
+        <GridLoader size="80" color={`${resolvedTheme==="light"?'#000000':'#ffffff'}`} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 h-full">
@@ -206,7 +225,7 @@ export const AnaraViewer = ({
           onAnnotationsChange={handleAnnotationsChange}
           focusedAnnotationId={focusedAnnotationId}
           onAnnotationClick={handleAnnotationClick}
-          documentId={documentId}
+          documentId={pdfId}
         />
       </Root>
     </div>

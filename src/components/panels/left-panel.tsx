@@ -3,7 +3,6 @@ import { type Tab, usePanelStore } from "@/store/usePanelStore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { FilePen, FileText, Plus, X } from "lucide-react";
 import { Button } from "../ui/button";
-import Editor from "../blocknote/editor";
 import { AnaraViewer } from "../anara/anara";
 import {
   DropdownMenu,
@@ -13,27 +12,9 @@ import {
 } from "../ui/dropdown-menu";
 import { useStore } from "@/store/useCollectionStore";
 import  BlockEditor  from '@/components/blocknote/BlockNoteEditor'
-import { toast } from "sonner";
-import debounce from "lodash/debounce";
+import { SaveStatus } from "../sidebar/save-status";
+import { useDocStore } from "@/store/useDocStore";
 
-// Define a new component to wrap the Editor and handle content fetching/saving
-interface NoteEditorWrapperProps {
-  tabId: string;
-}
-
-const NoteEditorWrapper: React.FC<NoteEditorWrapperProps> = ({ tabId }) => {
-  // TODO: Implement getNoteContent(id) to fetch note content based on ID
-  // For now, using placeholder initial content
-  const initialContent = JSON.stringify([{ type: "paragraph", content: "" }]);
-
-  // TODO: Implement updateNoteContent(id, content) to save note content
-  const handleChange = async (content: string) => {
-    console.log(`Content for doc ${tabId}:`, content);
-    // Example: await updateNoteContent(tabId, content);
-  };
-
-  return <Editor initialContent={initialContent} onChange={handleChange} />;
-};
 
 const LeftPanel = () => {
   const {
@@ -46,6 +27,7 @@ const LeftPanel = () => {
   } = usePanelStore();
   const { setCreation } = useStore();
   const tabs = getLeftPanelTabs();
+  const { saveStatus } = useDocStore();
 
   // Keep track of the previous leftActiveTabId
   const prevLeftActiveTabIdRef = React.useRef(leftActiveTabId);
@@ -112,6 +94,7 @@ const LeftPanel = () => {
             </div>
           ))}
         </div>
+        <SaveStatus status={saveStatus[leftActiveTabId]} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
@@ -138,11 +121,12 @@ const LeftPanel = () => {
           >
             {tab.type === "pdf" && tab.pdfUrl ? (
               <AnaraViewer
+                pdfId={tab.id}
                 pdfUrl={tab.pdfUrl}
                 pdfHighlights={getPdfHighlights(tab.id) || []}
               />
             ) : (
-              <BlockEditor tabId={tab.id} />
+              <BlockEditor docid={tab.id} />
             )}
           </TabsContent>
         ))}

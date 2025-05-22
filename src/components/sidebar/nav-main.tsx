@@ -38,15 +38,18 @@ export function NavMain() {
   const { setCreation } = useStore();
 
   // Use callbacks for event handlers to prevent recreation on renders
-  const handleImportPdf = useCallback(() => {
+  const handleImportPdf = useCallback((e: Event) => {
+    e.preventDefault();
     setImportPdfOpen(true);
   }, []);
 
-  const handleCreatePage = useCallback(() => {
+  const handleCreatePage = useCallback((e: Event) => {
+    e.preventDefault();
     setCreation({ parentId: null, type: "note" });
   }, [setCreation]);
 
-  const handleCreateWorkspace = useCallback(() => {
+  const handleCreateWorkspace = useCallback((e: Event) => {
+    e.preventDefault();
     setCreation({ parentId: null, type: "folder" });
   }, [setCreation]);
 
@@ -64,21 +67,21 @@ export function NavMain() {
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem
               className="flex items-center gap-2 cursor-pointer"
-              onClick={handleImportPdf}
+              onSelect={handleImportPdf}
             >
               <ImportIcon className="h-4 w-4" />
               <span>Import PDF</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="flex items-center gap-2 cursor-pointer"
-              onClick={handleCreatePage}
+              onSelect={handleCreatePage}
             >
               <FilePlusIcon className="h-4 w-4" />
               <span>Create Page</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="flex items-center gap-2 cursor-pointer"
-              onClick={handleCreateWorkspace}
+              onSelect={handleCreateWorkspace}
             >
               <FolderPlusIcon className="h-4 w-4" />
               <span>Create Workspace</span>

@@ -158,6 +158,10 @@ const PDFContent = ({
   );
 };
 
+
+import "pdfjs-dist/web/pdf_viewer.css";
+
+
 export const AnaraViewer = ({
   pdfId,
   pdfUrl,
@@ -170,10 +174,8 @@ export const AnaraViewer = ({
   const [focusedAnnotationId, setFocusedAnnotationId] = useState<string>();
   const { getPdfAsync, updatePdfHighlightsAsync, pdfs, loadingPdfs, clearPdf } = usePdfStore();
   const { resolvedTheme } = useTheme();
-
   const pdf = pdfs[pdfId];
   const isLoading = loadingPdfs[pdfId];
-
   // Load PDF data on mount
   React.useEffect(() => {
     getPdfAsync(pdfId);

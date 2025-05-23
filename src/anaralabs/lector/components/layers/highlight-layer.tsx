@@ -1,7 +1,7 @@
 import { Slot } from "@radix-ui/react-slot";
 import {
   type ComponentPropsWithoutRef,
-  type ElementRef,
+  type ComponentRef,
   forwardRef,
 } from "react";
 
@@ -28,7 +28,7 @@ type Dimensions = {
   width: string | number;
 };
 export const HighlightLayer = forwardRef<
-  ElementRef<"div">,
+  ComponentRef<"div">,
   HighlightLayerProps
 >(({ asChild, className, style, ...props }, ref) => {
   const pageNumber = usePDFPageNumber();

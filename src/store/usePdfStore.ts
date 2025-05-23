@@ -58,7 +58,7 @@ export const usePdfStore = create<PdfStore>((set, get) => ({
         .select('id, highlights')
         .eq('id', pdfId)
         .single();
-      console.log(data,error);
+
       if (error) throw error;
       
       set(state => ({
@@ -144,4 +144,4 @@ export const usePdfStore = create<PdfStore>((set, get) => ({
       return newState;
     });
   }
-})); 
+}));

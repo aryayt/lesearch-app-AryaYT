@@ -132,17 +132,18 @@ export function NavWorkspaces() {
   const handleDropHandler = async (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
     if (!draggedItem) return;
-
+  
     if (draggedItem.id === targetId) return;
-
+  
     try {
       const targetItem = allItems.find((item) => item.id === targetId);
-      if (targetItem && ["pdf", "chat", "note"].includes(targetItem.type)) {
-        toast.error("You cannot drop items onto a PDF, Chat, or Note.");
-        return;
-      }
-
+  
       if (draggedItem.type === "folder") {
+        if (targetItem && (targetItem.type === "note" || targetItem.type === "pdf")) {
+          toast.error("Folders cannot be dropped into a file.");
+          return;
+        }
+  
         if (targetId === null) {
           await updateFile(draggedItem.id, { parentId: targetId });
           toast.success(`Moved folder "${draggedItem.name}" to Workspace.`);
@@ -151,7 +152,7 @@ export function NavWorkspaces() {
           toast.success(`Moved folder "${draggedItem.name}" into the folder.`);
         }
       }
-
+  
       if (draggedItem.type === "note" || draggedItem.type === "pdf") {
         if (targetId !== null) {
           await updateFile(draggedItem.id, { parentId: targetId });
@@ -167,6 +168,7 @@ export function NavWorkspaces() {
       toast.error("An error occurred while moving the item. Please try again.");
     }
   };
+  
 
   // Handle item creation (creating files, folders, etc.)
   const handleCreate = async () => {
@@ -247,7 +249,7 @@ export function NavWorkspaces() {
                       setDropTarget={setDropTarget}
                       dropTarget={dropTarget}
                       isDraggable={
-                        file.type !== "folder" && file.parentId !== null
+                         file.parentId !== null
                       }
                       onRequestCreate={(newItem) => setCreation(newItem)}
                     />

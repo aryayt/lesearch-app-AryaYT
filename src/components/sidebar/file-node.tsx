@@ -322,7 +322,7 @@ export function FileNode({
                   draggedItem={draggedItem}
                   setDropTarget={setDropTarget}
                   dropTarget={dropTarget}
-                  isDraggable={child.type !== "folder"}
+                  isDraggable={child.id !== null}
                   onRequestCreate={onRequestCreate}
                 />
               ))

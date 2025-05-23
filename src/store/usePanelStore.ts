@@ -1,13 +1,6 @@
 import { create } from 'zustand';
 import { createClient } from '@/lib/supabase/client';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type{ Annotation } from '@/anaralabs/lector';
-
-// Memory cache for large data
-interface MemoryCache {
-  content: Record<string, string>;
-  pdfHighlights: Record<string, Annotation[]>;
-}
 
 // Panel visibility control
 interface PanelVisibility {
@@ -36,7 +29,6 @@ interface PanelStore {
     string,
     { leftPanelTabs: Tab[]; middlePanelTabs: Tab[] }
   >;
-  memoryCache: MemoryCache;
   panelVisibility: Record<string, PanelVisibility>;
 
   /* State setters */
@@ -46,15 +38,11 @@ interface PanelStore {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
-  setContent: (tabId: string, content: string) => void;
-  setPdfHighlights: (tabId: string, highlights: Annotation[]) => void;
   setPanelVisibility: (pageId: string, visibility: PanelVisibility) => void;
 
   /* Getters */
   getLeftPanelTabs: () => Tab[];
   getMiddlePanelTabs: () => Tab[];
-  getContent: (tabId: string) => string | undefined;
-  getPdfHighlights: (tabId: string) => Annotation[] | undefined;
   getPanelVisibility: (pageId: string) => PanelVisibility;
 
   /* Side effects */
@@ -69,7 +57,6 @@ interface PanelStore {
   ) => void;
   removeTabFromAllPanels: (tabId: string) => void;
 }
-
 
 /**
  * Fetches and normalizes page data from Supabase
@@ -190,10 +177,6 @@ export const usePanelStore = create(
     error: null,
     pageTabs: {},
     panelVisibility: {},
-    memoryCache: {
-      content: {},
-      pdfHighlights: {},
-    },
 
     /* State setters */
     setActivePageId: (pageId) => set({ activePageId: pageId }),
@@ -202,26 +185,6 @@ export const usePanelStore = create(
     setLoading: (loading) => set({ isLoading: loading }),
     setError: (error) => set({ error }),
     clearError: () => set({ error: null }),
-    setContent: (tabId, content) =>
-      set((state) => ({
-        memoryCache: {
-          ...state.memoryCache,
-          content: {
-            ...state.memoryCache.content,
-            [tabId]: content,
-          },
-        },
-      })),
-    setPdfHighlights: (tabId, highlights) => 
-      set((state) => ({
-        memoryCache: {
-          ...state.memoryCache,
-          pdfHighlights: {
-            ...state.memoryCache.pdfHighlights,
-            [tabId]: highlights,
-          },
-        },
-      })),
     setPanelVisibility: (pageId, visibility) =>
       set((state) => ({
         panelVisibility: {
@@ -245,8 +208,6 @@ export const usePanelStore = create(
         ? get().pageTabs[pageId]?.middlePanelTabs ?? []
         : [];
     },
-    getContent: (tabId) => get().memoryCache.content[tabId],
-    getPdfHighlights: (tabId) => get().memoryCache.pdfHighlights[tabId],
     getPanelVisibility: (pageId) => {
       // Default to only showing left panel, with middle and right panels hidden
       return get().panelVisibility[pageId] || { showMiddlePanel: false, showRightPanel: false };
@@ -377,17 +338,11 @@ export const usePanelStore = create(
           }
         }
 
-        // Clear memory cache for removed tab
-        const newMemoryCache = { ...state.memoryCache };
-        delete newMemoryCache.content[tabId];
-        delete newMemoryCache.pdfHighlights[tabId];
-
         return {
           pageTabs: {
             ...state.pageTabs,
             [activePageId]: updated,
           },
-          memoryCache: newMemoryCache,
           // Preserve existing active tab IDs to prevent panel selection issues
           leftActiveTabId: newLeftActiveTabId,
           middleActiveTabId: newMiddleActiveTabId,
@@ -413,11 +368,6 @@ export const usePanelStore = create(
             page.middlePanelTabs = page.middlePanelTabs.filter(tab => tab.id !== tabId);
           }
         }
-
-        // Clear memory cache for the removed tab
-        const newMemoryCache = { ...state.memoryCache };
-        delete newMemoryCache.content[tabId];
-        delete newMemoryCache.pdfHighlights[tabId];
 
         // Update active tab IDs if needed
         let newLeftActiveTabId = state.leftActiveTabId;
@@ -447,7 +397,6 @@ export const usePanelStore = create(
 
         return {
           pageTabs: updatedPageTabs,
-          memoryCache: newMemoryCache,
           leftActiveTabId: newLeftActiveTabId,
           middleActiveTabId: newMiddleActiveTabId,
         };

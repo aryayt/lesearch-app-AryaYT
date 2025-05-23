@@ -187,6 +187,7 @@ export const AnaraViewer = ({
   }, [pdfId, getPdfAsync, clearPdf]);
 
   const handleAnnotationsChange = useCallback((annotations: Annotation[]) => {
+    console.log("handle annotations",annotations);
     try {
       updatePdfHighlightsAsync(pdfId, annotations);
     } catch (error) {

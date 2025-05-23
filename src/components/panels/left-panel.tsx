@@ -11,10 +11,10 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { useStore } from "@/store/useCollectionStore";
-import  BlockEditor  from '@/components/blocknote/BlockNoteEditor'
+import BlockEditor from '@/components/blocknote/BlockNoteEditor'
 import { SaveStatus } from "../sidebar/save-status";
 import { useDocStore } from "@/store/useDocStore";
-
+import { usePdfStore } from "@/store/usePdfStore";
 
 const LeftPanel = () => {
   const {
@@ -23,8 +23,8 @@ const LeftPanel = () => {
     removeTab,
     leftActiveTabId,
     setLeftActiveTabId,
-    getPdfHighlights,
   } = usePanelStore();
+  const { pdfs } = usePdfStore();
   const { setCreation } = useStore();
   const tabs = getLeftPanelTabs();
   const { saveStatus } = useDocStore();
@@ -123,7 +123,7 @@ const LeftPanel = () => {
               <AnaraViewer
                 pdfId={tab.id}
                 pdfUrl={tab.pdfUrl}
-                pdfHighlights={getPdfHighlights(tab.id) || []}
+                pdfHighlights={pdfs[tab.id]?.highlights || []}
               />
             ) : (
               <BlockEditor docid={tab.id} />

@@ -107,6 +107,8 @@ export const usePdfStore = create<PdfStore>((set, get) => ({
       saveStatus: { ...state.saveStatus, [pdfId]: 'start' }
     }));
 
+    console.log("highlights",highlights);
+
     try {
       const supabase = createClient();
       const { error } = await supabase

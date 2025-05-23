@@ -1,66 +1,39 @@
-import { useCallback, useState } from "react";
-
+import { useCallback, useMemo } from "react";
 import type { Annotation } from "@/anaralabs/lector";
-import { useAnnotations } from "@/anaralabs/lector";
+import { usePdfStore } from "@/store/usePdfStore";
 
-interface UseAnnotationActionsProps {
-  annotation: Annotation;
-  onClose?: () => void;
-}
+export const useAnnotationActions = (documentId: string) => {
+  const { pdfs, updatePdfHighlightsAsync } = usePdfStore();
+  const annotations = useMemo(() => pdfs[documentId]?.highlights || [], [pdfs, documentId]);
 
-interface UseAnnotationActionsReturn {
-  comment: string;
-  isEditing: boolean;
-  setComment: (comment: string) => void;
-  setIsEditing: (isEditing: boolean) => void;
-  handleSaveComment: () => void;
-  handleColorChange: (color: string) => void;
-  handleCancelEdit: () => void;
-  colors: string[];
-}
+  const addAnnotation = useCallback((annotation: Annotation) => {
+    const updatedAnnotations = [...annotations, annotation];
+    updatePdfHighlightsAsync(documentId, updatedAnnotations);
+  }, [documentId, annotations, updatePdfHighlightsAsync]);
 
-export const useAnnotationActions = ({
-  annotation,
-  onClose,
-}: UseAnnotationActionsProps): UseAnnotationActionsReturn => {
-  const { updateAnnotation } = useAnnotations();
-  const [comment, setComment] = useState(annotation.comment || "");
-  const [isEditing, setIsEditing] = useState(false);
+  const updateAnnotation = useCallback((id: string, updates: Partial<Annotation>) => {
+    const updatedAnnotations = annotations.map((annotation) =>
+      annotation.id === id
+        ? {
+            ...annotation,
+            ...updates,
+          }
+        : annotation
+    );
+    updatePdfHighlightsAsync(documentId, updatedAnnotations);
+  }, [documentId, annotations, updatePdfHighlightsAsync]);
 
-  const handleSaveComment = useCallback(() => {
-    updateAnnotation(annotation.documentId, annotation.id, { comment });
-    setIsEditing(false);
-    onClose?.();
-  }, [annotation.id, annotation.documentId, comment, updateAnnotation, onClose]);
-
-  const handleColorChange = useCallback(
-    (color: string) => {
-      updateAnnotation(annotation.documentId, annotation.id, { color });
-      onClose?.();
-    },
-    [annotation.id, annotation.documentId, updateAnnotation, onClose]
-  );
-
-  const handleCancelEdit = useCallback(() => {
-    setIsEditing(false);
-    onClose?.();
-  }, [onClose]);
-
-  const colors = [
-    "rgba(255, 255, 0, 0.3)", // Yellow
-    "rgba(0, 255, 0, 0.3)", // Green
-    "rgba(255, 182, 193, 0.3)", // Pink
-    "rgba(135, 206, 235, 0.3)", // Sky Blue
-  ];
+  const deleteAnnotation = useCallback((id: string) => {
+    const updatedAnnotations = annotations.filter(
+      (annotation) => annotation.id !== id
+    );
+    updatePdfHighlightsAsync(documentId, updatedAnnotations);
+  }, [documentId, annotations, updatePdfHighlightsAsync]);
 
   return {
-    comment,
-    isEditing,
-    setComment,
-    setIsEditing,
-    handleSaveComment,
-    handleColorChange,
-    handleCancelEdit,
-    colors,
+    annotations,
+    addAnnotation,
+    updateAnnotation,
+    deleteAnnotation,
   };
 }; 

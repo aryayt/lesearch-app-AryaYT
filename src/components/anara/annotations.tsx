@@ -1,8 +1,6 @@
-import { 
-  type Annotation,
-  useAnnotations,
-} from "@/anaralabs/lector";
-import  { useCallback, useState } from "react";
+import type { Annotation } from "@/anaralabs/lector";
+import { useCallback, useState } from "react";
+import { useAnnotationActions } from "./useAnnotationActions";
 
 export const SelectionTooltipContent = ({ onHighlight }: { onHighlight: () => void }) => {
   return (
@@ -16,10 +14,10 @@ export const SelectionTooltipContent = ({ onHighlight }: { onHighlight: () => vo
   );
 };
 
-export interface AnnotationListProps {
+interface AnnotationListProps {
   annotations: Annotation[];
   focusedAnnotationId?: string;
-  onAnnotationClick: (annotation: Annotation | null) => void;
+  onAnnotationClick: (annotation: Annotation) => void;
 }
 
 export const AnnotationList = ({ annotations, focusedAnnotationId, onAnnotationClick }: AnnotationListProps) => {
@@ -67,22 +65,22 @@ export interface TooltipContentProps {
 }
 
 export const TooltipContent = ({ annotation, onClose }: TooltipContentProps) => {
-  const { updateAnnotation, deleteAnnotation } = useAnnotations();
+  const { updateAnnotation, deleteAnnotation } = useAnnotationActions(annotation.documentId);
   const [comment, setComment] = useState(annotation.comment || "");
   const [isEditing, setIsEditing] = useState(false);
 
   const handleSaveComment = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    updateAnnotation(annotation.documentId, annotation.id, { comment });
+    updateAnnotation(annotation.id, { comment });
     setIsEditing(false);
     onClose?.();
-  }, [annotation.id, annotation.documentId, comment, updateAnnotation, onClose]);
+  }, [annotation.id, comment, updateAnnotation, onClose]);
 
   const handleColorChange = useCallback((e: React.MouseEvent, color: string) => {
     e.stopPropagation();
-    updateAnnotation(annotation.documentId, annotation.id, { color });
+    updateAnnotation(annotation.id, { color });
     onClose?.();
-  }, [annotation.id, annotation.documentId, updateAnnotation, onClose]);
+  }, [annotation.id, updateAnnotation, onClose]);
 
   const handleStartEditing = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -96,9 +94,9 @@ export const TooltipContent = ({ annotation, onClose }: TooltipContentProps) => 
 
   const handleDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    deleteAnnotation(annotation.documentId, annotation.id);
+    deleteAnnotation(annotation.id);
     onClose?.();
-  }, [annotation.id, annotation.documentId, deleteAnnotation, onClose]);
+  }, [annotation.id, deleteAnnotation, onClose]);
 
   const colors = [
     "rgba(255, 255, 0, 0.3)", // Yellow
@@ -117,8 +115,8 @@ export const TooltipContent = ({ annotation, onClose }: TooltipContentProps) => 
       <div className="flex items-center justify-center gap-2">
           {colors.map((color) => (
             <button
-            type="button"
-            title="color"
+              type="button"
+              title="color"
               key={color}
               className={'w-6 h-6 rounded'}
               style={{ backgroundColor: color }}
@@ -141,14 +139,14 @@ export const TooltipContent = ({ annotation, onClose }: TooltipContentProps) => 
           />
           <div className="flex justify-end gap-2">
             <button
-            type="button"
+              type="button"
               onClick={handleCancelEdit}
               className="px-2 py-1 text-sm text-gray-600 hover:text-gray-800"
             >
               Cancel
             </button>
             <button
-            type="button"
+              type="button"
               onClick={handleSaveComment}
               className="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
             >
@@ -162,21 +160,20 @@ export const TooltipContent = ({ annotation, onClose }: TooltipContentProps) => 
             <div className="text-sm text-gray-700">{annotation.comment}</div>
           ) : (
             <>
-            <button
-            type="button"
-              onClick={handleStartEditing}
-              className="text-sm text-blue-500 hover:text-blue-600"
-            >
-              Add comment
-            </button>
-            
-        <button
-        type="button"
-        onClick={handleDelete}
-        className="text-sm text-red-500 hover:text-red-600"
-      >
-        Delete
-      </button>
+              <button
+                type="button"
+                onClick={handleStartEditing}
+                className="text-sm text-blue-500 hover:text-blue-600"
+              >
+                Add comment
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="text-sm text-red-500 hover:text-red-600"
+              >
+                Delete
+              </button>
             </>
           )}
         </div>

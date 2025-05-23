@@ -10,7 +10,6 @@ import {
   AnnotationHighlightLayer,
   type Annotation,
   SelectionTooltip,
-  useAnnotations,
   useSelectionDimensions,
   usePdfJump,
   AnnotationLayer,
@@ -19,7 +18,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import "pdfjs-dist/web/pdf_viewer.css";
 import { useTheme } from "next-themes";
 import GridLoader from "../loader/grid-loader";
-
 import { GlobalWorkerOptions } from "pdfjs-dist";
 import ZoomMenu from "./zoom-menu";
 import DocumentMenu from "./document-menu";
@@ -37,26 +35,20 @@ GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 interface PDFContentProps {
-  onAnnotationsChange: (annotations: Annotation[]) => void;
   initialAnnotations?: Annotation[];
   focusedAnnotationId?: string;
   onAnnotationClick: (annotation: Annotation | null) => void;
 }
 
 const PDFContent = ({
-  onAnnotationsChange,
   focusedAnnotationId,
   onAnnotationClick,
   documentId,
 }: PDFContentProps & { documentId: string }) => {
-  const { addAnnotation, getAnnotations } = useAnnotations();
   const { getDimension } = useSelectionDimensions();
   const { jumpToHighlightRects } = usePdfJump();
-
-  useEffect(() => {
-    const annotations = getAnnotations(documentId);
-    onAnnotationsChange(annotations);
-  }, [getAnnotations, onAnnotationsChange, documentId]);
+  const { pdfs, updatePdfHighlightsAsync } = usePdfStore();
+  const currentAnnotations = pdfs[documentId]?.highlights || [];
 
   const handleCreateAnnotation = useCallback(() => {
     const selection = getDimension();
@@ -74,35 +66,21 @@ const PDFContent = ({
       updatedAt: new Date(),
     };
 
-    addAnnotation(documentId, newAnnotation);
+    // Update annotations directly in Supabase
+    const updatedAnnotations = [...currentAnnotations, newAnnotation];
+    updatePdfHighlightsAsync(documentId, updatedAnnotations);
     window.getSelection()?.removeAllRanges();
-  }, [addAnnotation, getDimension, documentId]);
-
-  useEffect(() => {
-    const annotations = getAnnotations(documentId);
-    if (annotations.length === 0) return;
-
-    const lastAnnotation = annotations[annotations.length - 1];
-    const isNewAnnotation =
-      Date.now() - new Date(lastAnnotation.createdAt).getTime() < 1000;
-
-    if (isNewAnnotation) {
-      onAnnotationClick(lastAnnotation);
-    }
-  }, [getAnnotations, onAnnotationClick, documentId]);
+  }, [getDimension, documentId, currentAnnotations, updatePdfHighlightsAsync]);
 
   useEffect(() => {
     if (!focusedAnnotationId) return;
 
-    const annotations = getAnnotations(documentId);
-    console.log(annotations)
-    const annotation = annotations.find((a) => a.id === focusedAnnotationId);
+    const annotation = currentAnnotations.find((a) => a.id === focusedAnnotationId);
     if (!annotation || !annotation.highlights.length) return;
 
-    jumpToHighlightRects(annotation.highlights, "pixels", "center", -50);
-  }, [focusedAnnotationId, getAnnotations, jumpToHighlightRects, documentId]);
+    jumpToHighlightRects(annotation.highlights, "pixels", "start", 0);
+  }, [focusedAnnotationId, currentAnnotations, jumpToHighlightRects]);
 
-  
   const handlePagesClick = useCallback(
     (e: React.MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -158,10 +136,6 @@ const PDFContent = ({
   );
 };
 
-
-import "pdfjs-dist/web/pdf_viewer.css";
-
-
 export const AnaraViewer = ({
   pdfId,
   pdfUrl,
@@ -172,10 +146,11 @@ export const AnaraViewer = ({
   pdfHighlights: Annotation[];
 }) => {
   const [focusedAnnotationId, setFocusedAnnotationId] = useState<string>();
-  const { getPdfAsync, updatePdfHighlightsAsync, pdfs, loadingPdfs, clearPdf } = usePdfStore();
+  const { getPdfAsync, pdfs, loadingPdfs, clearPdf } = usePdfStore();
   const { resolvedTheme } = useTheme();
   const pdf = pdfs[pdfId];
   const isLoading = loadingPdfs[pdfId];
+
   // Load PDF data on mount
   React.useEffect(() => {
     getPdfAsync(pdfId);
@@ -185,15 +160,6 @@ export const AnaraViewer = ({
       clearPdf(pdfId);
     };
   }, [pdfId, getPdfAsync, clearPdf]);
-
-  const handleAnnotationsChange = useCallback((annotations: Annotation[]) => {
-    console.log("handle annotations",annotations);
-    try {
-      updatePdfHighlightsAsync(pdfId, annotations);
-    } catch (error) {
-      console.error("Error saving annotations:", error);
-    }
-  }, [pdfId, updatePdfHighlightsAsync]);
 
   const handleAnnotationClick = useCallback((annotation: Annotation | null) => {
     setFocusedAnnotationId(annotation?.id);
@@ -225,7 +191,6 @@ export const AnaraViewer = ({
         </div>
         <PDFContent
           initialAnnotations={currentHighlights}
-          onAnnotationsChange={handleAnnotationsChange}
           focusedAnnotationId={focusedAnnotationId}
           onAnnotationClick={handleAnnotationClick}
           documentId={pdfId}

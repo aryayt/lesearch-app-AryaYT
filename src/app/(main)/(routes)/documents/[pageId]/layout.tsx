@@ -32,7 +32,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
     try {
       const page = allItems.find((item) => item.id === pageId);
       if (!page) {
-        console.log("Page not found in allItems:", pageId);
+        // console.log("Page not found in allItems:", pageId);
         return;
       }
 

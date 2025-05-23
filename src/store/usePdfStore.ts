@@ -27,6 +27,8 @@ interface PdfStore extends PdfState {
   }) => void;
   updatePdfHighlightsAsync: (pdfId: string, highlights: Annotation[]) => Promise<void>;
   clearPdf: (pdfId: string) => void;
+  subscribeToPdfChanges: (pdfId: string) => void;
+  unsubscribeFromPdfChanges: (pdfId: string) => void;
 }
 
 const initialState: PdfState = {
@@ -62,9 +64,18 @@ export const usePdfStore = create<PdfStore>((set, get) => ({
       if (error) throw error;
       
       set(state => ({
-        pdfs: { ...state.pdfs, [pdfId]: data },
+        pdfs: { 
+          ...state.pdfs, 
+          [pdfId]: { 
+            ...data,
+            highlights: data.highlights || []
+          }
+        },
         loadingPdfs: { ...state.loadingPdfs, [pdfId]: false }
       }));
+
+      // Subscribe to realtime updates after initial fetch
+      get().subscribeToPdfChanges(pdfId);
     } catch (err) {
       set(state => ({ 
         errors: { 
@@ -77,24 +88,25 @@ export const usePdfStore = create<PdfStore>((set, get) => ({
   },
 
   pdfRealtimeHandler: ({ eventType, pdf, old }) => {
-    const state = get();
-    
     if (eventType === "DELETE") {
-      set(state => ({
-        pdfs: { ...state.pdfs },
-        loadingPdfs: { ...state.loadingPdfs },
-        updatingPdfs: { ...state.updatingPdfs },
-        errors: { ...state.errors },
-        saveStatus: { ...state.saveStatus }
-      }));
-      delete state.pdfs[old.id];
-      delete state.loadingPdfs[old.id];
-      delete state.updatingPdfs[old.id];
-      delete state.errors[old.id];
-      delete state.saveStatus[old.id];
+      set(state => {
+        const newState = { ...state };
+        delete newState.pdfs[old.id];
+        delete newState.loadingPdfs[old.id];
+        delete newState.updatingPdfs[old.id];
+        delete newState.errors[old.id];
+        delete newState.saveStatus[old.id];
+        return newState;
+      });
     } else if (eventType === "UPDATE") {
       set(state => ({
-        pdfs: { ...state.pdfs, [pdf.id]: pdf },
+        pdfs: { 
+          ...state.pdfs, 
+          [pdf.id]: { 
+            ...pdf,
+            highlights: pdf.highlights || state.pdfs[pdf.id]?.highlights || []
+          }
+        },
         updatingPdfs: { ...state.updatingPdfs, [pdf.id]: false }
       }));
     }
@@ -107,8 +119,6 @@ export const usePdfStore = create<PdfStore>((set, get) => ({
       saveStatus: { ...state.saveStatus, [pdfId]: 'start' }
     }));
 
-    console.log("highlights",highlights);
-
     try {
       const supabase = createClient();
       const { error } = await supabase
@@ -119,7 +129,13 @@ export const usePdfStore = create<PdfStore>((set, get) => ({
       if (error) throw error;
       
       set(state => ({
-        pdfs: { ...state.pdfs, [pdfId]: { ...state.pdfs[pdfId], highlights } },
+        pdfs: { 
+          ...state.pdfs, 
+          [pdfId]: { 
+            ...state.pdfs[pdfId],
+            highlights 
+          }
+        },
         updatingPdfs: { ...state.updatingPdfs, [pdfId]: false },
         saveStatus: { ...state.saveStatus, [pdfId]: 'success' }
       }));
@@ -135,7 +151,38 @@ export const usePdfStore = create<PdfStore>((set, get) => ({
     }
   },
 
+  subscribeToPdfChanges: (pdfId: string) => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`pdf-${pdfId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'pdfs',
+          filter: `id=eq.${pdfId}`
+        },
+        (payload) => {
+          get().pdfRealtimeHandler({
+            eventType: payload.eventType,
+            pdf: payload.new as Pdf,
+            old: payload.old as { id: string; uuid: string }
+          });
+        }
+      )
+      .subscribe();
+    return channel;
+  },
+
+  unsubscribeFromPdfChanges: (pdfId: string) => {
+    const supabase = createClient();
+    const channel = supabase.channel(`pdf-${pdfId}`);
+    supabase.removeChannel(channel);
+  },
+
   clearPdf: (pdfId: string) => {
+    get().unsubscribeFromPdfChanges(pdfId);
     set(state => {
       const newState = { ...state };
       delete newState.pdfs[pdfId];

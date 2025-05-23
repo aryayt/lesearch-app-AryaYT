@@ -29,7 +29,6 @@ export {
 } from "./hooks/search/useSearch";
 export { calculateHighlightRects } from "./hooks/search/useSearchPosition";
 export type { Annotation } from "./hooks/useAnnotations";
-export { useAnnotations } from "./hooks/useAnnotations";
 export { LinkService } from "./hooks/usePDFLinkService";
 export { usePDFPageNumber } from "./hooks/usePdfPageNumber";
 export { useSelectionDimensions } from "./hooks/useSelectionDimensions";

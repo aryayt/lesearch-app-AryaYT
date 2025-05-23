@@ -1,7 +1,7 @@
 import type { Annotation } from "../../hooks/useAnnotations";
-import { useAnnotations } from "../../hooks/useAnnotations";
 import { usePDFPageNumber } from "../../hooks/usePdfPageNumber";
 import { AnnotationTooltip, type AnnotationTooltipContentProps } from "../annotation-tooltip";
+import { usePdfStore } from "@/store/usePdfStore";
 
 interface AnnotationHighlightLayerProps {
   className?: string;
@@ -35,10 +35,10 @@ export const AnnotationHighlightLayer = ({
   tooltipBubbleSize = 6,
   documentId,
 }: AnnotationHighlightLayerProps) => {
-  const { getAnnotations } = useAnnotations();
   const pageNumber = usePDFPageNumber();
+  const { pdfs } = usePdfStore();
+  const annotations = pdfs[documentId]?.highlights || [];
 
-  const annotations = getAnnotations(documentId);
   const pageAnnotations = annotations.filter(
     (annotation: Annotation) => annotation.pageNumber === pageNumber
   );
@@ -65,7 +65,7 @@ export const AnnotationHighlightLayer = ({
             onClose: () => {},
           })}
         >
-          <button 
+          <button
             type="button"
             style={{ cursor: "pointer", border: "none", background: "none", padding: 0, width: "100%" }}
             onClick={() => onAnnotationClick?.(annotation)}

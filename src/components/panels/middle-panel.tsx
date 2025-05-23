@@ -3,7 +3,6 @@ import { type Tab, usePanelStore } from "@/store/usePanelStore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { FilePen, FileText, Plus, X } from "lucide-react";
 import { Button } from "../ui/button";
-import Editor from "../blocknote/editor";
 import { AnaraViewer } from "../anara/anara";
 import {
   DropdownMenu,
@@ -13,18 +12,19 @@ import {
 } from "../ui/dropdown-menu";
 import { useStore } from "@/store/useCollectionStore";
 import { PDFImport } from "../sidebar/pdf-import";
+import { usePdfStore } from "@/store/usePdfStore";
+import BlockEditor from "../blocknote/BlockNoteEditor";
 
 const MiddlePanel = () => {
   const {
     activePageId,
-    leftActiveTabId,
     getMiddlePanelTabs,
     removeTab,
     middleActiveTabId,
     setMiddleActiveTabId,
-    getPdfHighlights,
   } = usePanelStore();
   const { setCreation } = useStore();
+  const { pdfs } = usePdfStore();
   const [isPdfImportOpen, setIsPdfImportOpen] = useState(false);
   const tabs = getMiddlePanelTabs();
 
@@ -169,20 +169,21 @@ const MiddlePanel = () => {
         </TabsList>
         <div className="flex-1 overflow-hidden">
           {tabs.map((tab: Tab) => (
-            <TabsContent
-              key={tab.id}
-              value={tab.id}
-              className="flex flex-col mt-0 h-full overflow-auto"
-            >
-              {tab.type === "pdf" && tab.pdfUrl ? (
-                <AnaraViewer
-                  pdfUrl={tab.pdfUrl}
-                  pdfHighlights={getPdfHighlights(tab.id) || []}
-                />
-              ) : (
-                <Editor />
-              )}
-            </TabsContent>
+                      <TabsContent
+                      key={tab.id}
+                      value={tab.id}
+                      className="flex flex-col mt-0 h-full overflow-auto"
+                    >
+                      {tab.type === "pdf" && tab.pdfUrl ? (
+                        <AnaraViewer
+                          pdfId={tab.id}
+                          pdfUrl={tab.pdfUrl}
+                          pdfHighlights={pdfs[tab.id]?.highlights || []}
+                        />
+                      ) : (
+                        <BlockEditor docid={tab.id} />
+                      )}
+                    </TabsContent>
           ))}
         </div>
       </Tabs>

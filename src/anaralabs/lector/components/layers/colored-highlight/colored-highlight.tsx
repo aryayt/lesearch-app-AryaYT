@@ -24,6 +24,11 @@ export const ColoredHighlightComponent = ({
         <span
           key={`${selection.uuid}-${index}`}
           onClick={() => setShowButton(!showButton)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              setShowButton(!showButton);
+            }
+          }}
           style={{
             position: "absolute",
             top: rect.top,
@@ -43,6 +48,7 @@ export const ColoredHighlightComponent = ({
       {showButton && (
         <button
           key={`${selection.uuid}-delete-button`}
+          type="button"
           style={{
             backgroundColor: "white",
             color: "white",
@@ -59,6 +65,7 @@ export const ColoredHighlightComponent = ({
           onClick={() => deleteColoredHighlight(selection.uuid)}
         >
           <svg
+            aria-hidden="true"
             fill="#000000"
             version="1.1"
             id="Capa_1"

@@ -53,7 +53,7 @@ export const HighlightLayer = forwardRef<
         return (
           <Comp
             ref={ref}
-            key={`highlight-${pageNumber}-${index}`}
+            key={`highlight-${pageNumber}-${index}-${rect}`}
             className={className}
             style={{
               position: "absolute",

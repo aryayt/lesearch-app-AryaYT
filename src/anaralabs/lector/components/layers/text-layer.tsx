@@ -21,7 +21,7 @@ export const TextLayer = ({
       }}
       {...props}
       {...{
-        ["data-page-number"]: pageNumber,
+        "data-page-number": pageNumber,
       }}
       ref={textContainerRef}
     />

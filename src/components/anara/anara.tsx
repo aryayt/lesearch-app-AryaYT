@@ -14,7 +14,7 @@ import {
   usePdfJump,
   AnnotationLayer,
 } from "@/anaralabs/lector";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import "pdfjs-dist/web/pdf_viewer.css";
 import { useTheme } from "next-themes";
 import GridLoader from "../loader/grid-loader";
@@ -48,7 +48,7 @@ const PDFContent = ({
   const { getDimension } = useSelectionDimensions();
   const { jumpToHighlightRects } = usePdfJump();
   const { pdfs, updatePdfHighlightsAsync } = usePdfStore();
-  const currentAnnotations = pdfs[documentId]?.highlights || [];
+  const currentAnnotations = useMemo(() => pdfs[documentId]?.highlights || [], [pdfs, documentId]);
 
   const handleCreateAnnotation = useCallback(() => {
     const selection = getDimension();

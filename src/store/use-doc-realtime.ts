@@ -18,6 +18,7 @@ export const useDocRealtime = () => {
   const { docRealtimeHandler } = useDocStore();
 
   useEffectOnce(() => {
+    console.log('Setting up realtime subscription');
     const supabase = createClient();
     const channel = supabase
       .channel("notes_content")
@@ -25,12 +26,14 @@ export const useDocRealtime = () => {
         "postgres_changes",
         { event: "*", schema: "public", table: "notes" },
         (payload) => {
+          console.log('Realtime event received:', payload);
           docRealtimeHandler(payload as DocPayload);
         }
       )
       .subscribe();
 
     return () => {
+      console.log('Cleaning up realtime subscription');
       channel.unsubscribe();
     };
   });

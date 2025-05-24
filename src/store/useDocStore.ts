@@ -45,6 +45,7 @@ export const useDocStore = create<DocStore>((set, get) => ({
     })),
 
   getDocAsync: async (docId: string) => {
+    console.log('getDocAsync called:', docId);
     set(state => ({
       loadingDocs: { ...state.loadingDocs, [docId]: true },
       errors: { ...state.errors, [docId]: null }
@@ -60,11 +61,13 @@ export const useDocStore = create<DocStore>((set, get) => ({
 
       if (error) throw error;
       
+      console.log('getDocAsync success:', { docId, data });
       set(state => ({
         docs: { ...state.docs, [docId]: data },
         loadingDocs: { ...state.loadingDocs, [docId]: false }
       }));
     } catch (err) {
+      console.error('getDocAsync error:', { docId, err });
       set(state => ({ 
         errors: { 
           ...state.errors, 
@@ -76,6 +79,7 @@ export const useDocStore = create<DocStore>((set, get) => ({
   },
 
   docRealtimeHandler: ({ eventType, doc, old }) => {
+    console.log('docRealtimeHandler:', { eventType, doc, old });
     const state = get();
     
     if (eventType === "DELETE") {
@@ -91,9 +95,11 @@ export const useDocStore = create<DocStore>((set, get) => ({
       delete state.updatingDocs[old.id];
       delete state.errors[old.id];
       delete state.saveStatus[old.id];
-    } else if (eventType === "UPDATE") {
+    } else if (eventType === "UPDATE" || eventType === "INSERT") {
+      console.log('Updating doc from realtime:', { docId: doc.id, content: doc.content });
       set(state => ({
         docs: { ...state.docs, [doc.id]: doc },
+        loadingDocs: { ...state.loadingDocs, [doc.id]: false },
         updatingDocs: { ...state.updatingDocs, [doc.id]: false }
       }));
     }

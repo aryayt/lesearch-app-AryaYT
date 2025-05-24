@@ -14,33 +14,22 @@ import { useDocStore } from '@/store/useDocStore';
 import { useDocRealtime } from '@/store/use-doc-realtime'
 import GridLoader from '../loader/grid-loader'
 import { useTheme } from 'next-themes';
+import { useCallback } from 'react';
+import debounce from 'lodash/debounce';
 
 export function PlateEditor({ docid }: { docid: string }) {
   const { docs, loadingDocs, getDocAsync, clearDoc, updateDocAsync } = useDocStore();
   const doc = docs[docid];
   const isInitialLoading = loadingDocs[docid];
   const { resolvedTheme } = useTheme();
-  
-  const initialValue: Value = [
-    {
-      children: [{ text: 'Playground' }],
-      type: 'h1',
-    },
-    {
-      children: [
-        { text: 'A rich-text editor with AI capabilities. Try the ' },
-        { bold: true, text: 'AI commands' },
-        { text: ' or use ' },
-        { kbd: true, text: 'Cmd+J' },
-        { text: ' to open the AI menu.' },
-      ],
-      type: ParagraphPlugin.key,
-    },
-  ];
 
-  const editor = useCreateEditor({ 
-    value: doc?.content ? JSON.parse(doc.content) : initialValue 
-  });
+  console.log("doc", doc , docid)
+
+  const debouncedUpdate = useCallback((value: Value) => {
+    updateDocAsync(docid, { content: JSON.stringify(value) });
+  }, [docid, updateDocAsync]);
+
+  const debouncedSave = debounce(debouncedUpdate, 1500);
 
   useDocRealtime();
 
@@ -52,26 +41,41 @@ export function PlateEditor({ docid }: { docid: string }) {
       clearDoc(docid);
     };
   }, [docid, getDocAsync, clearDoc]);
+  
+   // Set initial value based on whether doc has been loaded
+   const initialValue: Value = doc?.content ? JSON.parse(doc.content) : [
+    {
+      children: [
+        { text: 'Write anything to get started. Try with ' },
+        { bold: true, text: 'AI commands' },
+        { text: ' or use ' },
+        { kbd: true, text: 'Cmd+J' },
+        { text: ' to open the AI menu.' },
+      ],
+      type: ParagraphPlugin.key,
+    },
+  ];
+
+  const editor = useCreateEditor({ value: initialValue });
+  
 
   // Only show loading skeleton on initial fetch
   if (isInitialLoading && !doc) {
     return (
       <div className="h-full w-full flex justify-center items-center">
-      <GridLoader size="80" color={`${resolvedTheme==="light"?'#000000':'#ffffff'}`} />
-    </div>
+        <GridLoader size="80" color={`${resolvedTheme==="light"?'#000000':'#ffffff'}`} />
+      </div>
     );
   }
 
-  const handleChange = (options: { value: Value }) => {
-    console.log('Editor content changed:', options.value);
-    updateDocAsync(docid, { content: JSON.stringify(options.value) });
-  };
-
   return (
     <DndProvider backend={HTML5Backend}>
-      <Plate editor={editor} onChange={handleChange}>
+      <Plate 
+        editor={editor} 
+        onChange={(options: { value: Value }) => debouncedSave(options.value)}
+      >
         <EditorContainer>
-          <Editor variant="demo" />
+          <Editor variant="default" />
         </EditorContainer>
         <SettingsDialog />
       </Plate>

@@ -11,10 +11,10 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { useStore } from "@/store/useCollectionStore";
-import BlockEditor from '@/components/blocknote/BlockNoteEditor'
 import { SaveStatus } from "../sidebar/save-status";
 import { useDocStore } from "@/store/useDocStore";
 import { usePdfStore } from "@/store/usePdfStore";
+import { PlateEditor } from "../platejs/plate-editor";
 
 const LeftPanel = () => {
   const {
@@ -117,7 +117,7 @@ const LeftPanel = () => {
           <TabsContent
             key={tab.id}
             value={tab.id}
-            className="flex flex-col mt-0 h-full overflow-auto"
+            className="flex flex-col mt-0 h-full overflow-hidden"
           >
             {tab.type === "pdf" && tab.pdfUrl ? (
               <AnaraViewer
@@ -126,7 +126,9 @@ const LeftPanel = () => {
                 pdfHighlights={pdfs[tab.id]?.highlights || []}
               />
             ) : (
-              <BlockEditor docid={tab.id} />
+              <div data-registry="plate">
+                <PlateEditor docid={tab.id} />
+              </div>
             )}
           </TabsContent>
         ))}

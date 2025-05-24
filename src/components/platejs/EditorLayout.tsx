@@ -4,6 +4,8 @@ import { useDocRealtime } from '@/store/use-doc-realtime';
 import { PlateEditor } from './plate-editor';
 import GridLoader from '../loader/grid-loader';
 import { useTheme } from 'next-themes';
+import { ParagraphPlugin } from '@udecode/plate/react';
+import type { Value } from '@udecode/plate';
 
 const EditorLayout = ({ docid }: { docid: string }) => {
   const { docs, loadingDocs, getDocAsync, clearDoc } = useDocStore();
@@ -11,7 +13,6 @@ const EditorLayout = ({ docid }: { docid: string }) => {
   const isInitialLoading = loadingDocs[docid];
   const { resolvedTheme } = useTheme();
 
-  console.log('EditorLayout render:', { docid, doc, isInitialLoading });
 
   useDocRealtime();
 
@@ -34,7 +35,26 @@ const EditorLayout = ({ docid }: { docid: string }) => {
     );
   }
 
-  return <PlateEditor docid={docid} content={doc?.content} />;
+     // Set initial value based on whether doc has been loaded
+     const initialValue: Value = doc?.content ? JSON.parse(doc.content) : [
+      {
+        children: [
+          { text: 'Write anything to get started. Try with ' },
+          { bold: true, text: 'AI commands' },
+          { text: ' or use ' },
+          { kbd: true, text: 'Cmd+J' },
+          { text: ' to open the AI menu.' },
+        ],
+        type: ParagraphPlugin.key,
+      },
+    ];
+
+
+  return (
+    <div data-registry="plate">
+      {doc?.content !== undefined && <PlateEditor docid={docid} content={initialValue} />}
+    </div>
+  )
 };
 
 export default EditorLayout;

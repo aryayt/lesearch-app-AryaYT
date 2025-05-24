@@ -14,7 +14,7 @@ import { useStore } from "@/store/useCollectionStore";
 import { SaveStatus } from "../sidebar/save-status";
 import { useDocStore } from "@/store/useDocStore";
 import { usePdfStore } from "@/store/usePdfStore";
-import { PlateEditor } from "../platejs/plate-editor";
+import EditorLayout from "../platejs/EditorLayout";
 
 const LeftPanel = () => {
   const {
@@ -127,7 +127,7 @@ const LeftPanel = () => {
               />
             ) : (
               <div data-registry="plate">
-                <PlateEditor docid={tab.id} />
+                <EditorLayout docid={tab.id} />
               </div>
             )}
           </TabsContent>

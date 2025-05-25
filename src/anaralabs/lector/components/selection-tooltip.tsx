@@ -156,6 +156,7 @@ export const SelectionTooltip = ({ children }: SelectionTooltipProps) => {
             ...floatingStyles,
           }}
           {...getFloatingProps()}
+          className="bg-popover rounded-md border shadow-md p-1"
         >
           {children}
         </div>

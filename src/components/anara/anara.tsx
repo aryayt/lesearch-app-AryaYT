@@ -110,6 +110,10 @@ const PDFContent = ({
     []
   );
 
+  const handleAskAI = useCallback(() => {
+    console.log("Ask AI");
+  }, []);
+
   return (
     <Pages
       className="dark:invert-[94%] dark:hue-rotate-180 dark:brightness-[80%] dark:contrast-[228%] dark:bg-gray-100"
@@ -129,7 +133,7 @@ const PDFContent = ({
           documentId={documentId}
         />
         <SelectionTooltip>
-          <SelectionTooltipContent onHighlight={handleCreateAnnotation} />
+          <SelectionTooltipContent onHighlight={handleCreateAnnotation} onAskAI={handleAskAI} />
         </SelectionTooltip>
       </Page>
     </Pages>

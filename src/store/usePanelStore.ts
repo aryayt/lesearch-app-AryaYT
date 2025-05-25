@@ -217,9 +217,14 @@ export const usePanelStore = create(
     addTab: async (pageId, pageType, panel) => {
       set({ isLoading: true, error: null });
       try {
-        const activePageId = get().activePageId;
+        let activePageId = get().activePageId;
+        if (!activePageId && panel === 'left') {
+          get().setActivePageId(pageId);
+          activePageId = pageId;  
+        }
+
         if (!activePageId) {
-          throw new Error('No active page selected. Please select a page before adding tabs.');
+          throw new Error('No active page selected. Please select a page before adding tabs or use the left panel to add tabs.');
         }
 
         // Check if tab already exists in the specified panel

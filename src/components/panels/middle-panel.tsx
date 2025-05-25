@@ -13,7 +13,7 @@ import {
 import { useStore } from "@/store/useCollectionStore";
 import { PDFImport } from "../sidebar/pdf-import";
 import { usePdfStore } from "@/store/usePdfStore";
-import BlockEditor from "../blocknote/BlockNoteEditor";
+import EditorLayout from "../platejs/EditorLayout";
 
 const MiddlePanel = () => {
   const {
@@ -181,7 +181,9 @@ const MiddlePanel = () => {
                           pdfHighlights={pdfs[tab.id]?.highlights || []}
                         />
                       ) : (
-                        <BlockEditor docid={tab.id} />
+                        <div data-registry="plate">
+                        <EditorLayout docid={tab.id} />
+                      </div>
                       )}
                     </TabsContent>
           ))}

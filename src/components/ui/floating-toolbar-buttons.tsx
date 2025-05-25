@@ -31,6 +31,7 @@ import { TurnIntoDropdownMenu } from './turn-into-dropdown-menu';
 
 export function FloatingToolbarButtons() {
   const readOnly = useEditorReadOnly();
+  
 
   return (
     <>

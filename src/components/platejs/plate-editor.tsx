@@ -46,7 +46,7 @@ export function PlateEditor({ docid , content}: { docid: string , content: Value
         <EditorContainer>
           <Editor variant="default" />
         </EditorContainer>
-        <SettingsDialog />
+        {/* <SettingsDialog /> */}
       </Plate>
     </DndProvider>
   );

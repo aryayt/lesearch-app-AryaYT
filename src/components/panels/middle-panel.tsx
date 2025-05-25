@@ -14,6 +14,8 @@ import { useStore } from "@/store/useCollectionStore";
 import { PDFImport } from "../sidebar/pdf-import";
 import { usePdfStore } from "@/store/usePdfStore";
 import EditorLayout from "../platejs/EditorLayout";
+import { SaveStatus } from "../sidebar/save-status";
+import { useDocStore } from "@/store/useDocStore";
 
 const MiddlePanel = () => {
   const {
@@ -26,6 +28,7 @@ const MiddlePanel = () => {
   const { setCreation } = useStore();
   const { pdfs } = usePdfStore();
   const [isPdfImportOpen, setIsPdfImportOpen] = useState(false);
+  const { saveStatus } = useDocStore();
   const tabs = getMiddlePanelTabs();
 
   // Keep track of the previous middleActiveTabId
@@ -143,6 +146,7 @@ const MiddlePanel = () => {
               </div>
             ))}
           </div>
+          <SaveStatus status={saveStatus[middleActiveTabId]} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">

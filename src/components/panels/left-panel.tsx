@@ -126,9 +126,7 @@ const LeftPanel = () => {
                 pdfHighlights={pdfs[tab.id]?.highlights || []}
               />
             ) : (
-              <div data-registry="plate">
-                <EditorLayout docid={tab.id} />
-              </div>
+              <EditorLayout docid={tab.id} />
             )}
           </TabsContent>
         ))}

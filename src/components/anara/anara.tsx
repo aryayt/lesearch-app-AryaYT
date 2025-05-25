@@ -177,7 +177,7 @@ export const AnaraViewer = ({
   }
 
   return (
-    <div className="flex flex-col gap-4 h-full">
+    <div className="flex flex-col gap-2 h-full">
       <Root
         className="border overflow-hidden flex flex-col w-full h-full rounded-lg"
         source={pdfUrl}

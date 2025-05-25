@@ -51,7 +51,7 @@ const EditorLayout = ({ docid }: { docid: string }) => {
 
 
   return (
-    <div data-registry="plate">
+    <div data-registry="plate" className="flex flex-col gap-2 h-full">
       {doc?.content !== undefined && <PlateEditor docid={docid} content={initialValue} />}
     </div>
   )

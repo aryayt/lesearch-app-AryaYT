@@ -95,7 +95,7 @@ export function BlockContextMenu({ children }: { children: React.ReactNode }) {
           });
         }}
       >
-        <div className="w-full">{children}</div>
+        <div className="relative w-full flex h-full overflow-auto">{children}</div>
       </ContextMenuTrigger>
       <ContextMenuContent
         className="w-64"

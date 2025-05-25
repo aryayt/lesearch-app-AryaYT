@@ -28,26 +28,17 @@ export function PlateEditor({ docid , content}: { docid: string , content: Value
   const editor = useCreateEditor({ value: content });
   
 
-  // // Only show loading skeleton on initial fetch
-  // if (isInitialLoading && !doc) {
-  //   return (
-  //     <div className="h-full w-full flex justify-center items-center">
-  //       <GridLoader size="80" color={`${resolvedTheme==="light"?'#000000':'#ffffff'}`} />
-  //     </div>
-  //   );
-  // }
-
   return (
     <DndProvider backend={HTML5Backend}>
       <Plate 
         editor={editor} 
         onChange={(options: { value: Value }) => debouncedSave(options.value)}
       >
-        <EditorContainer>
+        <EditorContainer className="border overflow-hidden flex flex-col w-full h-full rounded-lg">
           <Editor variant="default" />
         </EditorContainer>
-        {/* <SettingsDialog /> */}
-      </Plate>
+          {/* <SettingsDialog /> */}
+        </Plate>
     </DndProvider>
   );
 }

@@ -6,7 +6,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Plate } from '@udecode/plate/react';
 import type { Value } from '@udecode/plate';
 import { useCreateEditor } from '@/components/platejs/use-create-editor';
-import { SettingsDialog } from '@/components/platejs/settings';
+// import { SettingsDialog } from '@/components/platejs/settings';
 import { Editor, EditorContainer } from '@/components/ui/editor';
 import { useDocStore } from '@/store/useDocStore';
 import { useCallback } from 'react';

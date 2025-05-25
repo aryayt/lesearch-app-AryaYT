@@ -198,7 +198,16 @@ export const TooltipContent = ({ annotation, onClose }: TooltipContentProps) => 
       ) : (
         <div className="flex flex-row gap-2">
           {annotation.comment ? (
-            <div className="text-sm text-gray-700">{annotation.comment}</div>
+            <>
+              <div className="text-sm text-gray-700">{annotation.comment}</div>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="text-sm text-red-500 hover:text-red-600"
+          >
+                Delete
+              </button>
+            </>
           ) : (
             <>
               <button

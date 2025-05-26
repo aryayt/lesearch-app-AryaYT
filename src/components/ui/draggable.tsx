@@ -88,7 +88,9 @@ export const DraggableAboveNodes: RenderNodeWrapper = (props) => {
 
   if (!enabled) return;
 
-  return (props) => <Draggable {...props} />;
+  const DraggableWrapper = (props: PlateElementProps) => <Draggable {...props} />;
+  DraggableWrapper.displayName = 'DraggableWrapper';
+  return DraggableWrapper;
 };
 
 export function Draggable(props: PlateElementProps) {
@@ -231,7 +233,14 @@ const DragHandle = React.memo(function DragHandle() {
               .getApi(BlockSelectionPlugin)
               .blockSelection.set(element.id as string);
           }}
-          role="button"
+          // role="button"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              editor
+                .getApi(BlockSelectionPlugin)
+                .blockSelection.set(element.id as string);
+            }
+          }}
         >
           <GripVertical className="text-muted-foreground" />
         </div>

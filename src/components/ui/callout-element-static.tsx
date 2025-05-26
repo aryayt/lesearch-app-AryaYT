@@ -1,20 +1,27 @@
 import * as React from 'react';
 
-import type { SlateElementProps } from '@udecode/plate';
+import type { SlateElementProps, TElement } from '@udecode/plate';
 
 import { cn } from '@udecode/cn';
 import { SlateElement } from '@udecode/plate';
+
+interface CalloutElementProps extends SlateElementProps {
+  element: TElement & {
+    backgroundColor?: string;
+    icon?: string;
+  };
+}
 
 export function CalloutElementStatic({
   children,
   className,
   ...props
-}: SlateElementProps) {
+}: CalloutElementProps) {
   return (
     <SlateElement
       className={cn('my-1 flex rounded-sm bg-muted p-4 pl-3', className)}
       style={{
-        backgroundColor: props.element.backgroundColor as any,
+        backgroundColor: props.element.backgroundColor,
       }}
       {...props}
     >
@@ -27,7 +34,7 @@ export function CalloutElementStatic({
           }}
         >
           <span data-plate-prevent-deserialization>
-            {(props.element.icon as any) || '💡'}
+            {props.element.icon || '💡'}
           </span>
         </div>
         <div className="w-full">{children}</div>

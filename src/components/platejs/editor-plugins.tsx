@@ -1,6 +1,7 @@
 'use client';
-
+ 
 import emojiMartData from '@emoji-mart/data';
+import type { EmojiMartData } from '@emoji-mart/data';
 import { CalloutPlugin } from '@udecode/plate-callout/react';
 import { CodeBlockPlugin } from '@udecode/plate-code-block/react';
 import { DatePlugin } from '@udecode/plate-date/react';
@@ -48,6 +49,9 @@ import { softBreakPlugin } from './soft-break-plugin';
 import { suggestionPlugin } from './suggestion-plugin';
 import { tablePlugin } from './table-plugin';
 import { tocPlugin } from './toc-plugin';
+import type { RenderNodeWrapper } from '@udecode/plate/react';
+import type { AnyPluginConfig } from '@udecode/plate';
+
 
 export const viewPlugins = [
   ...basicNodesPlugins,
@@ -80,7 +84,7 @@ export const viewPlugins = [
   discussionPlugin,
   commentsPlugin,
   suggestionPlugin.configure({
-    render: { belowNodes: SuggestionBelowNodes as any },
+    render: { belowNodes: SuggestionBelowNodes as RenderNodeWrapper<AnyPluginConfig> },
   }),
 ] as const;
 
@@ -105,7 +109,7 @@ export const editorPlugins = [
   cursorOverlayPlugin,
   ...blockMenuPlugins,
   ...dndPlugins,
-  EmojiPlugin.configure({ options: { data: emojiMartData as any } }),
+  EmojiPlugin.configure({ options: { data: emojiMartData as EmojiMartData } }),
   exitBreakPlugin,
   resetBlockTypePlugin,
   ...deletePlugins,

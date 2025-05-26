@@ -35,8 +35,11 @@ export const useCanvasLayer = ({ background }: { background?: string }) => {
 
     canvas.style.height = `${viewport.height}px`;
     canvas.style.width = `${viewport.width}px`;
-
-    const canvasContext = canvas.getContext("2d")!;
+    
+    const canvasContext = canvas.getContext("2d");
+    if (!canvasContext) {
+      return;
+    }
     canvasContext.scale(scale, scale);
 
     const renderingTask = pdfPageProxy.render({
@@ -56,7 +59,7 @@ export const useCanvasLayer = ({ background }: { background?: string }) => {
     return () => {
       void renderingTask.cancel();
     };
-  }, [pdfPageProxy, dpr, zoom]);
+  }, [pdfPageProxy, dpr, zoom, background]);
 
   return {
     canvasRef,

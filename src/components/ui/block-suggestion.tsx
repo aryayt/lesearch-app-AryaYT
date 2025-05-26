@@ -75,12 +75,12 @@ export const TYPE_TEXT_MAP: Record<string, (node?: TElement) => string> = {
   [ColumnPlugin.key]: () => 'Column',
   [EquationPlugin.key]: () => 'Equation',
   [FilePlugin.key]: () => 'File',
-  [HEADING_KEYS.h1]: () => `Heading 1`,
-  [HEADING_KEYS.h2]: () => `Heading 2`,
-  [HEADING_KEYS.h3]: () => `Heading 3`,
-  [HEADING_KEYS.h4]: () => `Heading 4`,
-  [HEADING_KEYS.h5]: () => `Heading 5`,
-  [HEADING_KEYS.h6]: () => `Heading 6`,
+  [HEADING_KEYS.h1]: () => 'Heading 1',
+  [HEADING_KEYS.h2]: () => 'Heading 2',
+  [HEADING_KEYS.h3]: () => 'Heading 3',
+  [HEADING_KEYS.h4]: () => 'Heading 4',
+  [HEADING_KEYS.h5]: () => 'Heading 5',
+  [HEADING_KEYS.h6]: () => 'Heading 6',
   [HorizontalRulePlugin.key]: () => 'Horizontal Rule',
   [ImagePlugin.key]: () => 'Image',
   [MediaEmbedPlugin.key]: () => 'Media',
@@ -162,15 +162,12 @@ export const BlockSuggestionCard = ({
           <div className="flex flex-col gap-2">
             {suggestion.type === 'remove' && (
               <React.Fragment>
-                {suggestionText2Array(suggestion.text!).map((text, index) => (
-                  <div key={index} className="flex items-center gap-2">
+                {suggestionText2Array(suggestion.text || '').map((text) => (
+                  <div key={`remove-${text}`} className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">
                       Delete:
                     </span>
-
-                    <span key={index} className="text-sm">
-                      {text}
-                    </span>
+                    <span className="text-sm">{text}</span>
                   </div>
                 ))}
               </React.Fragment>
@@ -178,41 +175,31 @@ export const BlockSuggestionCard = ({
 
             {suggestion.type === 'insert' && (
               <React.Fragment>
-                {suggestionText2Array(suggestion.newText!).map(
-                  (text, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">
-                        Add:
-                      </span>
-
-                      <span key={index} className="text-sm">
-                        {text || 'line breaks'}
-                      </span>
-                    </div>
-                  )
-                )}
+                {suggestionText2Array(suggestion.newText || '').map((text) => (
+                  <div key={`insert-${text}`} className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      Add:
+                    </span>
+                    <span className="text-sm">{text || 'line breaks'}</span>
+                  </div>
+                ))}
               </React.Fragment>
             )}
 
             {suggestion.type === 'replace' && (
               <div className="flex flex-col gap-2">
-                {suggestionText2Array(suggestion.newText!).map(
-                  (text, index) => (
-                    <React.Fragment key={index}>
-                      <div
-                        key={index}
-                        className="flex items-start gap-2 text-brand/80"
-                      >
-                        <span className="text-sm">with:</span>
-                        <span className="text-sm">{text || 'line breaks'}</span>
-                      </div>
-                    </React.Fragment>
-                  )
-                )}
+                {suggestionText2Array(suggestion.newText || '').map((text) => (
+                  <React.Fragment key={`replace-new-${text}`}>
+                    <div className="flex items-start gap-2 text-brand/80">
+                      <span className="text-sm">with:</span>
+                      <span className="text-sm">{text || 'line breaks'}</span>
+                    </div>
+                  </React.Fragment>
+                ))}
 
-                {suggestionText2Array(suggestion.text!).map((text, index) => (
-                  <React.Fragment key={index}>
-                    <div key={index} className="flex items-start gap-2">
+                {suggestionText2Array(suggestion.text || '').map((text, index) => (
+                  <React.Fragment key={`replace-old-${text}`}>
+                    <div className="flex items-start gap-2">
                       <span className="text-sm text-muted-foreground">
                         {index === 0 ? 'Replace:' : 'Delete:'}
                       </span>
@@ -291,11 +278,11 @@ export const useResolveSuggestion = (
   const { api, editor, getOption, setOption } =
     useEditorPlugin(suggestionPlugin);
 
-  suggestionNodes.forEach(([node]) => {
+  for (const [node] of suggestionNodes) {
     const id = api.suggestion.nodeId(node);
     const map = getOption('uniquePathMap');
 
-    if (!id) return;
+    if (!id) continue;
 
     const previousPath = map.get(id);
 
@@ -310,13 +297,14 @@ export const useResolveSuggestion = (
       }
 
       if (!nodes && lineBreakId !== id) {
-        return setOption('uniquePathMap', new Map(map).set(id, blockPath));
+        setOption('uniquePathMap', new Map(map).set(id, blockPath));
+        continue;
       }
 
-      return;
+      continue;
     }
     setOption('uniquePathMap', new Map(map).set(id, blockPath));
-  });
+  }
 
   const resolvedSuggestion: ResolvedSuggestion[] = React.useMemo(() => {
     const map = getOption('uniquePathMap');
@@ -347,13 +335,13 @@ export const useResolveSuggestion = (
 
     const res: ResolvedSuggestion[] = [];
 
-    suggestionIds.forEach((id) => {
-      if (!id) return;
+    for (const id of suggestionIds) {
+      if (!id) continue;
 
       const path = map.get(id);
 
-      if (!path || !PathApi.isPath(path)) return;
-      if (!PathApi.equals(path, blockPath)) return;
+      if (!path || !PathApi.isPath(path)) continue;
+      if (!PathApi.equals(path, blockPath)) continue;
 
       const entries = [
         ...editor.api.nodes<TElement | TSuggestionText>({
@@ -372,26 +360,24 @@ export const useResolveSuggestion = (
 
       let newText = '';
       let text = '';
-      let properties: any = {};
-      let newProperties: any = {};
+      let properties: Record<string, unknown> = {};
+      let newProperties: Record<string, unknown> = {};
 
       // overlapping suggestion
-      entries.forEach(([node]) => {
+      for (const [node] of entries) {
         if (TextApi.isText(node)) {
           const dataList = api.suggestion.dataList(node);
 
-          dataList.forEach((data) => {
-            if (data.id !== id) return;
+          for (const data of dataList) {
+            if (data.id !== id) continue;
 
             switch (data.type) {
               case 'insert': {
                 newText += node.text;
-
                 break;
               }
               case 'remove': {
                 text += node.text;
-
                 break;
               }
               case 'update': {
@@ -406,18 +392,16 @@ export const useResolveSuggestion = (
                 };
 
                 newText += node.text;
-
                 break;
               }
-              // No default
             }
-          });
+          }
         } else {
           const lineBreakData = api.suggestion.isBlockSuggestion(node)
             ? node.suggestion
             : undefined;
 
-          if (lineBreakData?.id !== keyId2SuggestionId(id)) return;
+          if (lineBreakData?.id !== keyId2SuggestionId(id)) continue;
           if (lineBreakData.type === 'insert') {
             newText += lineBreakData.isLineBreak
               ? BLOCK_SUGGESTION
@@ -428,15 +412,14 @@ export const useResolveSuggestion = (
               : BLOCK_SUGGESTION + TYPE_TEXT_MAP[node.type](node);
           }
         }
-      });
+      }
 
-      if (entries.length === 0) return;
+      if (entries.length === 0) continue;
 
       const nodeData = api.suggestion.suggestionData(entries[0][0]);
 
-      if (!nodeData) return;
+      if (!nodeData) continue;
 
-      // const comments = data?.discussions.find((d) => d.id === id)?.comments;
       const comments =
         discussions.find((s: TDiscussion) => s.id === id)?.comments || [];
       const createdAt = new Date(nodeData.createdAt);
@@ -444,7 +427,7 @@ export const useResolveSuggestion = (
       const keyId = getSuggestionKey(id);
 
       if (nodeData.type === 'update') {
-        return res.push({
+        res.push({
           comments,
           createdAt,
           keyId,
@@ -455,9 +438,10 @@ export const useResolveSuggestion = (
           type: 'update',
           userId: nodeData.userId,
         });
+        continue;
       }
       if (newText.length > 0 && text.length > 0) {
-        return res.push({
+        res.push({
           comments,
           createdAt,
           keyId,
@@ -467,9 +451,10 @@ export const useResolveSuggestion = (
           type: 'replace',
           userId: nodeData.userId,
         });
+        continue;
       }
       if (newText.length > 0) {
-        return res.push({
+        res.push({
           comments,
           createdAt,
           keyId,
@@ -478,9 +463,10 @@ export const useResolveSuggestion = (
           type: 'insert',
           userId: nodeData.userId,
         });
+        continue;
       }
       if (text.length > 0) {
-        return res.push({
+        res.push({
           comments,
           createdAt,
           keyId,
@@ -490,7 +476,7 @@ export const useResolveSuggestion = (
           userId: nodeData.userId,
         });
       }
-    });
+    }
 
     return res;
   }, [

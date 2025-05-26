@@ -1,7 +1,8 @@
 'use client';
 
-import * as React from 'react';
+import type * as React from 'react';
 
+import type { TElement } from '@udecode/plate';
 import { cn } from '@udecode/cn';
 import { useCalloutEmojiPicker } from '@udecode/plate-callout/react';
 import { useEmojiDropdownMenuState } from '@udecode/plate-emoji/react';
@@ -13,12 +14,19 @@ import { emojiCategoryIcons, emojiSearchIcons } from './emoji-icons';
 import { EmojiPicker } from './emoji-picker';
 import { EmojiToolbarDropdown } from './emoji-toolbar-dropdown';
 
+interface CalloutElementProps extends React.ComponentProps<typeof PlateElement> {
+  element: TElement & {
+    backgroundColor?: string;
+    icon?: string;
+  };
+}
+
 export function CalloutElement({
   attributes,
   children,
   className,
   ...props
-}: React.ComponentProps<typeof PlateElement>) {
+}: CalloutElementProps) {
   const { emojiPickerState, isOpen, setIsOpen } = useEmojiDropdownMenuState({
     closeOnSelect: true,
   });
@@ -33,7 +41,7 @@ export function CalloutElement({
     <PlateElement
       className={cn('my-1 flex rounded-sm bg-muted p-4 pl-3', className)}
       style={{
-        backgroundColor: props.element.backgroundColor as any,
+        backgroundColor: props.element.backgroundColor,
       }}
       attributes={{
         ...attributes,
@@ -54,7 +62,7 @@ export function CalloutElement({
               }}
               contentEditable={false}
             >
-              {(props.element.icon as any) || '💡'}
+              {props.element.icon || '💡'}
             </Button>
           }
         >

@@ -5,7 +5,7 @@ import * as React from 'react';
 import type { TExcalidrawElement } from '@udecode/plate-excalidraw';
 import type { PlateElementProps } from '@udecode/plate/react';
 
-import { useExcalidrawElement } from '@udecode/plate-excalidraw/react';
+import { type TExcalidrawProps, useExcalidrawElement } from '@udecode/plate-excalidraw/react';
 import { PlateElement } from '@udecode/plate/react';
 
 export function ExcalidrawElement(
@@ -21,7 +21,7 @@ export function ExcalidrawElement(
     <PlateElement {...props}>
       <div contentEditable={false}>
         <div className="mx-auto aspect-video h-[600px] w-[min(100%,600px)] overflow-hidden rounded-sm border">
-          {Excalidraw && <Excalidraw {...(excalidrawProps as any)} />}
+          {Excalidraw && <Excalidraw {...(excalidrawProps as TExcalidrawProps)} />}
         </div>
       </div>
       {children}

@@ -77,7 +77,7 @@ export const BlockDiscussion: RenderNodeWrapper<AnyPluginConfig> = (props) => {
     return;
   }
 
-  return (props) => (
+  const BlockDiscussionWrapper = (props: PlateElementProps) => (
     <BlockCommentsContent
       blockPath={blockPath}
       commentNodes={commentNodes}
@@ -86,6 +86,8 @@ export const BlockDiscussion: RenderNodeWrapper<AnyPluginConfig> = (props) => {
       {...props}
     />
   );
+  BlockDiscussionWrapper.displayName = 'BlockDiscussionWrapper';
+  return BlockDiscussionWrapper;
 };
 
 const BlockCommentsContent = ({
@@ -169,13 +171,12 @@ const BlockCommentsContent = ({
 
     if (!activeNode) return null;
 
-    return editor.api.toDOMNode(activeNode[0])!;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const domNode = editor.api.toDOMNode(activeNode[0]);
+    return domNode || null;
   }, [
-    open,
     activeSuggestion,
     activeCommentId,
-    editor.api,
+    editor,
     suggestionNodes,
     draftCommentNode,
     commentNodes,
@@ -327,11 +328,11 @@ export const useResolvedDiscussion = (
 
   const discussions = usePluginOption(discussionPlugin, 'discussions');
 
-  commentNodes.forEach(([node]) => {
+  for (const [node] of commentNodes) {
     const id = api.comment.nodeId(node);
     const map = getOption('uniquePathMap');
 
-    if (!id) return;
+    if (!id) continue;
 
     const previousPath = map.get(id);
 
@@ -341,14 +342,14 @@ export const useResolvedDiscussion = (
 
       if (!nodes) {
         setOption('uniquePathMap', new Map(map).set(id, blockPath));
-        return;
+        continue;
       }
 
-      return;
+      continue;
     }
     // TODO: fix throw error
     setOption('uniquePathMap', new Map(map).set(id, blockPath));
-  });
+  }
 
   const commentsIds = new Set(
     commentNodes.map(([node]) => api.comment.nodeId(node)).filter(Boolean)

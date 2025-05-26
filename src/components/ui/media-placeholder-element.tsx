@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 
 import type { TPlaceholderElement } from '@udecode/plate-media';
 import type { PlateElementProps } from '@udecode/plate/react';
@@ -109,7 +110,7 @@ export const MediaPlaceholderElement = withHOC(
           isUpload: true,
           name: element.mediaType === FilePlugin.key ? uploadedFile.name : '',
           placeholderId: element.id as string,
-          type: element.mediaType!,
+          type: element.mediaType,
           url: uploadedFile.url,
         };
 
@@ -120,13 +121,14 @@ export const MediaPlaceholderElement = withHOC(
 
       api.placeholder.removeUploadingFile(element.id as string);
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [uploadedFile, element.id]);
+    }, [uploadedFile, element.id, editor, api.placeholder.removeUploadingFile, element,]);
 
     // React dev mode will call React.useEffect twice
     const isReplaced = React.useRef(false);
 
     /** Paste and drop */
     React.useEffect(() => {
+      console.log('isReplaced', isReplaced);
       if (isReplaced.current) return;
 
       isReplaced.current = true;
@@ -139,7 +141,7 @@ export const MediaPlaceholderElement = withHOC(
       replaceCurrentPlaceholder(currentFiles);
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isReplaced]);
+    }, [api.placeholder.getUploadingFile, element.id, replaceCurrentPlaceholder]);
 
     return (
       <PlateElement className="my-1" {...props}>
@@ -149,6 +151,13 @@ export const MediaPlaceholderElement = withHOC(
               'flex cursor-pointer items-center rounded-sm bg-muted p-3 pr-9 select-none hover:bg-primary/10'
             )}
             onClick={() => !loading && openFilePicker()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                if (!loading) {
+                  openFilePicker();
+                }
+              }
+            }}
             contentEditable={false}
           >
             <div className="relative mr-3 flex text-muted-foreground/80 [&_svg]:size-6">
@@ -215,11 +224,13 @@ export function ImageProgress({
 
   return (
     <div className={cn('relative', className)} contentEditable={false}>
-      <img
+      <Image
         ref={imageRef}
         className="h-auto w-full rounded-sm object-cover"
         alt={file.name}
         src={objectUrl}
+        objectFit="cover"
+        fill
       />
       {progress < 100 && (
         <div className="absolute right-1 bottom-1 flex items-center space-x-2 rounded-full bg-black/50 px-1 py-0.5">
@@ -249,7 +260,7 @@ export function formatBytes(
 
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
 
-  return `${(bytes / Math.pow(1024, i)).toFixed(decimals)} ${
+  return `${(bytes / 1024**i).toFixed(decimals)} ${
     sizeType === 'accurate'
       ? (accurateSizes[i] ?? 'Bytest')
       : (sizes[i] ?? 'Bytes')

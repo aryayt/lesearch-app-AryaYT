@@ -19,9 +19,9 @@ export class LinkService implements IPDFLinkService {
     return this._pdfDocumentProxy;
   }
 
-  constructor() {
-    // this.viewportContext = viewportContext;
-  }
+  // constructor() {
+  //   // this.viewportContext = viewportContext;
+  // }
 
   get pagesCount() {
     return this._pdfDocumentProxy?.numPages || 0;
@@ -145,7 +145,8 @@ export class LinkService implements IPDFLinkService {
         try {
           const refProxy = destRef as RefProxy;
           pageIndex = await this.pdfDocumentProxy.getPageIndex(refProxy);
-        } catch (_error) {
+        } catch (error) {
+          console.error(error);
           return;
         }
       } else {
@@ -193,8 +194,8 @@ export class LinkService implements IPDFLinkService {
   
   setHash(hash: string): void {
     if (hash.startsWith('#page=')) {
-      const pageNumber = parseInt(hash.substring(6), 10);
-      if (!isNaN(pageNumber)) {
+      const pageNumber = Number.parseInt(hash.substring(6), 10);
+      if (!Number.isNaN(pageNumber)) {
         this.goToPage(pageNumber);
       }
     }

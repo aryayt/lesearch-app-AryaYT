@@ -18,7 +18,9 @@ export function LinkElement(props: PlateElementProps<TLinkElement>) {
       className="font-medium text-primary underline decoration-primary underline-offset-4"
       attributes={{
         ...props.attributes,
-        ...(linkProps as any),
+        href: linkProps.href,
+        target: linkProps.target,
+        rel: linkProps.rel,
       }}
     >
       {props.children}

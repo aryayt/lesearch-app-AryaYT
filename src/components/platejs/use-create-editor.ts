@@ -1,6 +1,8 @@
 'use client';
 
 import type { Value } from '@udecode/plate';
+import type { ComponentType } from 'react';
+import type { PlatePlugin } from '@udecode/plate/react';
 
 import { withProps } from '@udecode/cn';
 import { AIPlugin } from '@udecode/plate-ai/react';
@@ -171,12 +173,12 @@ export const useCreateEditor = (
     readOnly,
     ...options
   }: {
-    components?: Record<string, any>;
+    components?: Record<string, ComponentType<object>>;
     placeholders?: boolean;
-    plugins?: any[];
+    plugins?: PlatePlugin[];
     readOnly?: boolean;
   } & Omit<CreatePlateEditorOptions, 'plugins'> = {},
-  deps: any[] = []
+  deps: unknown[] = []
 ) => {
   return usePlateEditor<Value, (typeof editorPlugins)[number]>(
     {
@@ -185,7 +187,7 @@ export const useCreateEditor = (
           ...(readOnly
             ? viewComponents
             : placeholders
-              ? withPlaceholders(editorComponents)
+              ? withPlaceholders(editorComponents as Record<string, ComponentType<object>>)
               : editorComponents),
           ...components,
         },
@@ -196,7 +198,7 @@ export const useCreateEditor = (
         ...editorPlugins,
         FixedToolbarPlugin,
         FloatingToolbarPlugin,
-      ],
+      ] as PlatePlugin[],
       value: options.value,
       ...options,
     },

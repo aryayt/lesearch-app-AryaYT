@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import type * as React from 'react';
 
 import type { TTableCellElement } from '@udecode/plate-table';
 import type { PlateElementProps } from '@udecode/plate/react';
@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils';
 
 import { blockSelectionVariants } from './block-selection';
 import { ResizeHandle } from './resize-handle';
+
 
 export function TableCellElement({
   isHeader,
@@ -69,10 +70,10 @@ export function TableCellElement({
         'before:size-full',
         selected && 'before:z-10 before:bg-brand/5',
         "before:absolute before:box-border before:content-[''] before:select-none",
-        borders.bottom?.size && `before:border-b before:border-b-border`,
-        borders.right?.size && `before:border-r before:border-r-border`,
-        borders.left?.size && `before:border-l before:border-l-border`,
-        borders.top?.size && `before:border-t before:border-t-border`
+        borders.bottom?.size && 'before:border-b before:border-b-border',
+        borders.right?.size && 'before:border-r before:border-r-border',
+        borders.left?.size && 'before:border-l before:border-l-border',
+        borders.top?.size && 'before:border-t before:border-t-border'
       )}
       style={
         {
@@ -120,7 +121,7 @@ export function TableCellElement({
                 className={cn(
                   'absolute top-0 z-30 hidden h-full w-1 bg-ring',
                   'right-[-1.5px]',
-                  columnResizeVariants({ colIndex: colIndex as any })
+                  columnResizeVariants({ colIndex: colIndex as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 })
                 )}
               />
               {colIndex === 0 && (

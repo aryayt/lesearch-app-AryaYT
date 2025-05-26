@@ -52,6 +52,7 @@ const LeftPanel = () => {
 
   if (tabs.length === 0) return null;
 
+
   return (
     <Tabs
       value={leftActiveTabId}

@@ -24,10 +24,12 @@ import DocumentMenu from "./document-menu";
 import { PageNavigation } from "./page-navigation";
 import {
   SelectionTooltipContent,
-  TooltipContent,
-  type TooltipContentProps,
+  AnnotationTooltip,
+  type AnnotationTooltipProps,
 } from "./annotations";
 import { usePdfStore } from '@/store/usePdfStore';
+
+
 
 GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.mjs",
@@ -72,6 +74,7 @@ const PDFContent = ({
     window.getSelection()?.removeAllRanges();
   }, [getDimension, documentId, currentAnnotations, updatePdfHighlightsAsync]);
 
+
   useEffect(() => {
     if (!focusedAnnotationId) return;
 
@@ -104,8 +107,19 @@ const PDFContent = ({
   );
 
   const renderTooltipContent = useCallback(
-    ({ annotation, onClose }: TooltipContentProps) => {
-      return <TooltipContent annotation={annotation} onClose={onClose} />;
+    ({ annotation, onClose }: AnnotationTooltipProps) => {
+      return <AnnotationTooltip annotation={annotation} onClose={onClose} />;
+    },
+    []
+  );
+
+  const renderHoverTooltipContent = useCallback(
+    ({ annotation }: AnnotationTooltipProps) => {
+      return (
+        <div className="bg-background p-2 shadow-lg text-sm border border-gray-300 rounded-md">
+          {annotation.comment || 'No comment'}
+        </div>
+      );
     },
     []
   );
@@ -126,14 +140,17 @@ const PDFContent = ({
         <AnnotationHighlightLayer
           className="dark:opacity-40 mix-blend-multiply transition-all duration-200 cursor-pointer"
           focusedAnnotationId={focusedAnnotationId}
-          tooltipClassName="bg-white shadow-lg rounded-lg p-3 min-w-[200px]"
+          tooltipClassName="bg-background shadow-lg rounded-lg p-2 min-w-[200px] border border-gray-300 rounded-md"
           onAnnotationClick={onAnnotationClick}
           renderTooltipContent={renderTooltipContent}
-          renderHoverTooltipContent={renderTooltipContent}
+          renderHoverTooltipContent={renderHoverTooltipContent}
           documentId={documentId}
         />
         <SelectionTooltip>
-          <SelectionTooltipContent onHighlight={handleCreateAnnotation} onAskAI={handleAskAI} />
+          <SelectionTooltipContent 
+            onHighlight={handleCreateAnnotation} 
+            onAskAI={handleAskAI}
+          />
         </SelectionTooltip>
       </Page>
     </Pages>

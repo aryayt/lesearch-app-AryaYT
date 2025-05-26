@@ -148,7 +148,7 @@ export function CodeBlockCombobox() {
           variant="ghost"
           className="h-6 justify-between gap-1 px-2 text-xs text-muted-foreground select-none"
           aria-expanded={open}
-          role="combobox"
+          // role="combobox"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();

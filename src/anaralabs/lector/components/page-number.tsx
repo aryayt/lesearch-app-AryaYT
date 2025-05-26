@@ -35,7 +35,9 @@ export const CurrentPage = ({ ...props }: HTMLProps<HTMLInputElement>) => {
       onChange={(e) => {
         setPageNumber(e.target.value);
       }}
-      onClick={() => (isSelected.current = true)}
+      onClick={() => {
+        isSelected.current = true;
+      }}
       onBlur={(e) => {
         if (currentPage !== Number(e.target.value)) {
           jumpToPage(Number(e.target.value), {
@@ -46,7 +48,9 @@ export const CurrentPage = ({ ...props }: HTMLProps<HTMLInputElement>) => {
         isSelected.current = false;
       }}
       onKeyDown={(e) => {
-        e.key === "Enter" && e.currentTarget.blur();
+        if (e.key === "Enter") {
+          e.currentTarget.blur();
+        }
       }}
       min={1}
       max={pages}

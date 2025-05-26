@@ -1,5 +1,5 @@
 import { AnnotationLayer } from "pdfjs-dist";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 
 import { usePdf } from "../../internal";
 import { cancellable } from "../../lib/cancellable";
@@ -36,7 +36,7 @@ const defaultAnnotationLayerParams = {
 } satisfies Required<AnnotationLayerParams>;
 
 export const useAnnotationLayer = (params: AnnotationLayerParams) => {
-  const mergedParams = { ...defaultAnnotationLayerParams, ...params };
+  const mergedParams = useMemo(() => ({ ...defaultAnnotationLayerParams, ...params }), [params]);
   const annotationLayerRef = useRef<HTMLDivElement>(null);
   const annotationLayerObjectRef = useRef<AnnotationLayer | null>(null);
   const linkService = usePDFLinkService();
@@ -135,8 +135,8 @@ export const useAnnotationLayer = (params: AnnotationLayerParams) => {
       // Handle internal page links
       if (href.startsWith('#page=')) {
         e.preventDefault();
-        const pageNumber = parseInt(href.substring(6), 10);
-        if (!isNaN(pageNumber)) {
+        const pageNumber = Number.parseInt(href.substring(6), 10);
+        if (!Number.isNaN(pageNumber)) {
           linkService.goToPage(pageNumber);
         }
       }
@@ -206,7 +206,8 @@ export const useAnnotationLayer = (params: AnnotationLayerParams) => {
             linkService,
           });
           
-        } catch (_error) {
+        } catch (error) {
+          console.error(error);
           // Silently handle rendering errors
         }
       })(),
@@ -215,7 +216,7 @@ export const useAnnotationLayer = (params: AnnotationLayerParams) => {
     return () => {
       cancel();
     };
-  }, [pdfPageProxy, pdfDocumentProxy, mergedParams, linkService]);
+  }, [pdfPageProxy, pdfDocumentProxy, linkService, mergedParams]);
 
   return {
     annotationLayerRef,

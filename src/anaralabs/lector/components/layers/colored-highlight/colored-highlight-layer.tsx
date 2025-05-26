@@ -39,7 +39,7 @@ export const ColoredHighlightLayer = ({
       addColoredHighlight(highlight);
       if (onHighlight) onHighlight(highlight);
     }
-  }, []);
+  }, [addColoredHighlight, onHighlight, getDimension]);
 
   return (
     <div className="colored-highlights-layer">

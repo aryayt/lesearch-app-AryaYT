@@ -9,9 +9,8 @@ export const ZoomIn = ({ ...props }: HTMLProps<HTMLButtonElement>) => {
   return (
     <Primitive.button
       {...props}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      onClick={(e: any) => {
-        props.onClick && props.onClick(e);
+      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+        props.onClick?.(e);
         setZoom((zoom) => Number((zoom + 0.1).toFixed(1)));
       }}
     />
@@ -24,9 +23,8 @@ export const ZoomOut = ({ ...props }: HTMLProps<HTMLButtonElement>) => {
   return (
     <Primitive.button
       {...props}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      onClick={(e: any) => {
-        props.onClick && props.onClick(e);
+      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+        props.onClick?.(e);
         setZoom((zoom) => Number((zoom - 0.1).toFixed(1)));
       }}
     />
@@ -52,7 +50,9 @@ export const CurrentZoom = ({ ...props }: HTMLProps<HTMLInputElement>) => {
     <input
       {...props}
       value={zoom}
-      onClick={() => (isSelected.current = true)}
+      onClick={() => {
+        isSelected.current = true;
+      }}
       onChange={(e) => {
         setRealZoom(Number(e.target.value) / 100);
         setZoom(e.target.value);

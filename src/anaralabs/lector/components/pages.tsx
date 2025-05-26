@@ -103,7 +103,7 @@ export const Pages = ({
       clearTimeout(timeout);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPinching]);
+  }, [isPinching, virtualizer?.getVirtualItems, virtualizer?.measure]);
 
   const virtualizerItems = virtualizer?.getVirtualItems() ?? [];
   const items = tempItems.length ? tempItems : virtualizerItems;
@@ -133,20 +133,24 @@ export const Pages = ({
     ) => {
       //@ts-expect-error this is a private stuff
       const size = virtualizer.getSize();
-
+      if(zoom <0 ) {
+        return 0;
+      }
       //@ts-expect-error this is a private stuff
       const scrollOffset = virtualizer.getScrollOffset();
 
-      if (align === "auto") {
-        align = toOffset >= scrollOffset + size ? "end" : "start";
+      let finalAlign = align;
+      if (finalAlign === "auto") {
+        finalAlign = toOffset >= scrollOffset + size ? "end" : "start";
       }
 
-      if (align === "center") {
+      let finalOffset = toOffset;
+      if (finalAlign === "center") {
         // When aligning to a particular item (e.g. with scrollToIndex),
         // adjust offset by the size of the item to center on the item
-        toOffset += (itemSize - size) / 2;
-      } else if (align === "end") {
-        toOffset -= size;
+        finalOffset += (itemSize - size) / 2;
+      } else if (finalAlign === "end") {
+        finalOffset -= size;
       }
 
       const scrollSizeProp = virtualizer.options.horizontal
@@ -160,8 +164,9 @@ export const Pages = ({
         : 0;
 
       const _maxOffset = scrollSize - size;
+      console.log(_maxOffset);
 
-      return Math.max(toOffset, 0);
+      return Math.max(finalOffset, 0);
     };
   }, [zoom, virtualizer]);
 
@@ -200,9 +205,7 @@ export const Pages = ({
         >
           {items.map((virtualItem) => {
             const innerBoxWidth =
-              viewports && viewports[virtualItem.index]
-                ? viewports[virtualItem.index]?.width
-                : 0;
+              viewports ? viewports[virtualItem.index] ? viewports[virtualItem.index]?.width : 0 : 0;
 
             if (!innerBoxWidth) return null;
 
@@ -211,7 +214,7 @@ export const Pages = ({
                 key={virtualItem.key}
                 style={{
                   width: innerBoxWidth,
-                  height: `0px`,
+                  height: "0px",
                 }}
               >
                 <div

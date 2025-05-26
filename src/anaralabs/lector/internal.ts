@@ -3,7 +3,6 @@ import type { PageViewport, PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
 import { createRef } from "react";
 import { createStore, useStore } from "zustand";
 
-import { clamp } from "./lib/clamp";
 import { getFitWidthZoom } from "./lib/zoom";
 import { createZustandContext } from "./lib/zustand";
 
@@ -114,11 +113,23 @@ export const PDFStore = createZustandContext(
         const { minZoom, maxZoom } = get().zoomOptions;
 
         set((state) => {
+          let newZoom: number;
           if (typeof zoom === "function") {
-            const newZoom = clamp(zoom(state.zoom), minZoom, maxZoom);
-            return { zoom: newZoom, isZoomFitWidth };
+            const calculatedZoom = zoom(state.zoom);
+            // Ensure the calculated zoom is a valid number
+            if (Number.isNaN(calculatedZoom) || !Number.isFinite(calculatedZoom)) {
+              newZoom = state.zoom;
+            } else {
+              newZoom = Math.min(Math.max(calculatedZoom, minZoom), maxZoom);
+            }
+          } else {
+            // Ensure the provided zoom is a valid number
+            if (Number.isNaN(zoom) || !Number.isFinite(zoom)) {
+              newZoom = state.zoom;
+            } else {
+              newZoom = Math.min(Math.max(zoom, minZoom), maxZoom);
+            }
           }
-          const newZoom = clamp(zoom, minZoom, maxZoom);
           return { zoom: newZoom, isZoomFitWidth };
         });
       },

@@ -13,9 +13,13 @@ const ZoomMenu = () => {
   const zoom = usePdf((state) => state.zoom);
   const setCustomZoom = usePdf((state) => state.updateZoom);
   const fitToWidth = usePdf((state) => state.zoomFitWidth);
+  const { minZoom, maxZoom } = usePdf((state) => state.zoomOptions);
 
-  const handleZoomDecrease = () => setCustomZoom((zoom) => zoom * 0.9);
-  const handleZoomIncrease = () => setCustomZoom((zoom) => zoom * 1.1);
+  const handleZoomDecrease = () => setCustomZoom((zoom) => Math.max(minZoom, zoom * 0.9));
+  const handleZoomIncrease = () => setCustomZoom((zoom) => Math.min(maxZoom, zoom * 1.1));
+
+  // Ensure zoom is a valid number and within bounds
+  const displayZoom = Math.round(Math.min(Math.max(zoom, minZoom), maxZoom) * 100);
 
   return (
     <DropdownMenu>
@@ -26,14 +30,14 @@ const ZoomMenu = () => {
           className="flex items-center gap-1"
           aria-label="Zoom options"
         >
-          {Math.round(zoom * 100)}%
+          {displayZoom}%
           <ChevronUpIcon className="h-4 w-4 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="start" className="w-40">
         <DropdownMenuItem className="flex justify-between">
-          <span>{`${Math.round(zoom * 100)}%`}</span>
+          <span>{`${displayZoom}%`}</span>
         </DropdownMenuItem>
 
         <Button

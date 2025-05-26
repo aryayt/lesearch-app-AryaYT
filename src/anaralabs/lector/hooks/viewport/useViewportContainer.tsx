@@ -34,6 +34,33 @@ export const useViewportContainer = ({
     viewportRef.current = containerRef.current;
   }, [containerRef, viewportRef]);
 
+  const handleWheel = useCallback((e: WheelEvent) => {
+    if (e.ctrlKey) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      updateZoom((prevZoom) => {
+        if (Number.isNaN(prevZoom) || !Number.isFinite(prevZoom)) {
+          return minZoom;
+        }
+        const newZoom = prevZoom * delta;
+        if (Number.isNaN(newZoom) || !Number.isFinite(newZoom)) {
+          return prevZoom;
+        }
+        return Math.min(Math.max(newZoom, minZoom), maxZoom);
+      });
+    }
+  }, [updateZoom, minZoom, maxZoom]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+    };
+  }, [containerRef, handleWheel]);
+
   const transformations = useRef<{
     translateX: number;
     translateY: number;

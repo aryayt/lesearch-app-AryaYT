@@ -133,10 +133,15 @@ export function CodeBlockCombobox() {
     [searchValue]
   );
 
+  const handleOpenChange = React.useCallback((newOpen: boolean) => {
+    console.log('Open state changing to:', newOpen);
+    setOpen(newOpen);
+  }, []);
+
   if (readOnly) return null;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           size="sm"
@@ -144,6 +149,12 @@ export function CodeBlockCombobox() {
           className="h-6 justify-between gap-1 px-2 text-xs text-muted-foreground select-none"
           aria-expanded={open}
           role="combobox"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Button clicked, current open state:', open);
+            setOpen((prev) => !prev);
+          }}
         >
           {languages.find((language) => language.value === value)?.label ??
             'Plain Text'}
@@ -151,7 +162,21 @@ export function CodeBlockCombobox() {
       </PopoverTrigger>
       <PopoverContent
         className="w-[200px] p-0"
-        onCloseAutoFocus={() => setSearchValue('')}
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+        }}
+        onCloseAutoFocus={(e) => {
+          e.preventDefault();
+          setSearchValue('');
+        }}
+        onPointerDownOutside={(e) => {
+          e.preventDefault();
+          setOpen(false);
+        }}
+        onEscapeKeyDown={(e) => {
+          e.preventDefault();
+          setOpen(false);
+        }}
       >
         <Command shouldFilter={false}>
           <CommandInput

@@ -50,14 +50,14 @@ const PDFContent = ({
   const { pdfs, updatePdfHighlightsAsync } = usePdfStore();
   const currentAnnotations = useMemo(() => pdfs[documentId]?.highlights || [], [pdfs, documentId]);
 
-  const handleCreateAnnotation = useCallback(() => {
+  const handleCreateAnnotation = useCallback((color: string) => {
     const selection = getDimension();
     if (!selection || !selection.highlights.length) return;
 
     const newAnnotation = {
       pageNumber: selection.highlights[0].pageNumber,
       highlights: selection.highlights,
-      color: "rgba(255, 255, 0, 0.3)",
+      color: color,
       borderColor: "rgba(255, 255, 0, 0.1)",
       text: selection.text,
       id: uuidv4(),

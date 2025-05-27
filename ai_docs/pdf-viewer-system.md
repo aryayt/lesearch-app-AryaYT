@@ -1,163 +1,199 @@
-# PDF Viewer System
+# PDF Viewer System Documentation
 
 ## Overview
 
-The PDF Viewer system is a comprehensive solution for viewing, managing, and interacting with PDF documents in the Lesearch application. It provides a rich set of features including multi-panel viewing, thumbnails navigation, zoom controls, and PDF management.
+The PDF Viewer system in Lesearch provides advanced capabilities for viewing, annotating, and interacting with research papers. It is built on top of react-pdf with custom enhancements for research paper-specific features.
 
-## Key Components
+## Features
 
-### 1. PDF Store (Zustand)
+### Core Functionality
 
-Located at `src/store/pdf-store.ts`, this is the central state management for PDFs:
+- PDF rendering with high performance
+- Page navigation and zoom controls
+- Text selection and highlighting
+- Search within document
+- Thumbnail navigation
+- Responsive layout support
 
-- **PDF Management**: Stores and manages PDF metadata and content
-- **Panel Management**: Tracks open panels and their associated PDFs
-- **Persistence**: Uses Zustand's persist middleware to save PDFs and panel state to localStorage
+### Annotation Features
+
+- Text highlighting with custom colors
+- Comments and notes on selected text
+- Drawing and shape annotations
+- Freehand drawing
+- Sticky notes
+- Annotation export and import
+
+### Research-Specific Features
+
+- Citation linking
+- Reference management
+- Table of contents navigation
+- Figure and table references
+- Cross-reference support
+- Bibliography integration
+
+## Technical Implementation
+
+### Component Structure
 
 ```typescript
-// Core interfaces
-export interface PDF {
+interface PDFViewerProps {
+  file: string | File;
+  annotations?: Annotation[];
+  onAnnotationChange?: (annotations: Annotation[]) => void;
+  onPageChange?: (page: number) => void;
+  onZoomChange?: (zoom: number) => void;
+}
+
+interface Annotation {
   id: string;
-  name: string;
-  url: string;
+  type: 'highlight' | 'comment' | 'drawing' | 'shape';
+  page: number;
+  content: any;
+  color?: string;
+  author?: string;
   createdAt: Date;
-}
-
-export interface PanelInfo {
-  id: string;
-  pdfId: string;
+  updatedAt: Date;
 }
 ```
 
-### 2. PDF Viewer Component
-
-Located at `src/components/pdf-viewer/pdfViewer.tsx`, this component renders a single PDF:
-
-- Built on top of `@anaralabs/lector` library
-- Features:
-  - Thumbnails sidebar (collapsible)
-  - Page navigation
-  - Zoom controls
-  - Search functionality
-  - Base64 PDF data support
-
-### 3. Multi-Panel Layout
-
-Located at `src/app/(main)/(routes)/documents/[pageId]/page.tsx`, this implements the resizable multi-panel view:
-
-- Uses `react-resizable-panels` for resizable panels
-- Supports opening multiple PDFs side by side
-- Each panel operates independently with its own controls
-- Panels can be added, removed, and resized
-
-### 4. PDF Import
-
-Located at `src/components/pdf-import/pdf-import.tsx`, this handles PDF file uploads:
-
-- Converts uploaded files to base64 for storage
-- Validates file type and size
-- Provides a user-friendly import dialog
-- Integrates with the sidebar for easy access
-
-### 5. PDF Sidebar
-
-Located at `src/app/(main)/_components/sidebar/pdf-sidebar.tsx`, this displays available PDFs:
-
-- Lists all imported PDFs
-- Provides quick access to open PDFs
-- Highlights the currently active PDF
-
-## Implementation Details
-
-### PDF Storage Strategy
-
-PDFs are stored as base64-encoded strings in localStorage via Zustand's persist middleware. This approach was chosen to:
-
-1. Avoid issues with temporary blob URLs that don't persist across page reloads
-2. Ensure PDFs remain available offline
-3. Simplify the storage and retrieval process
+### State Management
 
 ```typescript
-// Reading a file as base64
-const readFileAsBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        resolve(reader.result);
-      } else {
-        reject(new Error('Failed to read file as base64'));
-      }
-    };
-    reader.onerror = () => {
-      reject(reader.error);
-    };
-    reader.readAsDataURL(file);
-  });
-};
-```
-
-### Multi-Panel Architecture
-
-The multi-panel system uses a combination of:
-
-1. **Panel Group**: Container for all panels using `react-resizable-panels`
-2. **Panel**: Individual container for each PDF viewer
-3. **Panel Resize Handle**: Draggable divider between panels
-4. **PDF Panel**: Wrapper component that includes panel header and PDF viewer
-
-Panels are stored in the Zustand store as an array of `PanelInfo` objects, each linking to a PDF by ID:
-
-```typescript
-// Opening a PDF in a new panel
-openPdfInPanel: (pdfId) => {
-  // Check if the PDF exists
-  const pdf = get().getPdf(pdfId);
-  if (!pdf) return;
-  
-  // Create a new panel with the PDF
-  const newPanel = {
-    id: uuidv4(),
-    pdfId,
-  };
-  
-  set((state) => ({
-    openPanels: [...state.openPanels, newPanel],
-  }));
+interface PDFViewerState {
+  currentPage: number;
+  totalPages: number;
+  zoom: number;
+  annotations: Annotation[];
+  selectedAnnotation: string | null;
+  searchResults: SearchResult[];
+  isSearching: boolean;
 }
 ```
 
-### Navigation and State Persistence
+### Integration with Multi-Panel Interface
 
-When navigating between pages, we use `window.location.href` instead of Next.js's `router.push()` to ensure proper rehydration of the Zustand store from localStorage. This approach was necessary due to an issue where the persisted state wasn't properly rehydrated during client-side navigation.
+The PDF viewer is designed to work seamlessly with the multi-panel interface:
 
-## Usage
+- Resizable panel support
+- Panel-specific state management
+- Cross-panel communication
+- Layout persistence
 
-### Importing a PDF
+### Performance Optimizations
 
-1. Click the "+" button in the sidebar user section
-2. Select "Import PDF" from the dropdown
-3. Choose a PDF file and provide a name
-4. Click "Import"
+- Lazy loading of PDF pages
+- Annotation caching
+- Worker-based PDF parsing
+- Memory management for large documents
+- Viewport-based rendering
 
-### Working with Multiple PDFs
+## User Interface
 
-1. Open a PDF by clicking on it in the sidebar
-2. To open another PDF alongside it, click the floating "+" button
-3. Select another PDF from the dropdown
-4. Resize panels by dragging the divider between them
-5. Close a panel by clicking the "X" in its header
+### Controls
 
-## Technical Considerations
+- Page navigation buttons
+- Zoom controls
+- Thumbnail sidebar
+- Annotation toolbar
+- Search interface
+- Table of contents
 
-- **PDF Size Limits**: Be mindful of localStorage limits when importing large PDFs
-- **Performance**: The thumbnail generation can be resource-intensive for large documents
-- **Browser Support**: The implementation relies on modern browser features like `FileReader` and `localStorage`
+### Interaction Patterns
 
-## Future Improvements
+- Click to select text
+- Double-click to highlight
+- Right-click for context menu
+- Drag to create annotations
+- Keyboard shortcuts for common actions
 
-- PDF annotation support
-- Collaborative viewing and commenting
-- Server-side PDF storage for larger files
-- Search across multiple PDFs
-- PDF comparison tools
+## Integration Points
+
+### Paper Management
+
+- File loading and caching
+- Metadata extraction
+- Version control
+- Storage management
+
+### Note Editor
+
+- Annotation synchronization
+- Citation insertion
+- Reference linking
+- Content sharing
+
+### AI Integration
+
+- Context-aware AI assistance
+- Paper analysis
+- Summary generation
+- Question answering
+
+## Implementation Phases
+
+1. **Phase 1**: Basic PDF viewing and navigation
+2. **Phase 2**: Annotation system implementation
+3. **Phase 3**: Research-specific features
+4. **Phase 4**: Performance optimizations and advanced features
+
+## Dependencies
+
+- `react-pdf` for PDF rendering
+- `pdf.js` for PDF parsing
+- `fabric.js` for drawing annotations
+- `zustand` for state management
+- `react-resizable-panels` for panel integration
+
+## Best Practices
+
+1. **Performance**
+   - Implement virtual scrolling for large documents
+   - Use web workers for heavy computations
+   - Optimize memory usage
+   - Cache rendered pages
+
+2. **Accessibility**
+   - Keyboard navigation support
+   - Screen reader compatibility
+   - High contrast mode
+   - Text scaling
+
+3. **Error Handling**
+   - Graceful fallbacks for unsupported features
+   - Clear error messages
+   - Recovery mechanisms
+   - Progress indicators
+
+4. **Security**
+   - Secure file handling
+   - Access control
+   - Data validation
+   - XSS prevention
+
+## Future Enhancements
+
+1. **Collaborative Features**
+   - Real-time annotation sharing
+   - Comment threading
+   - User presence
+   - Version history
+
+2. **Advanced Search**
+   - Full-text search
+   - Semantic search
+   - Filter by annotations
+   - Search within annotations
+
+3. **Export Options**
+   - PDF export with annotations
+   - Annotation summary
+   - Citation export
+   - Research notes export
+
+4. **Integration Enhancements**
+   - Reference manager integration
+   - Citation style support
+   - Bibliography generation
+   - Research workflow automation

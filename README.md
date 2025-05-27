@@ -7,10 +7,13 @@ Lesearch is a web application designed to enhance the readability and accessibil
 - **Authentication System**: Complete authentication flow with NextAuth.js and Supabase
 - **Google Sign-in**: Seamless integration with Google OAuth
 - **User Profiles**: Customizable user profiles with avatar uploads
-- **Responsive Dashboard**: Modern UI with a responsive sidebar
-- **Multi-panel Interface**: Resizable panels for paper viewing, note-taking, and AI interaction (upcoming)
-- **AI Integration**: Chat with AI assistants using Google Gemini and Azure OpenAI (upcoming)
-- **Paper Management**: Upload, organize, and explore research papers (upcoming)
+- **Responsive Dashboard**: Modern UI with a responsive sidebar and drag-and-drop functionality
+- **Multi-panel Interface**: Resizable panels for paper viewing, note-taking, and AI interaction
+- **PDF Viewer**: Advanced PDF viewing capabilities with annotation support
+- **BlockNote Editor**: Rich text editor with Markdown support for note-taking
+- **AI Integration**: Chat with AI assistants using Google Gemini and Azure OpenAI
+- **Paper Management**: Upload, organize, and explore research papers
+- **Drag and Drop**: Intuitive drag-and-drop interface for sidebar items and paper organization
 
 ## Getting Started
 
@@ -51,9 +54,9 @@ git clone https://github.com/LeSearch/frontend-v1.git
 cd frontend-v1
 
 # Install dependencies
-npm install
+npm install --legacy-peer-deps
 # or
-yarn install
+yarn install --legacy-peer-deps
 ```
 
 ### Running the Development Server
@@ -122,6 +125,7 @@ graph TD
         D --> D1[Paper Upload]
         D --> D2[Paper Explorer]
         D --> D3[Citation Manager]
+        D --> D4[PDF Viewer]
         
         E --> E1[Gemini Integration]
         E --> E2[Azure OpenAI Integration]
@@ -199,6 +203,9 @@ Contains detailed documentation about the codebase for developers and AI assista
 - `ui-components.md` - Documentation of UI components and design patterns
 - `state-management.md` - Information about state management with Zustand
 - `environment-variables.md` - Guide to environment variables
+- `pdf-viewer-system.md` - Documentation for the PDF viewer implementation
+- `lesearch_architecture.md` - Detailed system architecture
+- `lesearch_project_plan.md` - Project planning and roadmap
 
 ### `specs/`
 
@@ -225,6 +232,10 @@ Contains guidelines for AI development:
 - **Authentication**: NextAuth.js + Supabase
 - **Database & Storage**: Supabase
 - **Form Handling**: React Hook Form with Zod validation
+- **PDF Viewer**: react-pdf with custom annotation support
+- **Rich Text Editor**: BlockNote with Markdown support
+- **Panel Management**: react-resizable-panels
+- **Drag and Drop**: react-dnd for sidebar and paper organization
 
 ## Contributing
 

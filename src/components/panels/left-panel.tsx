@@ -50,7 +50,7 @@ const LeftPanel = () => {
   const handleAddNote = () => {
     setIsDropdownOpen(false);
     setTimeout(() => {
-      setCreation({ parentId: null, type: "note", panel: "left" });
+      setCreation({ parentId: activePageId, type: "note", panel: "left" });
     }, 0);
   };
 

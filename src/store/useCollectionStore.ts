@@ -36,7 +36,7 @@ type Store = {
 	fetchFilesAndFolders: () => Promise<void>;
 	addFile: (file: FileItem) => Promise<string>;
 	updateFile: (id: string, updates: Partial<FileItem>) => Promise<void>;
-	deleteItem: (id: string, type: FileItem["type"]) => Promise<string>;
+	deleteItem: (id: string, type: FileItem["type"]) => Promise<string | null>;
 	setActiveItem: (itemId: string | null) => void; // Method to set the active item
 	moveToCollection: (id: string) => Promise<void>;
 };
@@ -189,15 +189,18 @@ export const useStore = create<Store>((set, get) => ({
         allItems: state.allItems.filter((item) => item.id !== id),
       }));
 
-	  if(activePageId === id){
-		usePanelStore.getState().setActivePageId("");
-		return "main";
-	  }
+      if(activePageId === id) {
+        usePanelStore.getState().setActivePageId("");
+        usePanelStore.getState().removeTabFromAllPanels(id);
+        return "main";
+      }
+
+      usePanelStore.getState().removeTabFromAllPanels(id);
       console.log("File and record successfully deleted.");
-	  return id;
+      return null;
     } catch (err) {
       console.error("Error during file deletion process:", err);
-	  throw new Error("Error during file deletion process.");
+      throw new Error("Error during file deletion process.");
     } finally {
       // Step 5: Reset deleting state
       set({ isDeleting: false });

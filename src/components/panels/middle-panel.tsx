@@ -53,7 +53,7 @@ const MiddlePanel = () => {
 		setIsDropdownOpen(false);
 		setTimeout(() => {
 			setCreation({
-				parentId: null,
+				parentId: activePageId,
 				type: "note",
 				panel: "middle"
 			});
@@ -64,7 +64,7 @@ const MiddlePanel = () => {
 		setIsDropdownOpen(false);
 		setTimeout(() => {
 			setCreation({
-				parentId: null,
+				parentId: activePageId,
 				type: "pdf",
 				panel: "middle"
 			});

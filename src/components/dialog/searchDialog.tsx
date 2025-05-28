@@ -35,6 +35,7 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState("")
   const [selectedCategory, setSelectedCategory] = React.useState("all")
+  const [activeDropdownId, setActiveDropdownId] = React.useState<string | null>(null)
   const { allItems } = useStore();
   const { addTab } = usePanelStore();
   const router = useRouter();
@@ -97,10 +98,13 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
   };
 
   const handleOpenInPanel = (item: typeof allItems[0], panel: "left" | "middle") => {
-    if (item.type === "pdf" || item.type === "note") {
-      addTab(item.id, item.type, panel);
-      setOpen(false);
-    }
+    setActiveDropdownId(null);
+    setTimeout(() => {
+      if (item.type === "pdf" || item.type === "note") {
+        addTab(item.id, item.type, panel);
+        setOpen(false);
+      }
+    }, 0);
   };
 
   const categories = [
@@ -201,7 +205,10 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                                   {item.type}
                                 </Badge>
                               </div>
-                              <DropdownMenu>
+                              <DropdownMenu 
+                                open={activeDropdownId === item.id} 
+                                onOpenChange={(isOpen) => setActiveDropdownId(isOpen ? item.id : null)}
+                              >
                                 <DropdownMenuTrigger asChild>
                                   <Button
                                     variant="ghost"
@@ -214,17 +221,13 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem
-                                    onSelect={() => {
-                                      handleOpenInPanel(item, "left");
-                                    }}
+                                    onSelect={() => handleOpenInPanel(item, "left")}
                                   >
                                     <ArrowUpRight className="mr-2 h-4 w-4" />
                                     Open in Left Panel
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onSelect={() => {
-                                      handleOpenInPanel(item, "middle");
-                                    }}
+                                    onSelect={() => handleOpenInPanel(item, "middle")}
                                   >
                                     <ArrowUpRight className="mr-2 h-4 w-4" />
                                     Open in Middle Panel
@@ -266,7 +269,10 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                                   )}
                                 </div>
                               </div>
-                              <DropdownMenu>
+                              <DropdownMenu 
+                                open={activeDropdownId === item.id} 
+                                onOpenChange={(isOpen) => setActiveDropdownId(isOpen ? item.id : null)}
+                              >
                                 <DropdownMenuTrigger asChild>
                                   <Button
                                     variant="ghost"
@@ -279,17 +285,13 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem
-                                    onSelect={() => {
-                                      handleOpenInPanel(item, "left");
-                                    }}
+                                    onSelect={() => handleOpenInPanel(item, "left")}
                                   >
                                     <ArrowUpRight className="mr-2 h-4 w-4" />
                                     Open in Left Panel
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onSelect={() => {
-                                      handleOpenInPanel(item, "middle");
-                                    }}
+                                    onSelect={() => handleOpenInPanel(item, "middle")}
                                   >
                                     <ArrowUpRight className="mr-2 h-4 w-4" />
                                     Open in Middle Panel
@@ -330,7 +332,10 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                                   )}
                                 </div>
                               </div>
-                              <DropdownMenu>
+                              <DropdownMenu 
+                                open={activeDropdownId === item.id} 
+                                onOpenChange={(isOpen) => setActiveDropdownId(isOpen ? item.id : null)}
+                              >
                                 <DropdownMenuTrigger asChild>
                                   <Button
                                     variant="ghost"
@@ -343,17 +348,15 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem
-                                    onSelect={() => {
-                                      handleOpenInPanel(item, "left");
-                                    }}
+                                    className="cursor-pointer hover:bg-background"
+                                    onSelect={() => handleOpenInPanel(item, "left")}
                                   >
                                     <ArrowUpRight className="mr-2 h-4 w-4" />
                                     Open in Left Panel
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onSelect={() => {
-                                      handleOpenInPanel(item, "middle");
-                                    }}
+                                    className="cursor-pointer hover:bg-background"
+                                    onSelect={() => handleOpenInPanel(item, "middle")}
                                   >
                                     <ArrowUpRight className="mr-2 h-4 w-4" />
                                     Open in Middle Panel

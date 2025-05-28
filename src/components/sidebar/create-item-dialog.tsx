@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useStore } from "@/store/useCollectionStore";
 import { usePanelStore } from "@/store/usePanelStore";
 import { useRouter } from "next/navigation";
@@ -16,6 +16,8 @@ import { toast } from "sonner";
 
 export function CreateItemDialog() {
   const [newName, setNewName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   
   const {
@@ -37,12 +39,39 @@ export function CreateItemDialog() {
     }
   }, [creation]);
 
+  // Focus input when dialog opens
+  useEffect(() => {
+    if (creation) {
+      // Small delay to ensure dialog is mounted
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
+  }, [creation]);
+
   const handleDialogOpenChange = (open: boolean) => {
     if (!open) {
       // Wait for animation to complete before clearing dialog content
       setTimeout(() => {
         setCreation(null);
       }, 300); // Match this with your animation duration
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      if (creation?.panel) {
+        await handleCreateFromPanel();
+      } else {
+        await handleCreate();
+      }
+    } catch (error) {
+      toast.error("Failed to create item");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -81,20 +110,13 @@ export function CreateItemDialog() {
     
     if (data) {
       await addTab(id as string, "note", creation.panel as "left" | "middle");
-      setLeftActiveTabId(id as string);
+      if (creation.panel === "left") {
+        setLeftActiveTabId(id as string);
+      }
     }
 
     toast.success(`Added new note: "${newName}"`);
     setCreation(null); // Close dialog
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (creation?.panel) {
-      handleCreateFromPanel();
-    } else {
-      handleCreate();
-    }
   };
 
   const getTitle = () => {
@@ -118,13 +140,13 @@ export function CreateItemDialog() {
         </DialogTitle>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <Input
+            ref={inputRef}
             placeholder="Enter title…"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            autoFocus
           />
-          <Button type="submit">
-            {creation.panel ? "Add Note" : "Create"}
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Creating..." : creation.panel ? "Add Note" : "Create"}
           </Button>
         </form>
       </DialogContent>

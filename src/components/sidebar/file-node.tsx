@@ -12,7 +12,6 @@ import {
   Trash2,
   Star,
   ArrowUpRight,
-  Loader2,
   X,
   FilePen,
 } from "lucide-react";
@@ -29,20 +28,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useStore, type FileItem } from "@/store/useCollectionStore";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { usePanelStore } from "@/store/usePanelStore";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { PDFImport } from "./pdf-import";
+import { DeleteItemDialog } from "./delete-item-dialog";
 
 export type FileNodeProps = {
   file: FileItem;
@@ -83,11 +75,9 @@ export function FileNode({
     openFolders,
     setOpenFolders,
     activeItemId,
-    deleteItem,
-    isDeleting,
     moveToCollection,
   } = useStore();
-  const { activePageId, addTab, removeTabFromAllPanels } = usePanelStore();
+  const { activePageId, addTab } = usePanelStore();
   const router = useRouter();
   const isOpen = openFolders.has(file.id);
   const isDragging = draggedItem?.id === file.id;
@@ -338,54 +328,13 @@ export function FileNode({
         </CollapsibleContent>
       </Collapsible>
 
-      {isDeleteDialogOpen && (
-        <Dialog
-          open={isDeleteDialogOpen}
-          onOpenChange={() => setIsDeleteDialogOpen(false)}
-        >
-          <DialogContent >
-            <DialogTitle>Delete {file.name}</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete {file.name}? This action cannot be
-              undone.
-            </DialogDescription>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsDeleteDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={async () => {
-                  try {
-                    const id = await deleteItem(file.id, file.type);
-                    if(id) {
-                      removeTabFromAllPanels(id);
-                    }
-                    if(id === "main") {
-                      router.push('/documents');
-                    }
-                    toast.success(`${file.name} deleted successfully`);
-                    setIsDeleteDialogOpen(false);
-                  } catch (error) {
-                    console.error("Error deleting item:", error);
-                    toast.error("Error deleting item");
-                  }
-                }}
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Delete"
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+      <DeleteItemDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        itemName={file.name}
+        itemId={file.id}
+        itemType={file.type}
+      />
 
       {isPdfImportOpen && (
         <PDFImport

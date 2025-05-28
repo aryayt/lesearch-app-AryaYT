@@ -102,23 +102,23 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
     return groups;
   }, [filteredItems]);
 
-  const handleItemClick = (item: typeof allItems[0], e?: React.MouseEvent) => {
-    // If the click originated from a dropdown menu item, don't navigate
-    if (e?.target instanceof HTMLElement && e.target.closest('[role="menuitem"]')) {
+  const handleItemClick = (item: typeof allItems[0], e: React.MouseEvent) => {
+    // Prevent click if it's from dropdown menu
+    if (e.target instanceof HTMLElement && e.target.closest('[role="menuitem"]')) {
+      e.preventDefault();
       return;
     }
+    console.log("Item clicked-->", item);
     router.push(`/documents/${item.id}`);
     setOpen(false);
   };
 
   const handleOpenInPanel = (item: typeof allItems[0], panel: "left" | "middle") => {
     setActiveDropdownId(null);
-    setTimeout(() => {
-      if (item.type === "pdf" || item.type === "note") {
-        addTab(item.id, item.type, panel);
-        setOpen(false);
-      }
-    }, 0);
+    if (item.type === "pdf" || item.type === "note") {
+      addTab(item.id, item.type, panel);
+      setOpen(false);
+    }
   };
 
   const categories = [
@@ -196,7 +196,7 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                             <Command.Item
                               key={getItemKey(item, index)}
                               className="group px-2 py-2 rounded-md cursor-pointer flex items-center justify-between hover:bg-muted/50"
-                              onSelect={() => handleItemClick(item)}
+                              onClick={(e) => handleItemClick(item, e)}
                             >
                               <div className="flex items-center gap-2">
                                 {item.type === "note" ? (
@@ -268,7 +268,7 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                             <Command.Item
                               key={getItemKey(item, index)}
                               className="group px-2 py-2 rounded-md cursor-pointer flex items-center justify-between hover:bg-muted/50"
-                              onSelect={() => handleItemClick(item)}
+                              onClick={(e) => handleItemClick(item, e)}
                             >
                               <div className="flex items-center gap-2">
                                 <FileText className="w-4 h-4 text-red-500" />
@@ -336,7 +336,7 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                             <Command.Item
                               key={getItemKey(item, index)}
                               className="group px-2 py-2 rounded-md cursor-pointer flex items-center justify-between hover:bg-muted/50"
-                              onSelect={() => handleItemClick(item)}
+                              onClick={(e) => handleItemClick(item, e)}
                             >
                               <div className="flex items-center gap-2">
                                 <FilePen className="w-4 h-4 text-blue-500" />
@@ -401,7 +401,7 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                             <Command.Item
                               key={getItemKey(item, index)}
                               className="group px-2 py-2 rounded-md cursor-pointer flex items-center justify-between hover:bg-muted/50"
-                              onSelect={() => handleItemClick(item)}
+                              onClick={(e) => handleItemClick(item, e)}
                             >
                               <div className="flex items-center gap-2">
                                 <FileText className="w-4 h-4 text-red-500" />

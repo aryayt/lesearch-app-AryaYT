@@ -217,30 +217,41 @@ export const usePanelStore = create(
     addTab: async (pageId, pageType, panel) => {
       set({ isLoading: true, error: null });
       try {
+        // Get current active page ID from the route
         let activePageId = get().activePageId;
-        console.log("Adding tab-->", "activePageId", activePageId, "pageId", pageId, "pageType", pageType, "panel", panel);
-        if (!activePageId && panel === 'left') {
-          get().setActivePageId(pageId);
-          activePageId = pageId;  
+
+        // Validate inputs
+        if (!pageId) {
+          throw new Error('Invalid pageId: Page ID is required');
+        }
+        if (!pageType || !['pdf', 'note'].includes(pageType)) {
+          throw new Error(`Invalid pageType: ${pageType}. Must be 'pdf' or 'note'`);
         }
 
+        // Special case for left panel: If no active page exists, make this page the active one
+        if (!activePageId && panel === 'left') {
+          get().setActivePageId(pageId);
+          activePageId = pageId;
+        }
+
+        // Ensure we have an active page (except for left panel which can set itself as active)
         if (!activePageId) {
           throw new Error('No active page selected. Please select a page before adding tabs or use the left panel to add tabs.');
         }
 
-        // Check if tab already exists in the specified panel
+        // Get existing tabs for the active page
         const existing = get().pageTabs[activePageId] || {
           leftPanelTabs: [],
           middlePanelTabs: [],
         };
-        
-        const tabExists = panel === 'left' 
-          ? existing.leftPanelTabs.some(tab => tab.id === pageId)
-          : existing.middlePanelTabs.some(tab => tab.id === pageId);
+
+        // Check if tab already exists in the target panel
+        const targetTabs = panel === 'left' ? existing.leftPanelTabs : existing.middlePanelTabs;
+        const tabExists = targetTabs.some(tab => tab.id === pageId);
 
         if (tabExists) {
-          console.log("Tab already exists, skipping fetch");
-          if(panel === 'left') {
+          // If tab exists, just activate it
+          if (panel === 'left') {
             get().setLeftActiveTabId(pageId);
           } else {
             get().setMiddleActiveTabId(pageId);
@@ -253,33 +264,18 @@ export const usePanelStore = create(
           return;
         }
 
-        console.log("Fetching new tab data-->", pageId, pageType, panel);
-        
-        if (!pageId) {
-          throw new Error('Invalid pageId: Page ID is required');
-        }
-        
-        if (!pageType || !['pdf', 'note'].includes(pageType)) {
-          throw new Error(`Invalid pageType: ${pageType}. Must be 'pdf' or 'note'`);
-        }
-        
+        // Fetch new tab data
         const tab = await fetchPageData(pageId, pageType);
-        
+
+        // Update state with new tab
         set((state) => {
           const updated = { ...existing };
           
-          // Store current active tab IDs before updating
-          const currentLeftActiveTabId = state.leftActiveTabId;
-          const currentMiddleActiveTabId = state.middleActiveTabId;
-          
+          // Add tab to appropriate panel
           if (panel === 'left') {
             updated.leftPanelTabs = [...updated.leftPanelTabs, tab];
-            // Set new tab as active in left panel
-            setTimeout(() => get().setLeftActiveTabId(tab.id), 50);
           } else {
             updated.middlePanelTabs = [...updated.middlePanelTabs, tab];
-            // Set new tab as active in middle panel
-            setTimeout(() => get().setMiddleActiveTabId(tab.id), 50);
             // Ensure middle panel is visible when adding a new tab
             get().setPanelVisibility(activePageId, {
               ...get().getPanelVisibility(activePageId),
@@ -287,25 +283,31 @@ export const usePanelStore = create(
             });
           }
 
+          // Update state with new tabs and active tab IDs
           return {
             pageTabs: {
               ...state.pageTabs,
               [activePageId]: updated,
             },
-            // Preserve existing active tab IDs to prevent panel selection issues
-            leftActiveTabId: panel === 'left' ? tab.id : currentLeftActiveTabId,
-            middleActiveTabId: panel === 'middle' ? tab.id : currentMiddleActiveTabId,
+            leftActiveTabId: panel === 'left' ? tab.id : state.leftActiveTabId,
+            middleActiveTabId: panel === 'middle' ? tab.id : state.middleActiveTabId,
           };
         });
+
+        // Set active tab after state update
+        setTimeout(() => {
+          if (panel === 'left') {
+            get().setLeftActiveTabId(tab.id);
+          } else {
+            get().setMiddleActiveTabId(tab.id);
+          }
+        }, 50);
+
       } catch (err) {
-        // Create a more descriptive error message
         const errorMessage = err instanceof Error 
           ? err.message 
-          : (typeof err === 'object' && err !== null && Object.keys(err).length === 0 
-              ? 'Unknown error occurred while adding tab. Please check your network connection and try again.' 
-              : String(err));
-              
-        console.error('Error adding tab:', err, 'Message:', errorMessage);
+          : 'Unknown error occurred while adding tab. Please check your network connection and try again.';
+        console.error('Error adding tab:', err);
         set({ error: errorMessage });
       } finally {
         set({ isLoading: false });

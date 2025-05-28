@@ -40,6 +40,11 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
   const { addTab } = usePanelStore();
   const router = useRouter();
 
+  // Generate a unique key for each item
+  const getItemKey = React.useCallback((item: typeof allItems[0], index: number) => {
+    return `${item.id}-${index}`;
+  }, []);
+
   // Get folder path for an item
   const getFolderPath = React.useCallback((item: typeof allItems[0]): string => {
     if (!item.parentId) return "";
@@ -59,9 +64,18 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
 
   // Filter items based on search query and category
   const filteredItems = React.useMemo(() => {
-    if (!search) return [];
-    
     const query = search.toLowerCase();
+    
+    // If no search query, show all items of selected category
+    if (!search) {
+      return allItems.filter(item => {
+        const matchesCategory = selectedCategory === "all" || item.type === selectedCategory;
+        const isFile = item.type === "pdf" || item.type === "note";
+        return matchesCategory && isFile;
+      });
+    }
+    
+    // If there's a search query, filter by both search and category
     return allItems.filter(item => {
       const matchesSearch = item.name.toLowerCase().includes(query);
       const matchesCategory = selectedCategory === "all" || item.type === selectedCategory;
@@ -113,8 +127,6 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
     { id: "pdf", name: "Pdfs", icon: <FileText className="w-4 h-4" /> }
   ];
 
-  const showResults = search.length > 0;
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -129,7 +141,7 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
             <div className="flex items-center px-3 border-b mr-3 w-11/12">
               <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
               <Command.Input
-                placeholder="Search..."
+                placeholder="Search notes and PDFs..."
                 className="flex h-14 w-full rounded-md bg-transparent py-3 text-base outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
                 value={search}
                 onValueChange={setSearch}
@@ -138,7 +150,7 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-8 px-2 text-muted-foreground" 
+                  className="h-8 px-2 text-muted-foreground hover:text-foreground" 
                   onClick={() => setSearch("")}
                 >
                   <ListX className="h-4 w-4" />
@@ -155,7 +167,11 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                     variant={selectedCategory === category.id ? "secondary" : "ghost"}
                     size="sm"
                     className="h-8 text-xs gap-1.5"
-                    onClick={() => setSelectedCategory(category.id)}
+                    onClick={() => {
+                      setSelectedCategory(category.id);
+                      // Clear search when switching categories
+                      setSearch("");
+                    }}
                   >
                     {category.icon}
                     {category.name}
@@ -166,31 +182,30 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
 
             <Command.List className="p-0 overflow-hidden">
               <ScrollArea className="h-[450px]">
-                {!showResults ? (
+                {!search ? (
                   <>
-                    {/* Recent pages */}
-                    <div className="px-3 pt-2 pb-4">
-                      <div className="text-sm font-medium text-muted-foreground mb-2">
-                        Recent pages
-                      </div>
-                      <div className="space-y-1">
-                        {allItems
-                          .filter(item => item.type === "pdf" || item.type === "note")
-                          .slice(0, 4)
-                          .map((item) => (
+                    {/* Show all items of selected category */}
+                    {(selectedCategory === "all" || selectedCategory === "note") && groupedResults.pages.length > 0 && (
+                      <div className="px-3 pt-4 pb-2">
+                        <div className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                          <FilePen className="h-4 w-4 text-blue-500" />
+                          Notes
+                        </div>
+                        <div className="space-y-1">
+                          {groupedResults.pages.map((item, index) => (
                             <Command.Item
-                              key={item.id}
-                              className="group px-2 py-1.5 rounded-md cursor-pointer flex items-center justify-between"
+                              key={getItemKey(item, index)}
+                              className="group px-2 py-2 rounded-md cursor-pointer flex items-center justify-between hover:bg-muted/50"
                               onSelect={() => handleItemClick(item)}
                             >
                               <div className="flex items-center gap-2">
                                 {item.type === "note" ? (
-                                  <FilePen className="w-4 h-4" />
+                                  <FilePen className="w-4 h-4 text-blue-500" />
                                 ) : (
-                                  <FileText className="w-4 h-4" />
+                                  <FileText className="w-4 h-4 text-red-500" />
                                 )}
                                 <div className="flex flex-col">
-                                  <span>{item.name}</span>
+                                  <span className="text-sm font-medium">{item.name}</span>
                                   {getFolderPath(item) ? (
                                     <span className="text-xs text-muted-foreground">
                                       {getFolderPath(item)}
@@ -219,78 +234,16 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                                     <MoreHorizontal className="h-4 w-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
+                                <DropdownMenuContent align="end" className="w-48">
                                   <DropdownMenuItem
+                                    className="cursor-pointer hover:bg-muted"
                                     onSelect={() => handleOpenInPanel(item, "left")}
                                   >
                                     <ArrowUpRight className="mr-2 h-4 w-4" />
                                     Open in Left Panel
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onSelect={() => handleOpenInPanel(item, "middle")}
-                                  >
-                                    <ArrowUpRight className="mr-2 h-4 w-4" />
-                                    Open in Middle Panel
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </Command.Item>
-                          ))}
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {/* Pages results */}
-                    {(selectedCategory === "all" || selectedCategory === "note") && groupedResults.pages.length > 0 && (
-                      <div className="px-3 pt-4 pb-2">
-                        <div className="text-sm font-medium text-muted-foreground mb-2">
-                          Pages
-                        </div>
-                        <div className="space-y-1">
-                          {groupedResults.pages.map((item) => (
-                            <Command.Item
-                              key={item.id}
-                              className="group px-2 py-2 rounded-md cursor-pointer flex items-center justify-between"
-                              onSelect={() => handleItemClick(item)}
-                            >
-                              <div className="flex items-center gap-2">
-                                <FilePen className="w-4 h-4" />
-                                <div className="flex flex-col">
-                                  <span className="text-sm">{item.name}</span>
-                                  {getFolderPath(item) ? (
-                                    <span className="text-xs text-muted-foreground">
-                                      {getFolderPath(item)}
-                                    </span>
-                                  ) : (
-                                    <span className="text-xs text-muted-foreground">
-                                      My Collection
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <DropdownMenu 
-                                open={activeDropdownId === item.id} 
-                                onOpenChange={(isOpen) => setActiveDropdownId(isOpen ? item.id : null)}
-                              >
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onSelect={() => handleOpenInPanel(item, "left")}
-                                  >
-                                    <ArrowUpRight className="mr-2 h-4 w-4" />
-                                    Open in Left Panel
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
+                                    className="cursor-pointer hover:bg-muted"
                                     onSelect={() => handleOpenInPanel(item, "middle")}
                                   >
                                     <ArrowUpRight className="mr-2 h-4 w-4" />
@@ -304,23 +257,23 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                       </div>
                     )}
 
-                    {/* Files results */}
                     {(selectedCategory === "all" || selectedCategory === "pdf") && groupedResults.files.length > 0 && (
                       <div className="px-3 pt-4 pb-2">
-                        <div className="text-sm font-medium text-muted-foreground mb-2">
-                          Files
+                        <div className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-red-500" />
+                          PDFs
                         </div>
                         <div className="space-y-1">
-                          {groupedResults.files.map((item) => (
+                          {groupedResults.files.map((item, index) => (
                             <Command.Item
-                              key={item.id}
-                              className="group px-2 py-2 rounded-md cursor-pointer flex items-center justify-between"
+                              key={getItemKey(item, index)}
+                              className="group px-2 py-2 rounded-md cursor-pointer flex items-center justify-between hover:bg-muted/50"
                               onSelect={() => handleItemClick(item)}
                             >
                               <div className="flex items-center gap-2">
-                                <FileText className="w-4 h-4" />
+                                <FileText className="w-4 h-4 text-red-500" />
                                 <div className="flex flex-col">
-                                  <span className="text-sm">{item.name}</span>
+                                  <span className="text-sm font-medium">{item.name}</span>
                                   {getFolderPath(item) ? (
                                     <span className="text-xs text-muted-foreground">
                                       {getFolderPath(item)}
@@ -346,16 +299,149 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                                     <MoreHorizontal className="h-4 w-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
+                                <DropdownMenuContent align="end" className="w-48">
                                   <DropdownMenuItem
-                                    className="cursor-pointer hover:bg-background"
+                                    className="cursor-pointer hover:bg-muted"
                                     onSelect={() => handleOpenInPanel(item, "left")}
                                   >
                                     <ArrowUpRight className="mr-2 h-4 w-4" />
                                     Open in Left Panel
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    className="cursor-pointer hover:bg-background"
+                                    className="cursor-pointer hover:bg-muted"
+                                    onSelect={() => handleOpenInPanel(item, "middle")}
+                                  >
+                                    <ArrowUpRight className="mr-2 h-4 w-4" />
+                                    Open in Middle Panel
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </Command.Item>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* Search results */}
+                    {(selectedCategory === "all" || selectedCategory === "note") && groupedResults.pages.length > 0 && (
+                      <div className="px-3 pt-4 pb-2">
+                        <div className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                          <FilePen className="h-4 w-4 text-blue-500" />
+                          Notes
+                        </div>
+                        <div className="space-y-1">
+                          {groupedResults.pages.map((item, index) => (
+                            <Command.Item
+                              key={getItemKey(item, index)}
+                              className="group px-2 py-2 rounded-md cursor-pointer flex items-center justify-between hover:bg-muted/50"
+                              onSelect={() => handleItemClick(item)}
+                            >
+                              <div className="flex items-center gap-2">
+                                <FilePen className="w-4 h-4 text-blue-500" />
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-medium">{item.name}</span>
+                                  {getFolderPath(item) ? (
+                                    <span className="text-xs text-muted-foreground">
+                                      {getFolderPath(item)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">
+                                      My Collection
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <DropdownMenu 
+                                open={activeDropdownId === item.id} 
+                                onOpenChange={(isOpen) => setActiveDropdownId(isOpen ? item.id : null)}
+                              >
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48">
+                                  <DropdownMenuItem
+                                    className="cursor-pointer hover:bg-muted"
+                                    onSelect={() => handleOpenInPanel(item, "left")}
+                                  >
+                                    <ArrowUpRight className="mr-2 h-4 w-4" />
+                                    Open in Left Panel
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="cursor-pointer hover:bg-muted"
+                                    onSelect={() => handleOpenInPanel(item, "middle")}
+                                  >
+                                    <ArrowUpRight className="mr-2 h-4 w-4" />
+                                    Open in Middle Panel
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </Command.Item>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {(selectedCategory === "all" || selectedCategory === "pdf") && groupedResults.files.length > 0 && (
+                      <div className="px-3 pt-4 pb-2">
+                        <div className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-red-500" />
+                          PDFs
+                        </div>
+                        <div className="space-y-1">
+                          {groupedResults.files.map((item, index) => (
+                            <Command.Item
+                              key={getItemKey(item, index)}
+                              className="group px-2 py-2 rounded-md cursor-pointer flex items-center justify-between hover:bg-muted/50"
+                              onSelect={() => handleItemClick(item)}
+                            >
+                              <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-red-500" />
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-medium">{item.name}</span>
+                                  {getFolderPath(item) ? (
+                                    <span className="text-xs text-muted-foreground">
+                                      {getFolderPath(item)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">
+                                      My Collection
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <DropdownMenu 
+                                open={activeDropdownId === item.id} 
+                                onOpenChange={(isOpen) => setActiveDropdownId(isOpen ? item.id : null)}
+                              >
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48">
+                                  <DropdownMenuItem
+                                    className="cursor-pointer hover:bg-muted"
+                                    onSelect={() => handleOpenInPanel(item, "left")}
+                                  >
+                                    <ArrowUpRight className="mr-2 h-4 w-4" />
+                                    Open in Left Panel
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="cursor-pointer hover:bg-muted"
                                     onSelect={() => handleOpenInPanel(item, "middle")}
                                   >
                                     <ArrowUpRight className="mr-2 h-4 w-4" />
@@ -372,8 +458,10 @@ export function SearchDialog({ children }: { children: React.ReactNode }) {
                     {/* No results */}
                     {filteredItems.length === 0 && (
                       <div className="px-3 pt-4 pb-6">
-                        <div className="px-2 py-3 rounded-md border border-dashed flex items-center justify-center gap-1.5 text-sm text-muted-foreground">
-                          No results found for &ldquo;{search}&rdquo;
+                        <div className="px-2 py-6 rounded-md border border-dashed flex flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+                          <Search className="h-8 w-8 opacity-50" />
+                          <p>No results found for &ldquo;{search}&rdquo;</p>
+                          <p className="text-xs">Try different keywords or check your spelling</p>
                         </div>
                       </div>
                     )}

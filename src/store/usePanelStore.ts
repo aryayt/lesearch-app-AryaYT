@@ -218,6 +218,7 @@ export const usePanelStore = create(
       set({ isLoading: true, error: null });
       try {
         let activePageId = get().activePageId;
+        console.log("Adding tab-->", "activePageId", activePageId, "pageId", pageId, "pageType", pageType, "panel", panel);
         if (!activePageId && panel === 'left') {
           get().setActivePageId(pageId);
           activePageId = pageId;  

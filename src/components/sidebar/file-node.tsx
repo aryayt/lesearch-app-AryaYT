@@ -340,7 +340,7 @@ export function FileNode({
           open={isDeleteDialogOpen}
           onOpenChange={() => setIsDeleteDialogOpen(false)}
         >
-          <DialogContent>
+          <DialogContent >
             <DialogTitle>Delete {file.name}</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete {file.name}? This action cannot be
@@ -358,10 +358,10 @@ export function FileNode({
                 onClick={async () => {
                   try {
                     const id = await deleteItem(file.id, file.type);
-                    if(id ){
+                    if(id) {
                       removeTabFromAllPanels(id);
                     }
-                    if(id === "main"){
+                    if(id === "main") {
                       router.push('/documents');
                     }
                     toast.success(`${file.name} deleted successfully`);

@@ -30,6 +30,7 @@ const MiddlePanel = () => {
 	const [isPdfImportOpen, setIsPdfImportOpen] = useState(false);
 	const { saveStatus } = useDocStore();
 	const tabs = getMiddlePanelTabs();
+	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
 	// Keep track of the previous middleActiveTabId
 	const prevMiddleActiveTabIdRef = React.useRef(middleActiveTabId);
@@ -49,12 +50,25 @@ const MiddlePanel = () => {
 	}, [tabs, middleActiveTabId, setMiddleActiveTabId]);
 
 	const handleAddNote = () => {
-		setCreation({ parentId: activePageId, type: "note", panel: "middle" });
+		setIsDropdownOpen(false);
+		setTimeout(() => {
+			setCreation({
+				parentId: null,
+				type: "note",
+				panel: "middle"
+			});
+		}, 0);
 	};
 
 	const handleAddPdf = () => {
-		// Open the PDF import dialog specifically for the middle panel
-		setIsPdfImportOpen(true);
+		setIsDropdownOpen(false);
+		setTimeout(() => {
+			setCreation({
+				parentId: null,
+				type: "pdf",
+				panel: "middle"
+			});
+		}, 0);
 	};
 
 	const handleClosePdfImport = () => {
@@ -147,7 +161,7 @@ const MiddlePanel = () => {
 						))}
 					</div>
 					<SaveStatus status={saveStatus[middleActiveTabId]} />
-					<DropdownMenu>
+					<DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
 						<DropdownMenuTrigger asChild>
 							<Button variant="ghost" size="icon">
 								<Plus size={16} />
@@ -156,14 +170,14 @@ const MiddlePanel = () => {
 						<DropdownMenuContent>
 							<DropdownMenuItem
 								className="flex items-center gap-2 cursor-pointer"
-								onClick={handleAddPdf}
+								onSelect={handleAddPdf}
 							>
 								<FileText size={16} />
 								Open PDF
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								className="flex items-center gap-2 cursor-pointer"
-								onClick={handleAddNote}
+								onSelect={handleAddNote}
 							>
 								<FilePen size={16} />
 								Add Note

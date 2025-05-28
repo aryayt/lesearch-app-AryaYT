@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { type Tab, usePanelStore } from "@/store/usePanelStore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { FilePen, FileText, Plus, X } from "lucide-react";
@@ -28,6 +28,7 @@ const LeftPanel = () => {
   const { setCreation } = useStore();
   const tabs = getLeftPanelTabs();
   const { saveStatus } = useDocStore();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Keep track of the previous leftActiveTabId
   const prevLeftActiveTabIdRef = React.useRef(leftActiveTabId);
@@ -47,7 +48,10 @@ const LeftPanel = () => {
   }, [tabs, leftActiveTabId, setLeftActiveTabId]);
 
   const handleAddNote = () => {
-    setCreation({ parentId: activePageId, type: "note", panel: "left" });
+    setIsDropdownOpen(false);
+    setTimeout(() => {
+      setCreation({ parentId: null, type: "note", panel: "left" });
+    }, 0);
   };
 
   if (tabs.length === 0) return null;
@@ -96,7 +100,7 @@ const LeftPanel = () => {
           ))}
         </div>
         <SaveStatus status={saveStatus[leftActiveTabId]} />
-        <DropdownMenu>
+        <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
               <Plus size={16} />
@@ -105,7 +109,7 @@ const LeftPanel = () => {
           <DropdownMenuContent>
             <DropdownMenuItem
               className="flex items-center gap-2 cursor-pointer"
-              onClick={handleAddNote}
+              onSelect={handleAddNote}
             >
               <FileText size={16} />
               Add Note

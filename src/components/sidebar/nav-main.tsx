@@ -36,28 +36,35 @@ export function NavMain() {
   const isGraphView = pathname === "/graphview" || pathname === "/graphview/";
   const [importPdfOpen, setImportPdfOpen] = useState(false);
   const { setCreation } = useStore();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Use callbacks for event handlers to prevent recreation on renders
-  const handleImportPdf = useCallback((e: Event) => {
-    e.preventDefault();
-    setImportPdfOpen(true);
+  const handleImportPdf = useCallback(() => {
+    setIsDropdownOpen(false);
+    setTimeout(() => {
+      setImportPdfOpen(true);
+    }, 0);
   }, []);
 
-  const handleCreatePage = useCallback((e: Event) => {
-    e.preventDefault();
-    setCreation({ parentId: null, type: "note" });
+  const handleCreatePage = useCallback(() => {
+    setIsDropdownOpen(false);
+    setTimeout(() => {
+      setCreation({ parentId: null, type: "note" });
+    }, 0);
   }, [setCreation]);
 
-  const handleCreateWorkspace = useCallback((e: Event) => {
-    e.preventDefault();
-    setCreation({ parentId: null, type: "folder" });
+  const handleCreateWorkspace = useCallback(() => {
+    setIsDropdownOpen(false);
+    setTimeout(() => {
+      setCreation({ parentId: null, type: "folder" });
+    }, 0);
   }, [setCreation]);
 
   return (
     <SidebarMenu>
       {/* Search Item */}
       <SidebarMenuItem title="Create">
-        <DropdownMenu>
+        <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton>
               <Plus />

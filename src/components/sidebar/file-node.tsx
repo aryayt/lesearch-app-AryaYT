@@ -94,6 +94,7 @@ export function FileNode({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [isPdfImportOpen, setIsPdfImportOpen] = React.useState(false);
   const isActive = file.id === activePageId;
+  const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
 
   const handleMoveToCollection = React.useCallback(async () => {
     await moveToCollection(file.id);
@@ -120,11 +121,13 @@ export function FileNode({
 
   const handleDelete = React.useCallback(() => {
     setIsDeleteDialogOpen(true);
+    setIsDropdownOpen(false);
   }, []);
 
   const handleImportPdf = React.useCallback((e: Event) => {
     e.preventDefault();
     setIsPdfImportOpen(true);
+    setIsDropdownOpen(false);
   }, []);
 
   const toggleOpen = (e: React.MouseEvent) => {
@@ -230,7 +233,7 @@ export function FileNode({
             >
               {file.name}
             </button>
-            <DropdownMenu>
+            <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuAction showOnHover>
                   <MoreHorizontal />

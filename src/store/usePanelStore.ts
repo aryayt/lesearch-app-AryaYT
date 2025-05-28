@@ -243,6 +243,11 @@ export const usePanelStore = create(
             get().setLeftActiveTabId(pageId);
           } else {
             get().setMiddleActiveTabId(pageId);
+            // Ensure middle panel is visible when selecting an existing tab
+            get().setPanelVisibility(activePageId, {
+              ...get().getPanelVisibility(activePageId),
+              showMiddlePanel: true
+            });
           }
           return;
         }
@@ -274,6 +279,11 @@ export const usePanelStore = create(
             updated.middlePanelTabs = [...updated.middlePanelTabs, tab];
             // Set new tab as active in middle panel
             setTimeout(() => get().setMiddleActiveTabId(tab.id), 50);
+            // Ensure middle panel is visible when adding a new tab
+            get().setPanelVisibility(activePageId, {
+              ...get().getPanelVisibility(activePageId),
+              showMiddlePanel: true
+            });
           }
 
           return {

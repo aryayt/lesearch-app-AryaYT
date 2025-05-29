@@ -68,9 +68,11 @@ const PDFContent = ({
       updatedAt: new Date(),
     };
 
-    // Update annotations directly in Supabase
+    // Update UI immediately
     const updatedAnnotations = [...currentAnnotations, newAnnotation];
-    updatePdfHighlightsAsync(documentId, updatedAnnotations);
+    updatePdfHighlightsAsync(documentId, updatedAnnotations); // Add optimistic flag
+
+    // Clear selection
     window.getSelection()?.removeAllRanges();
   }, [getDimension, documentId, currentAnnotations, updatePdfHighlightsAsync]);
 
@@ -81,7 +83,7 @@ const PDFContent = ({
     const annotation = currentAnnotations.find((a) => a.id === focusedAnnotationId);
     if (!annotation || !annotation.highlights.length) return;
 
-    jumpToHighlightRects(annotation.highlights, "pixels", "start", 0);
+    jumpToHighlightRects(annotation.highlights, "pixels", "start", -20);
   }, [focusedAnnotationId, currentAnnotations, jumpToHighlightRects]);
 
   const handlePagesClick = useCallback(

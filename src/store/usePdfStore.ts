@@ -113,6 +113,17 @@ export const usePdfStore = create<PdfStore>((set, get) => ({
   },
 
   updatePdfHighlightsAsync: async (pdfId: string, highlights: Annotation[]) => {
+    // Update UI immediately by default
+    set(state => ({
+      pdfs: { 
+        ...state.pdfs, 
+        [pdfId]: { 
+          ...state.pdfs[pdfId],
+          highlights 
+        }
+      }
+    }));
+
     set(state => ({
       updatingPdfs: { ...state.updatingPdfs, [pdfId]: true },
       errors: { ...state.errors, [pdfId]: null },
@@ -129,17 +140,21 @@ export const usePdfStore = create<PdfStore>((set, get) => ({
       if (error) throw error;
       
       set(state => ({
-        pdfs: { 
-          ...state.pdfs, 
-          [pdfId]: { 
-            ...state.pdfs[pdfId],
-            highlights 
-          }
-        },
         updatingPdfs: { ...state.updatingPdfs, [pdfId]: false },
         saveStatus: { ...state.saveStatus, [pdfId]: 'success' }
       }));
     } catch (err) {
+      // Revert changes on error
+      set(state => ({
+        pdfs: { 
+          ...state.pdfs, 
+          [pdfId]: { 
+            ...state.pdfs[pdfId],
+            highlights: state.pdfs[pdfId]?.highlights || []
+          }
+        }
+      }));
+
       set(state => ({ 
         errors: { 
           ...state.errors, 

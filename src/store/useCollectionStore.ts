@@ -232,7 +232,8 @@ export const useStore = create<Store>((set, get) => ({
   
       // Step 2: Update the state to remove the item
       set((state) => ({
-        deletedItems: state.deletedItems.filter((item) => item.id !== id),
+        allItems: state.allItems.filter((item) => item.id !== id),
+		// deletedItems: [...state.deletedItems, state.allItems.find((item) => item.id === id) as FileItem],
       }));
 
       if(activePageId === id) {
@@ -272,6 +273,7 @@ export const useStore = create<Store>((set, get) => ({
       // Step 2: Update the state to remove the item
       set((state) => ({
         deletedItems: state.deletedItems.filter((item) => item.id !== id),
+		allItems: [...state.allItems, state.deletedItems.find((item) => item.id === id) as FileItem],
       }));
 
       if(activePageId === id) {

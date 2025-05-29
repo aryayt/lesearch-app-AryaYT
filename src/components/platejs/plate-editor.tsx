@@ -35,7 +35,7 @@ export function PlateEditor({ docid , content}: { docid: string , content: Value
         onChange={(options: { value: Value }) => debouncedSave(options.value)}
       >
         <EditorContainer className="border overflow-hidden flex flex-col w-full h-full rounded-lg">
-          <Editor variant="default" />
+          <Editor variant="default" placeholder="Start writing. Press / for commands or Cmd+J for AI." />
         </EditorContainer>
           {/* <SettingsDialog /> */}
         </Plate>

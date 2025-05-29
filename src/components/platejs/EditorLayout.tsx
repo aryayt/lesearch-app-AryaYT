@@ -4,7 +4,6 @@ import { useDocRealtime } from '@/store/use-doc-realtime';
 import { PlateEditor } from './plate-editor';
 import GridLoader from '../loader/grid-loader';
 import { useTheme } from 'next-themes';
-import { ParagraphPlugin } from '@udecode/plate/react';
 import type { Value } from '@udecode/plate';
 
 const EditorLayout = ({ docid }: { docid: string }) => {
@@ -36,18 +35,7 @@ const EditorLayout = ({ docid }: { docid: string }) => {
   }
 
      // Set initial value based on whether doc has been loaded
-     const initialValue: Value = doc?.content ? JSON.parse(doc.content) : [
-      {
-        children: [
-          { text: 'Write anything to get started. Try with ' },
-          { bold: true, text: 'AI commands' },
-          { text: ' or use ' },
-          { kbd: true, text: 'Cmd+J' },
-          { text: ' to open the AI menu.' },
-        ],
-        type: ParagraphPlugin.key,
-      },
-    ];
+     const initialValue: Value = doc?.content ? JSON.parse(doc.content) : [];
 
 
   return (

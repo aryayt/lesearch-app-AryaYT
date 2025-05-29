@@ -37,7 +37,10 @@ export function DeleteItemDialog({
   const handleAddToTrash = async () => {
     setTrashLoading(true);
     try {
-      await addToTrash(itemId);
+      const result = await addToTrash(itemId);
+      if (result === "main") {
+        router.push("/documents");
+      }
       toast.success(`${itemName} moved to Trash`);
       onClose();
     } catch (error) {

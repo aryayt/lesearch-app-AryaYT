@@ -192,7 +192,7 @@ export const useStore = create<Store>((set, get) => ({
   
       // Step 4: Update the state to remove the item
       set((state) => ({
-        allItems: state.allItems.filter((item) => item.id !== id),
+        deletedItems: state.deletedItems.filter((item) => item.id !== id),
       }));
 
       if(activePageId === id) {

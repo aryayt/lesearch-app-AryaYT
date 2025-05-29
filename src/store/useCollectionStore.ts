@@ -7,11 +7,13 @@ export type FileItem = {
 	name: string;
 	parentId: string | null;
 	type: "folder" | "pdf" | "note";
+	updated_at?: string;
 };
 
 // Zustand Store for managing files, dragged item, drop target, etc.
 type Store = {
 	allItems: FileItem[]; // All files
+	deletedItems: FileItem[]; // All deleted files
 	draggedItem: FileItem | null; // Currently dragged item
 	dropTarget: string | null; // Drop target item
 	creation: { parentId: string | null; type: FileItem["type"]; panel?: 'left' | 'middle' } | null; // Creation dialog state
@@ -34,9 +36,12 @@ type Store = {
 	handleDrop: (draggedItem: FileItem | null, targetId: string | null) => void;
 	setOpenFolders: (folderId: string, open: boolean) => void;
 	fetchFilesAndFolders: () => Promise<void>;
+	fetchDeletedFilesAndFolders: () => Promise<void>;
 	addFile: (file: FileItem) => Promise<string>;
 	updateFile: (id: string, updates: Partial<FileItem>) => Promise<void>;
 	deleteItem: (id: string, type: FileItem["type"]) => Promise<string | null>;
+	addToTrash: (id: string) => Promise<string | null>;
+	restoreFromTrash: (id: string) => Promise<string | null>;
 	setActiveItem: (itemId: string | null) => void; // Method to set the active item
 	moveToCollection: (id: string) => Promise<void>;
 };
@@ -58,6 +63,7 @@ const findParentFolders = (items: FileItem[], itemId: string | null): string[] =
 
 export const useStore = create<Store>((set, get) => ({
 	allItems: [],
+	deletedItems: [],
 	draggedItem: null,
 	dropTarget: null,
 	creation: null,
@@ -207,6 +213,85 @@ export const useStore = create<Store>((set, get) => ({
     }
   },
 
+  addToTrash: async (id) => {
+    const supabase = createClient();
+	const {activePageId} = usePanelStore.getState();
+    set({ isDeleting: true });
+  
+    try {
+      // Step 1: Delete the file record from the database
+      const { error: deleteDbError } = await supabase
+        .from("files")
+        .update({ is_deleted: true })
+        .eq("id", id);
+  
+      if (deleteDbError) {
+        console.error("Error deleting file record from database:", deleteDbError.message);
+        throw new Error("Failed to delete file record from database.");
+      }
+  
+      // Step 2: Update the state to remove the item
+      set((state) => ({
+        deletedItems: state.deletedItems.filter((item) => item.id !== id),
+      }));
+
+      if(activePageId === id) {
+        usePanelStore.getState().setActivePageId("");
+        usePanelStore.getState().removeTabFromAllPanels(id);
+        return "main";
+      }
+
+      usePanelStore.getState().removeTabFromAllPanels(id);
+      console.log("File and record successfully deleted.");
+      return null;
+    } catch (err) {
+      console.error("Error during file deletion process:", err);
+      throw new Error("Error during file deletion process.");
+    } finally {
+      // Step 5: Reset deleting state
+      set({ isDeleting: false });
+    }
+  },
+  restoreFromTrash: async (id) => {
+    const supabase = createClient();
+	const {activePageId} = usePanelStore.getState();
+    set({ isDeleting: true });
+  
+    try {
+      // Step 1: Delete the file record from the database
+      const { error: deleteDbError } = await supabase
+        .from("files")
+        .update({ is_deleted: false })
+        .eq("id", id);
+  
+      if (deleteDbError) {
+        console.error("Error deleting file record from database:", deleteDbError.message);
+        throw new Error("Failed to delete file record from database.");
+      }
+  
+      // Step 2: Update the state to remove the item
+      set((state) => ({
+        deletedItems: state.deletedItems.filter((item) => item.id !== id),
+      }));
+
+      if(activePageId === id) {
+        usePanelStore.getState().setActivePageId("");
+        usePanelStore.getState().removeTabFromAllPanels(id);
+        return "main";
+      }
+
+      usePanelStore.getState().removeTabFromAllPanels(id);
+      console.log("File and record successfully deleted.");
+      return null;
+    } catch (err) {
+      console.error("Error during file deletion process:", err);
+      throw new Error("Error during file deletion process.");
+    } finally {
+      // Step 5: Reset deleting state
+      set({ isDeleting: false });
+    }
+  },
+
 	// New method to set open folders
 	setOpenFolders: (folderId, open) =>
 		set((state) => {
@@ -225,7 +310,8 @@ export const useStore = create<Store>((set, get) => ({
 		// Fetch files and folders
 		const { data: files, error: filesError } = await supabase
 			.from("files")
-			.select("*");
+			.select("*")
+			.eq("is_deleted", false);
 
 		// Handle errors
 		if (filesError) {
@@ -235,17 +321,51 @@ export const useStore = create<Store>((set, get) => ({
 
 		// Filter and retain only the necessary fields (id, name, type)
 		const cleanFiles =
-			files?.map(({ id, name, type, parent_id, content_id }) => ({
+			files?.map(({ id, name, type, parent_id, updated_at }) => ({
 				id,
 				name,
 				type,
 				parentId: parent_id,
-				content_id,
+				updated_at,
 			})) || [];
 
 		// Combine files and folders and update the state
 		set({
 			allItems: [
+				...cleanFiles,
+			],
+		});
+	},
+	// Fetch deleted files and folders from Supabase
+	fetchDeletedFilesAndFolders: async () => {
+		const supabase = createClient();
+
+		// Fetch files and folders
+		const { data: files, error: filesError } = await supabase
+			.from("files")
+			.select("*")
+			.eq("is_deleted", true);
+
+		// Handle errors
+		if (filesError) {
+			console.log(filesError);
+			return;
+		}
+
+		// Filter and retain only the necessary fields (id, name, type)
+		const cleanFiles =
+			files?.map(({ id, name, type, parent_id, content_id, updated_at }) => ({
+				id,
+				name,
+				type,
+				parentId: parent_id,
+				content_id,
+				updated_at,
+			})) || [];
+
+		// Combine files and folders and update the state
+		set({
+			deletedItems: [
 				...cleanFiles,
 			],
 		});
@@ -304,7 +424,8 @@ export const useStore = create<Store>((set, get) => ({
 					id,
 					name,
 					parentId,
-					type
+					type,
+					isDeleted: false
 				}]
 			}));
 		}

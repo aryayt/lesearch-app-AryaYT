@@ -7,9 +7,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { Trash2, MessageCircleQuestion, Users, MessageSquare } from "lucide-react"
+import { MessageCircleQuestion, Users, MessageSquare } from "lucide-react"
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
+import { TrashBox } from "@/components/dialog/trash-box"
 
 export function NavSecondary({
   ...props
@@ -20,12 +21,7 @@ export function NavSecondary({
         {/* Main items at top */}
         <SidebarMenu>
           <SidebarMenuItem title="Trash">
-            <SidebarMenuButton asChild>
-              <Link href="/trash" className="flex items-center gap-1">
-              <Trash2 size={16} className="text-primary" />
-              <span className="mt-1">Trash</span>
-              </Link>
-            </SidebarMenuButton>
+            <TrashBox />
           </SidebarMenuItem>
           <SidebarMenuItem title="Feedback">
             <SidebarMenuButton asChild>

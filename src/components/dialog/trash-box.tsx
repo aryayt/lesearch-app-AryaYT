@@ -38,11 +38,11 @@ export function TrashBox() {
   const getIcon = (type: string) => {
     switch (type) {
       case "pdf":
-        return <FileText className="mr-2 text-blue-500" />;
+        return <FileText className="mr-2" />;
       case "note":
-        return <FilePen className="mr-2 text-green-500" />;
+        return <FilePen className="mr-2" />;
       case "folder":
-        return <Folder className="mr-2 text-yellow-500" />;
+        return <Folder className="mr-2" />;
       default:
         return null;
     }

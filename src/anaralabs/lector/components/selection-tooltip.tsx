@@ -5,11 +5,12 @@ import {
   useDismiss,
   useFloating,
   useInteractions,
+  size,
 } from "@floating-ui/react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-
 import { usePdf } from "../internal";
+import { createPortal } from "react-dom";
 
 interface SelectionTooltipProps {
   children: React.ReactNode;
@@ -25,7 +26,21 @@ export const SelectionTooltip = ({ children }: SelectionTooltipProps) => {
     open: isOpen,
     onOpenChange: setIsOpen,
     whileElementsMounted: autoUpdate,
-    middleware: [offset(10), shift({ padding: 8 })],
+    strategy: "fixed",
+    middleware: [
+      offset(10),
+      shift({ padding: 8 }),
+      size({
+        apply({  availableHeight, elements }) {
+          // Set a fixed width and height for the tooltip
+          Object.assign(elements.floating.style, {
+            width: '200px',
+            height: 'auto',
+            maxHeight: `${availableHeight}px`,
+          });
+        },
+      }),
+    ],
   });
 
   const dismiss = useDismiss(context);
@@ -54,7 +69,7 @@ export const SelectionTooltip = ({ children }: SelectionTooltipProps) => {
           width: lastRect.width,
           height: lastRect.height,
           x: lastRect.left,
-          y: lastRect.bottom, // Position below the last line of selection
+          y: lastRect.bottom,
           top: lastRect.bottom,
           right: lastRect.right,
           bottom: lastRect.bottom + lastRect.height,
@@ -72,9 +87,7 @@ export const SelectionTooltip = ({ children }: SelectionTooltipProps) => {
     const handleSelectionChange = () => {
       const selection = document.getSelection();
 
-      // Check if selection is within the viewport and not within a tooltip
       if (selection && viewportRef.current?.contains(selection.anchorNode)) {
-        // Check if the selection is within a tooltip
         const anchorNode = selection.anchorNode;
         const focusNode = selection.focusNode;
         
@@ -86,12 +99,10 @@ export const SelectionTooltip = ({ children }: SelectionTooltipProps) => {
             : node.parentElement;
             
           while (element) {
-            // Check for our custom tooltip attributes
             if (element.getAttribute('data-annotation-tooltip')) {
               return true;
             }
 
-            // Check for floating UI portal
             if (element.hasAttribute('data-floating-ui-portal')) {
               return true;
             }
@@ -101,7 +112,6 @@ export const SelectionTooltip = ({ children }: SelectionTooltipProps) => {
           return false;
         };
 
-        // Only show selection tooltip if selection is not in an unselectable area
         if (!isInUnselectableArea(anchorNode) && !isInUnselectableArea(focusNode)) {
           requestAnimationFrame(updateTooltipPosition);
         } else {
@@ -117,7 +127,6 @@ export const SelectionTooltip = ({ children }: SelectionTooltipProps) => {
       requestAnimationFrame(updateTooltipPosition);
     };
 
-    // Add selection change listener to document (since it can't be added directly to elements)
     document.addEventListener("selectionchange", handleSelectionChange);
 
     if (viewportRef.current) {
@@ -129,13 +138,11 @@ export const SelectionTooltip = ({ children }: SelectionTooltipProps) => {
     return () => {
       document.removeEventListener("selectionchange", handleSelectionChange);
       if (viewportRef.current) {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         viewportRef.current.removeEventListener("scroll", handleScroll);
       }
     };
   }, [refs, isOpen, viewportRef, updateTooltipPosition]);
 
-  // Handle clicks on the floating tooltip
   useEffect(() => {
     const handleFloatingClick = (e: MouseEvent) => {
       if (refs.floating.current?.contains(e.target as Node)) {
@@ -149,17 +156,20 @@ export const SelectionTooltip = ({ children }: SelectionTooltipProps) => {
 
   return (
     <>
-      {isOpen && (
+      {isOpen && viewportRef.current && createPortal(
         <div
           ref={refs.setFloating}
           style={{
             ...floatingStyles,
+            position: 'fixed',
+            zIndex: 50,
           }}
           {...getFloatingProps()}
           className="bg-popover rounded-md border shadow-md p-1"
         >
           {children}
-        </div>
+        </div>,
+        viewportRef.current
       )}
     </>
   );

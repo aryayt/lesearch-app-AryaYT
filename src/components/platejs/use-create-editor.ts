@@ -1,8 +1,6 @@
 'use client';
 
 import type { Value } from '@udecode/plate';
-import type { ComponentType } from 'react';
-import type { PlatePlugin } from '@udecode/plate/react';
 
 import { withProps } from '@udecode/cn';
 import { AIPlugin } from '@udecode/plate-ai/react';
@@ -109,6 +107,7 @@ import { TableElement } from '@/components/ui/table-element';
 import { TableRowElement } from '@/components/ui/table-row-element';
 import { TocElement } from '@/components/ui/toc-element';
 import { ToggleElement } from '@/components/ui/toggle-element';
+import { ComponentType } from 'react';
 
 export const viewComponents = {
   [AudioPlugin.key]: MediaAudioElement,
@@ -175,7 +174,8 @@ export const useCreateEditor = (
   }: {
     components?: Record<string, ComponentType<object>>;
     placeholders?: boolean;
-    plugins?: PlatePlugin[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    plugins?: any[];
     readOnly?: boolean;
   } & Omit<CreatePlateEditorOptions, 'plugins'> = {},
   deps: unknown[] = []
@@ -187,8 +187,8 @@ export const useCreateEditor = (
           ...(readOnly
             ? viewComponents
             : placeholders
-              ? withPlaceholders(editorComponents as Record<string, ComponentType<object>>)
-              : editorComponents),
+            ? withPlaceholders(editorComponents as Record<string, ComponentType<object>>)
+            : editorComponents),
           ...components,
         },
         ...override,
@@ -198,7 +198,7 @@ export const useCreateEditor = (
         ...editorPlugins,
         FixedToolbarPlugin,
         FloatingToolbarPlugin,
-      ] as PlatePlugin[],
+      ],
       value: options.value,
       ...options,
     },

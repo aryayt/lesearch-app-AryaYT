@@ -127,18 +127,19 @@ export const SelectionTooltip = ({ children }: SelectionTooltipProps) => {
       requestAnimationFrame(updateTooltipPosition);
     };
 
+    const viewport = viewportRef.current;
     document.addEventListener("selectionchange", handleSelectionChange);
 
-    if (viewportRef.current) {
-      viewportRef.current.addEventListener("scroll", handleScroll, {
+    if (viewport) {
+      viewport.addEventListener("scroll", handleScroll, {
         passive: true,
       });
     }
 
     return () => {
       document.removeEventListener("selectionchange", handleSelectionChange);
-      if (viewportRef.current) {
-        viewportRef.current.removeEventListener("scroll", handleScroll);
+      if (viewport) {
+        viewport.removeEventListener("scroll", handleScroll);
       }
     };
   }, [refs, isOpen, viewportRef, updateTooltipPosition]);

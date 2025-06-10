@@ -1,185 +1,13 @@
-"use client";
-import { useRef, useEffect, useState } from "react";
-import { Send, History } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
-import renderChatHistory from "../chat/chat-history";
-
-export interface Message {
-  id: number;
-  sender: "user" | "bot";
-  text: string;
-  timestamp: string;
-}
-
-export interface ChatHistory {
-  id: string;
-  title: string;
-  messages: Message[];
-  lastUpdated: string;
-}
-
-const examplePrompts = [
-  "Summarize this paper",
-  "What is the main contribution?",
-  "Explain this paragraph",
-  "List all referenced works",
-  "What does this term mean?",
-];
-
-const initialMessages: Message[] = [
-  {
-    id: 1,
-    sender: "bot",
-    text: "Hi! I'm your Lesearch assistant. Ask me anything about this paper or PDF. For example: 'Summarize this paper' or 'What is the main contribution?'",
-    timestamp: new Date().toISOString(),
-  },
-];
-
+import React, { useState } from 'react'
+import RenderChatHistory from '../chat/chat-history';
+import RenderChat from '../chat/render-chat';
+import { Card, CardHeader } from "@/components/ui/card";
+import { Button } from '../ui/button';
+import { History } from 'lucide-react';
 
 
 const RightPanel = () => {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!messages) return;
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const handleSend = async () => {
-    if (!input.trim()) return;
-    const userMsg: Message = {
-      id: Date.now(),
-      sender: "user",
-      text: input,
-      timestamp: new Date().toISOString(),
-    };
-    setMessages((msgs) => [...msgs, userMsg]);
-    setInput("");
-    setLoading(true);
-    // Placeholder: Simulate bot response
-    setTimeout(() => {
-      setMessages((msgs) => [
-        ...msgs,
-        {
-          id: Date.now() + 1,
-          sender: "bot",
-          text: "I'm here to help! (AI integration coming soon)",
-          timestamp: new Date().toISOString(),
-        },
-      ]);
-      setLoading(false);
-    }, 1200);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-
-  const renderChatArea = () => (
-    <>
-      <ScrollArea className="flex-1 px-4">
-        <div className="space-y-3">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex ${
-                msg.sender === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
-              <Card
-                className={cn(
-                  "max-w-[75%] px-4 py-2 text-sm shadow-md whitespace-pre-line break-words",
-                  msg.sender === "bot"
-                    ? "bg-primary/10 text-primary"
-                    : "bg-accent text-accent-foreground"
-                )}
-              >
-                <CardContent className="p-0">
-                  {msg.text}
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {formatDate(msg.timestamp)}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          ))}
-          {loading && (
-            <div className="flex justify-start">
-              <Card className="max-w-[75%] px-4 py-2 text-sm shadow-md bg-primary/10 text-primary opacity-70 animate-pulse">
-                <CardContent className="p-0">Thinking…</CardContent>
-              </Card>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollArea>
-
-      {/* Example Prompts */}
-      {messages.length <= 1 && !loading && (
-        <div className="px-4 pb-3">
-          <div className="text-xs text-muted-foreground mb-2">Try asking:</div>
-          <div className="flex flex-wrap gap-2">
-            {examplePrompts.map((prompt) => (
-              <Button
-                key={prompt}
-                variant="outline"
-                size="sm"
-                className="rounded-full"
-                onClick={() => setInput(prompt)}
-              >
-                {prompt}
-              </Button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Input Bar */}
-      <form
-        className="flex items-center gap-2 px-3 py-2  border-t bg-background/90 sticky bottom-0 z-10"
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSend();
-        }}
-      >
-        <Input
-          type="text"
-          placeholder="Ask a question about this paper…"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              handleSend();
-            }
-          }}
-          disabled={loading}
-        />
-        <Button
-          type="submit"
-          size="icon"
-          disabled={loading || !input.trim()}
-          aria-label="Send"
-        >
-          <Send size={18} />
-        </Button>
-      </form>
-    </>
-  );
 
   return (
     <Card className="flex flex-col h-full w-full gap-1">
@@ -202,11 +30,11 @@ const RightPanel = () => {
       </CardHeader>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
-        {showHistory ? renderChatHistory() : renderChatArea()}
+      <div className="flex flex-col h-full">
+        {showHistory ? <RenderChatHistory/>: <RenderChat/>}
       </div>
     </Card>
   );
-};
+}
 
-export default RightPanel;
+export default RightPanel

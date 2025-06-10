@@ -33,7 +33,6 @@ export default function SignOutDialog({
 
       <DialogContent
         className="w-[90%] gap-0 rounded-xl p-0 md:max-w-sm"
-        hideCloseButton
       >
         <VisuallyHidden.Root asChild>
           <DialogTitle>Sign Out</DialogTitle>

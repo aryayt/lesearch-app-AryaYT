@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, memo } from "react";
 import LeftPanel from "@/components/panels/left-panel";
 import {
   Panel,
@@ -10,6 +10,11 @@ import MiddlePanel from "@/components/panels/middle-panel";
 import RightPanel from "@/components/panels/right-panel";
 import { usePanelStore } from "@/store/usePanelStore";
 import { useParams } from "next/navigation";
+
+// Memoize panel components to prevent unnecessary re-renders
+const MemoizedLeftPanel = memo(LeftPanel);
+const MemoizedMiddlePanel = memo(MiddlePanel);
+const MemoizedRightPanel = memo(RightPanel);
 
 const DashboardPage = () => {
   const { getPanelVisibility, setActivePageId } = usePanelStore();
@@ -39,7 +44,7 @@ const DashboardPage = () => {
           order={1}
           className="border-r border-border flex flex-col rounded-xl shadow-lg h-full overflow-hidden bg-card"
         >
-          <LeftPanel />
+          <MemoizedLeftPanel />
         </Panel>
 
         {/* Middle Panel - Content panel (PDF/Notes) */}
@@ -55,7 +60,7 @@ const DashboardPage = () => {
               order={2}
               className="border-r border-border flex flex-col rounded-xl shadow-lg h-full overflow-hidden bg-card"
             >
-              <MiddlePanel />
+              <MemoizedMiddlePanel />
             </Panel>
           </>
         )}
@@ -73,7 +78,7 @@ const DashboardPage = () => {
               order={3}
               className="border-r border-border flex flex-col rounded-xl shadow-lg h-full bg-card"
             >
-              <RightPanel />
+              <MemoizedRightPanel />
             </Panel>
           </>
         )}

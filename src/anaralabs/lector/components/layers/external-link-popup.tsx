@@ -1,7 +1,8 @@
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { XIcon } from "lucide-react";
+import { XIcon, Minimize2Icon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useLayoutStore } from "@/store/layoutStore";
 
 interface ExternalLinkPopupProps {
   url: string;
@@ -17,6 +18,7 @@ export const ExternalLinkPopup = ({ url, onClose, onNavigate }: ExternalLinkPopu
     top: window.innerHeight / 2 - 100,
     left: window.innerWidth / 2 - 200,
   });
+  const { showExternalLink, setShowExternalLink } = useLayoutStore();
 
   // Adjust position to keep popup within window bounds
   const adjustPosition = () => {
@@ -115,6 +117,12 @@ export const ExternalLinkPopup = ({ url, onClose, onNavigate }: ExternalLinkPopu
     setIsDragging(true);
   };
 
+  const handleMinimize = () => {
+    setShowExternalLink(false);
+  };
+
+  if (!showExternalLink) return null;
+
   return (
     <div
       ref={popupRef}
@@ -124,7 +132,7 @@ export const ExternalLinkPopup = ({ url, onClose, onNavigate }: ExternalLinkPopu
         top: popupPosition.top,
         left: popupPosition.left,
         transform: isDragging ? "scale(1.02)" : "scale(1)",
-        transition: "transform 0.2s",
+        transition: "all 0.2s ease-in-out",
         transformOrigin: "center",
         animation: "0.3s cubic-bezier(0.16, 1, 0.3, 1)",
         userSelect: isDragging ? "none" : "auto",
@@ -140,15 +148,26 @@ export const ExternalLinkPopup = ({ url, onClose, onNavigate }: ExternalLinkPopu
             <h3 className="drag-handle flex-1 px-4 py-2 text-lg font-semibold">
               External Link
             </h3>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="h-8 w-8 rounded-full hover:bg-muted/80"
-            >
-              <XIcon className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleMinimize}
+                className="h-8 w-8 rounded-full hover:bg-muted/80"
+              >
+                <Minimize2Icon className="h-4 w-4" />
+                <span className="sr-only">Minimize</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className="h-8 w-8 rounded-full hover:bg-muted/80"
+              >
+                <XIcon className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-4">

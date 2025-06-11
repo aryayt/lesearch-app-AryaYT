@@ -37,6 +37,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { usePanelStore } from "@/store/usePanelStore";
+import { useLayoutStore } from "@/store/layoutStore";
 import { useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -117,6 +118,7 @@ const data = [
 
 export function NavActions() {
   const { activePageId, setPanelVisibility, getPanelVisibility } = usePanelStore();
+  const { showExternalLink, setShowExternalLink } = useLayoutStore();
   const params = useParams();
 
   // Use either the active page ID from the store, or the URL param as fallback
@@ -144,7 +146,19 @@ export function NavActions() {
 
   return (
     <div className="flex items-center gap-2 text-sm">
-
+      {/* External Link Toggle */}
+      {!showExternalLink && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7 transition-colors"
+          title="Show External Link"
+          aria-label="Show External Link"
+          onClick={() => setShowExternalLink(true)}
+        >
+          <Link className="text-muted-foreground" size={18} />
+        </Button>
+      )}
 
       {/* Middle Panel Toggle with Columns3 icon */}
       <Button

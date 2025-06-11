@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-type MinimizeTriggered = "settings" | "documents";
+type MinimizeTriggered = "settings" | "documents" | "externalLink";
 type LayoutState = {
   minimize: boolean;
   minSidebarWidth: number;
@@ -10,6 +10,7 @@ type LayoutState = {
   minimizeTriggered?: MinimizeTriggered;
   isDragging: boolean;
   prevSidebarWidth: number;
+  showExternalLink: boolean;
 };
 
 type LayoutAction = {
@@ -18,7 +19,7 @@ type LayoutAction = {
   setSidebarWidth: (width: number) => void;
   setIsDragging: (isDragging: boolean) => void;
   resetSidebarWidth: () => void;
-
+  setShowExternalLink: (show: boolean) => void;
 };
 
 const DEFAULT_WIDTH = 240;
@@ -34,6 +35,7 @@ export const useLayoutStore = create<LayoutState & LayoutAction>()(
       prevSidebarWidth: DEFAULT_WIDTH,
       sidebarWidth: DEFAULT_WIDTH,
       isDragging: false,
+      showExternalLink: true,
 
       setMinimize: (v) => set({ minimize: v }),
       
@@ -41,7 +43,6 @@ export const useLayoutStore = create<LayoutState & LayoutAction>()(
         minimizeTriggered: v, 
         minimize: true 
       }),
-      
       
       setSidebarWidth: (width) => {
         const { minSidebarWidth, maxSidebarWidth } = get();
@@ -53,18 +54,20 @@ export const useLayoutStore = create<LayoutState & LayoutAction>()(
         set({ sidebarWidth: clampedWidth });
       },
       
-
       setIsDragging: (isDragging) => set({ isDragging }),
       
       resetSidebarWidth: () => set({ 
         sidebarWidth: DEFAULT_WIDTH,
         minimize: false 
       }),
+
+      setShowExternalLink: (show) => set({ showExternalLink: show }),
     }),
     {
       name: "layout-storage",
       partialize: (state) => ({
         minimize: state.minimize,
+        showExternalLink: state.showExternalLink,
       }),
       storage: createJSONStorage(() => localStorage),
     }

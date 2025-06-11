@@ -67,7 +67,7 @@ export const AnnotationHighlightLayer = ({
         >
           <button
             type="button"
-            style={{ cursor: "pointer", border: "none", background: "none", padding: 0, width: "100%" }}
+            style={{ cursor: "pointer", border: "none", background: "none", padding: 0, width: "100%", pointerEvents: "auto" }}
             onClick={() => onAnnotationClick?.(annotation)}
             onKeyUp={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {

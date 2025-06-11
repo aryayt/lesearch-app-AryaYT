@@ -1,10 +1,12 @@
 import clsx from "clsx";
 import type { HTMLProps } from "react";
+import { useState } from "react";
 
 import {
   type AnnotationLayerParams,
   useAnnotationLayer,
 } from "../../hooks/layers/useAnnotationLayer";
+import { ExternalLinkPopup } from "./external-link-popup";
 
 /**
  * AnnotationLayer renders PDF annotations like links, highlights, and form fields.
@@ -22,23 +24,42 @@ export const AnnotationLayer = ({
   style,
   ...props
 }: AnnotationLayerParams & HTMLProps<HTMLDivElement>) => {
+  const [externalLink, setExternalLink] = useState<string | null>(null);
   const { annotationLayerRef } = useAnnotationLayer({
     renderForms,
     externalLinksEnabled,
     jumpOptions,
+    onExternalLinkClick: (url) => setExternalLink(url),
   });
 
+  const handleClose = () => setExternalLink(null);
+  const handleNavigate = () => {
+    if (externalLink) {
+      window.open(externalLink, '_blank');
+      handleClose();
+    }
+  };
+
   return (
-    <div
-      className={clsx("annotationLayer", className)}
-      style={{
-        ...style,
-        position: "absolute",
-        top: 0,
-        left: 0,
-      }}
-      {...props}
-      ref={annotationLayerRef}
-    />
+    <>
+      <div
+        className={clsx("annotationLayer", className)}
+        style={{
+          ...style,
+          position: "absolute",
+          top: 0,
+          left: 0,
+        }}
+        {...props}
+        ref={annotationLayerRef}
+      />
+      {externalLink && (
+        <ExternalLinkPopup
+          url={externalLink}
+          onClose={handleClose}
+          onNavigate={handleNavigate}
+        />
+      )}
+    </>
   );
 };

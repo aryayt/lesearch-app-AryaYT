@@ -27,12 +27,18 @@ export interface AnnotationLayerParams {
    * @default { behavior: "smooth", align: "start" }
    */
   jumpOptions?: Parameters<ReturnType<typeof usePdfJump>['jumpToPage']>[1];
+
+  /**
+   * Callback when an external link is clicked
+   */
+  onExternalLinkClick?: (url: string) => void;
 }
 
 const defaultAnnotationLayerParams = {
   renderForms: true,
   externalLinksEnabled: true,
   jumpOptions: { behavior: "smooth", align: "start" },
+  onExternalLinkClick: (url: string) => { void url; },
 } satisfies Required<AnnotationLayerParams>;
 
 export const useAnnotationLayer = (params: AnnotationLayerParams) => {
@@ -139,8 +145,14 @@ export const useAnnotationLayer = (params: AnnotationLayerParams) => {
         if (!Number.isNaN(pageNumber)) {
           linkService.goToPage(pageNumber);
         }
+      } else if (href.startsWith('http')) {
+        // Handle external links
+        e.preventDefault();
+        if (mergedParams.onExternalLinkClick) {
+          mergedParams.onExternalLinkClick(href);
+        }
       }
-      // External links will be handled by browser
+      // Other links will be handled by browser
     };
     
     element.addEventListener('click', handleLinkClick as EventListener);
@@ -148,7 +160,7 @@ export const useAnnotationLayer = (params: AnnotationLayerParams) => {
     return () => {
       element.removeEventListener('click', handleLinkClick as EventListener);
     };
-  }, [linkService]);
+  }, [linkService, mergedParams.onExternalLinkClick, mergedParams]);
 
   useEffect(() => {
     if (!annotationLayerRef.current) {

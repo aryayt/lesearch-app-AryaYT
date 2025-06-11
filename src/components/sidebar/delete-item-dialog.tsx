@@ -8,7 +8,7 @@ import {
   DialogFooter,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { useStore } from "@/store/useCollectionStore";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -70,25 +70,32 @@ export function DeleteItemDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogTitle>Delete {itemName}</DialogTitle>
-        <DialogDescription>
-          Are you sure you want to delete {itemName}?
-          <br />
-          <span className="text-sm text-muted-foreground">
-            You can restore it from Trash later, or delete it permanently now.
-          </span>
-        </DialogDescription>
-        {/* <div className="bg-destructive/10 border border-destructive/30 rounded p-2 my-2 text-xs text-destructive">
-          <b>Warning:</b> Permanent delete cannot be undone and will remove this item forever.
-        </div> */}
-        <DialogFooter className="flex flex-col sm:flex-row justify-between items-center gap-4">
+      <DialogContent className="sm:max-w-[425px]">
+        <div className="flex items-start gap-4">
+          <div className="mt-1 bg-destructive/10 p-2 rounded-full">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+          </div>
+          <div className="space-y-2">
+            <DialogTitle className="text-lg font-semibold break-words">
+              Delete &ldquo;{itemName}&rdquo;
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Are you sure you want to delete this {itemType}?
+              <br />
+              <span className="text-xs">
+                You can restore it from Trash later, or delete it permanently now.
+              </span>
+            </DialogDescription>
+          </div>
+        </div>
+
+        <DialogFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
           {/* Less prominent permanent delete as link */}
           <Button
             variant="link"
             onClick={handleDeletePermanently}
             disabled={permLoading || trashLoading}
-            className="text-destructive"
+            className="text-destructive hover:text-destructive/90 px-0"
           >
             {permLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -107,7 +114,7 @@ export function DeleteItemDialog({
               Cancel
             </Button>
             <Button
-              variant="default"
+              variant="destructive"
               onClick={handleAddToTrash}
               disabled={trashLoading || permLoading}
               className="font-semibold"
@@ -117,7 +124,7 @@ export function DeleteItemDialog({
               ) : (
                 <>
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
+                  Move to Trash
                 </>
               )}
             </Button>

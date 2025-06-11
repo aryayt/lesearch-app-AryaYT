@@ -17,6 +17,10 @@ import EditorLayout from "../platejs/EditorLayout";
 import { SaveStatus } from "../sidebar/save-status";
 import { useDocStore } from "@/store/useDocStore";
 import type { Annotation } from "@/anaralabs/lector";
+import { toast } from "sonner";
+import { useUserStore } from "@/store/userStore";
+import GridLoader from "../loader/grid-loader";
+import { useTheme } from "next-themes";
 
 interface TabContentProps {
 	tab: Tab;
@@ -83,13 +87,18 @@ const MiddlePanel = () => {
 		removeTab,
 		middleActiveTabId,
 		setMiddleActiveTabId,
+		addTab,
 	} = usePanelStore();
-	const { setCreation } = useStore();
+	const { setCreation, createItem, deleteItem } = useStore();
 	const { pdfs } = usePdfStore();
 	const [isPdfImportOpen, setIsPdfImportOpen] = useState(false);
 	const { saveStatus } = useDocStore();
+	const { user } = useUserStore();
 	const tabs = getMiddlePanelTabs();
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+	const [isDragging, setIsDragging] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
+	const { resolvedTheme } = useTheme();
 
 	// Keep track of the previous middleActiveTabId
 	const prevMiddleActiveTabIdRef = React.useRef(middleActiveTabId);
@@ -141,17 +150,99 @@ const MiddlePanel = () => {
 		removeTab(tabId, "middle");
 	}, [removeTab]);
 
-	// Enhanced empty state with more clear actions
+	const handleDragOver = useCallback((e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setIsDragging(true);
+	}, []);
+
+	const handleDragLeave = useCallback((e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setIsDragging(false);
+	}, []);
+
+	const handleDrop = useCallback(async (e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setIsDragging(false);
+		setIsLoading(true);
+
+		const file = e.dataTransfer.files?.[0];
+		if (!file || !file.type.includes('pdf')) {
+			toast.error("Please drop a PDF file");
+			return;
+		}
+
+		if (!user) {
+			toast.error("User not found");
+			return;
+		}
+
+		try {
+			const fileName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+			const formData = new FormData();
+			formData.append("file", file);
+			formData.append("userId", user.id);
+
+			const id = await createItem(fileName, activePageId, "pdf");
+
+			if (!id) {
+				toast.error("Failed to create PDF");
+				return;
+			}
+
+			formData.append("id", id);
+
+			const response = await fetch("/api/documents/upload", {
+				method: "POST",
+				body: formData,
+			});
+
+			if (!response.ok) {
+				deleteItem(id, "pdf");
+				const errorData = await response.json();
+				throw new Error(errorData.error || "Failed to upload document");
+			}
+
+			// Add the PDF as a tab in the middle panel
+			await addTab(id, "pdf", "middle");
+			toast.success("PDF added successfully");
+
+		} catch (error) {
+			console.error("Error importing PDF:", error);
+			toast.error("Failed to import PDF");
+		}
+		finally {
+			setIsLoading(false);
+		}
+	}, [user, createItem, deleteItem, addTab, activePageId]);
+
+	if(isLoading) {
+		return (
+		<div className="flex flex-col w-full h-full items-center justify-center">
+			<GridLoader size="80" color={`${resolvedTheme==="light"?'#000000':'#ffffff'}`} />
+		</div>
+	)}
+
+	// Enhanced empty state with drag and drop
 	if (tabs.length === 0)
 		return (
 			<>
-				<div className="flex flex-col w-full h-full items-center justify-center bg-card/50">
+				<div 
+					className={`flex flex-col w-full h-full items-center justify-center bg-card/50 transition-colors ${
+						isDragging ? 'bg-primary/5' : ''
+					}`}
+					onDragOver={handleDragOver}
+					onDragLeave={handleDragLeave}
+					onDrop={handleDrop}
+				>
 					<div className="text-center max-w-sm space-y-4 p-6 rounded-lg border-2 border-dashed border-primary/20">
 						<h3 className="text-xl font-medium text-foreground">
 							This panel is empty
 						</h3>
 						<p className="text-sm text-muted-foreground">
-							Add content to organize your notes and documents side by side
+							Drag and drop a PDF file here or use the buttons below
 						</p>
 
 						<div className="flex flex-col gap-3 mt-4">

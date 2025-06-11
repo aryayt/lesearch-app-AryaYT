@@ -4,10 +4,17 @@ import type { Annotation } from '@/anaralabs/lector';
 
 interface Pdf {
   id: string;
+  name: string;
   highlights: Annotation[];
 }
 
 export type Status = "start" | "success" | "failed" | null;
+
+interface SelectedText {
+  text: string;
+  documentId: string;
+  documentName: string;
+}
 
 interface PdfState {
   pdfs: Record<string, Pdf>;
@@ -15,6 +22,7 @@ interface PdfState {
   updatingPdfs: Record<string, boolean>;
   errors: Record<string, string | null>;
   saveStatus: Record<string, Status>;
+  selectedText: SelectedText | null;
 }
 
 interface PdfStore extends PdfState {
@@ -29,6 +37,8 @@ interface PdfStore extends PdfState {
   clearPdf: (pdfId: string) => void;
   subscribeToPdfChanges: (pdfId: string) => void;
   unsubscribeFromPdfChanges: (pdfId: string) => void;
+  setSelectedText: (text: string, documentId: string, documentName: string) => void;
+  clearSelectedText: () => void;
 }
 
 const initialState: PdfState = {
@@ -37,6 +47,7 @@ const initialState: PdfState = {
   updatingPdfs: {},
   errors: {},
   saveStatus: {},
+  selectedText: null,
 };
 
 export const usePdfStore = create<PdfStore>((set, get) => ({
@@ -57,7 +68,7 @@ export const usePdfStore = create<PdfStore>((set, get) => ({
       const supabase = createClient();
       const { data, error } = await supabase
         .from('pdfs')
-        .select('id, highlights')
+        .select('id, name, highlights')
         .eq('id', pdfId)
         .single();
 
@@ -207,5 +218,20 @@ export const usePdfStore = create<PdfStore>((set, get) => ({
       delete newState.saveStatus[pdfId];
       return newState;
     });
+  },
+
+  setSelectedText: (text: string, documentId: string, documentName: string) => {
+    set((state) => ({
+      ...state,
+      selectedText: {
+        text,
+        documentId,
+        documentName,
+      },
+    }));
+  },
+
+  clearSelectedText: () => {
+    set({ selectedText: null });
   }
 }));

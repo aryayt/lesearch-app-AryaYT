@@ -14,13 +14,14 @@ import {
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
-import { ArrowUpIcon, Paperclip, PaperclipIcon, StopCircle, X } from 'lucide-react';
+import { ArrowUpIcon, CornerDownRightIcon, Paperclip, PaperclipIcon, StopCircle, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { SuggestedActions } from './suggested-actions';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import Image from 'next/image';
+import { usePdfStore } from '@/store/usePdfStore';
 
 type Attachment = {
   file: File;
@@ -54,6 +55,7 @@ function PureMultimodalInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { width } = useWindowSize();
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const { selectedText, clearSelectedText } = usePdfStore();
 
   const [localStorageInput, setLocalStorageInput] = useLocalStorage(
     'input',
@@ -155,9 +157,11 @@ function PureMultimodalInput({
 
   return (
     <div className="w-full flex flex-col gap-4">
-      {messages.length === 0 && attachments.length === 0 && (
+      {messages.length === 0 && attachments.length === 0 && !selectedText && (
         <SuggestedActions append={append} chatId={chatId} />
       )}
+
+
 
       <input
         type="file"
@@ -169,6 +173,25 @@ function PureMultimodalInput({
       />
 
       <div className='border border-input rounded-3xl p-2'>
+      {selectedText && (
+        <div className="flex flex-col w-full rounded-lg border border-muted bg-muted/40 px-4 py-2 mb-3 text-sm text-foreground/90 gap-2 overflow-hidden group">
+          <div className="flex items-center gap-3 min-w-0">
+            <CornerDownRightIcon className="size-4 text-muted-foreground flex-shrink-0" />
+            <span className="truncate font-medium" title={selectedText.text}>{selectedText.text}</span>
+            <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+              {selectedText.documentName}
+            </span>
+            <button
+              onClick={clearSelectedText}
+              className="ml-auto hover:bg-muted/80 rounded-full p-1.5 flex items-center justify-center transition-colors flex-shrink-0"
+              aria-label="Remove selected text"
+              type="button"
+            >
+              <X className="size-4 text-muted-foreground" />
+            </button>
+          </div>
+        </div>
+      )}
         {attachments.length > 0 && (
           <div
             data-testid="attachments-preview"

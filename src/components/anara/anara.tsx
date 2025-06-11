@@ -54,7 +54,7 @@ const PDFContent = ({
 }) => {
   const { getDimension } = useSelectionDimensions();
   const { jumpToHighlightRects } = usePdfJump();
-  const { pdfs, updatePdfHighlightsAsync } = usePdfStore();
+  const { pdfs, updatePdfHighlightsAsync, setSelectedText } = usePdfStore();
   const currentAnnotations = useMemo(() => pdfs[documentId]?.highlights || [], [pdfs, documentId]);
 
   const handleCreateAnnotation = useCallback((color: string) => {
@@ -132,8 +132,14 @@ const PDFContent = ({
   );
 
   const handleAskAI = useCallback(() => {
-    console.log("Ask AI");
-  }, []);
+    const selection = getDimension();
+    if (!selection || !selection.text) return;
+
+    // Get the document name from the current PDF
+    const currentPdf = pdfs[documentId];
+    const documentName = currentPdf?.name || 'Unknown Document';
+    setSelectedText(selection.text, documentId, documentName);
+  }, [getDimension, documentId, setSelectedText, pdfs]);
 
   return (
     <Pages
@@ -175,7 +181,7 @@ export const AnaraViewer = ({
 }) => {
   const [focusedAnnotationId, setFocusedAnnotationId] = useState<string>();
   const [externalLink, setExternalLink] = useState<string | null>(null);
-  const { getPdfAsync, pdfs, loadingPdfs, clearPdf } = usePdfStore();
+  const { getPdfAsync, pdfs, loadingPdfs, clearPdf,  clearSelectedText } = usePdfStore();
   const { resolvedTheme } = useTheme();
   const pdf = pdfs[pdfId];
   const isLoading = loadingPdfs[pdfId];
@@ -211,6 +217,13 @@ export const AnaraViewer = ({
 
   // Use highlights from store if available, otherwise use props
   const currentHighlights = pdf?.highlights || pdfHighlights;
+
+  // Clear selected text when component unmounts
+  useEffect(() => {
+    return () => {
+      clearSelectedText();
+    };
+  }, [clearSelectedText]);
 
   if (isLoading && !pdf) {
     return (

@@ -1,14 +1,17 @@
-import React, { useState } from 'react'
+import React from 'react'
 import RenderChatHistory from '../chat/chat-history';
 import RenderChat from '../chat/render-chat';
 import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from '../ui/button';
 import { History } from 'lucide-react';
-
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 const RightPanel = () => {
-  const [showHistory, setShowHistory] = useState(false);
-
+  console.log('RightPanel');
   return (
     <Card className="flex flex-col h-full w-full gap-1">
       <CardHeader className="border-b h-8 bg-background/80 sticky top-0 z-10">
@@ -16,22 +19,28 @@ const RightPanel = () => {
           <span className="font-semibold text-lg text-foreground">
             Lesearch Assistant
           </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowHistory(!showHistory)}
-            className="ml-auto"
-            aria-label="Chat History"
-          >
-            <History size={20} className="text-muted-foreground" />
-          </Button>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="ml-auto"
+                aria-label="Chat History"
+              >
+                <History size={20} className="text-muted-foreground" />
+              </Button>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80 p-0" align="end">
+              <RenderChatHistory />
+            </HoverCardContent>
+          </HoverCard>
         </div>
       </CardHeader>
 
       {/* Main Content Area */}
       <div className="flex flex-col h-full">
-        {showHistory ? <RenderChatHistory/>: <RenderChat/>}
+        <RenderChat />
       </div>
     </Card>
   );

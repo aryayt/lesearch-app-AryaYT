@@ -7,7 +7,7 @@ export const DEFAULT_CHAT_MODEL: string = 'chat-model';
 
 export default  function RenderChat() {
     const id = generateUUID();
-  
+  console.log('RenderChat');
     return (
       <>
         <Chat

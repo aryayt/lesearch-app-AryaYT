@@ -46,8 +46,6 @@ export function Chat({
   });
 
 
-  console.log('AI messages', messages);
-
   return (
     <>
       <Messages

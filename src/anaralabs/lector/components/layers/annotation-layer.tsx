@@ -5,6 +5,7 @@ import {
   type AnnotationLayerParams,
   useAnnotationLayer,
 } from "../../hooks/layers/useAnnotationLayer";
+import { useLayoutStore } from "@/store/layoutStore";
 
 /**
  * AnnotationLayer renders PDF annotations like links, highlights, and form fields.
@@ -26,11 +27,16 @@ export const AnnotationLayer = ({
 }: AnnotationLayerParams & HTMLProps<HTMLDivElement> & {
   onExternalLinkClick?: (url: string) => void;
 }) => {
+  const { setShowExternalLink } = useLayoutStore();
+
   const { annotationLayerRef } = useAnnotationLayer({
     renderForms,
     externalLinksEnabled,
     jumpOptions,
-    onExternalLinkClick,
+    onExternalLinkClick: (url) => {
+      setShowExternalLink(true); // Show the popup when a link is clicked
+      onExternalLinkClick?.(url);
+    },
   });
 
   return (

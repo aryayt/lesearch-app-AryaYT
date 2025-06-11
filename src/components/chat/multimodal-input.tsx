@@ -10,6 +10,7 @@ import {
   useCallback,
   type ChangeEvent,
   memo,
+  type DragEvent,
 } from 'react';
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
@@ -55,7 +56,49 @@ function PureMultimodalInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { width } = useWindowSize();
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
   const { selectedText, clearSelectedText } = usePdfStore();
+
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+  const ALLOWED_FILE_TYPES = [
+    'image/*',
+    'application/pdf',
+    'text/plain',
+    'text/markdown',
+    'text/x-markdown',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/rtf',
+    'text/csv',
+    'application/json',
+  ];
+
+  const ALLOWED_EXTENSIONS = [
+    '.md',
+    '.markdown',
+    '.txt',
+    '.pdf',
+    '.doc',
+    '.docx',
+    '.xls',
+    '.xlsx',
+    '.ppt',
+    '.pptx',
+    '.rtf',
+    '.csv',
+    '.json',
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.gif',
+    '.bmp',
+    '.webp',
+    '.svg'
+  ];
 
   const [localStorageInput, setLocalStorageInput] = useLocalStorage(
     'input',
@@ -100,21 +143,55 @@ function PureMultimodalInput({
     adjustHeight();
   };
 
+  const validateFile = (file: File) => {
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`File ${file.name} is too large. Maximum file size is 50MB.`);
+      return false;
+    }
+
+    // Check file extension
+    const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+    const hasValidExtension = ALLOWED_EXTENSIONS.includes(extension || '');
+
+    // Check MIME type
+    const isAllowedType = ALLOWED_FILE_TYPES.some(type => {
+      if (type.endsWith('/*')) {
+        return file.type.startsWith(type.replace('/*', ''));
+      }
+      return file.type === type;
+    });
+
+    // For markdown files, we need to be more lenient as browsers might not set the correct MIME type
+    const isMarkdown = extension === '.md' || extension === '.markdown';
+
+    if (!isAllowedType && !isMarkdown && !hasValidExtension) {
+      toast.error(`File type ${file.type} is not supported. Please upload images, documents (PDF, DOC, DOCX, MD, TXT, RTF), spreadsheets (XLS, XLSX), presentations (PPT, PPTX), or data files (CSV, JSON).`);
+      return false;
+    }
+
+    return true;
+  };
+
+  const processFiles = async (files: File[]) => {
+    const validFiles = files.filter(validateFile);
+    
+    const newAttachments = await Promise.all(
+      validFiles.map(async (file) => {
+        let preview;
+        if (file.type.startsWith('image/')) {
+          preview = URL.createObjectURL(file);
+        }
+        return { file, preview };
+      })
+    );
+
+    setAttachments((current) => [...current, ...newAttachments]);
+  };
+
   const handleFileChange = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(event.target.files || []);
-      
-      const newAttachments = await Promise.all(
-        files.map(async (file) => {
-          let preview;
-          if (file.type.startsWith('image/')) {
-            preview = URL.createObjectURL(file);
-          }
-          return { file, preview };
-        })
-      );
-
-      setAttachments((current) => [...current, ...newAttachments]);
+      await processFiles(files);
     },
     [],
   );
@@ -155,43 +232,87 @@ function PureMultimodalInput({
     width,
   ]);
 
+  const handleDragEnter = (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length === 0) return;
+
+    await processFiles(files);
+  };
+
   return (
     <div className="w-full flex flex-col gap-4">
       {messages.length === 0 && attachments.length === 0 && !selectedText && (
         <SuggestedActions append={append} chatId={chatId} />
       )}
 
-
-
       <input
         type="file"
         className="hidden"
         ref={fileInputRef}
         multiple
+        accept={ALLOWED_FILE_TYPES.join(',')}
         onChange={handleFileChange}
         tabIndex={-1}
       />
 
-      <div className='border border-input rounded-3xl p-2'>
-      {selectedText && (
-        <div className="flex flex-col w-full rounded-lg border border-muted bg-muted/40 px-4 py-2 mb-3 text-sm text-foreground/90 gap-2 overflow-hidden group">
-          <div className="flex items-center gap-3 min-w-0">
-            <CornerDownRightIcon className="size-4 text-muted-foreground flex-shrink-0" />
-            <span className="truncate font-medium" title={selectedText.text}>{selectedText.text}</span>
-            <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-              {selectedText.documentName}
-            </span>
-            <button
-              onClick={clearSelectedText}
-              className="ml-auto hover:bg-muted/80 rounded-full p-1.5 flex items-center justify-center transition-colors flex-shrink-0"
-              aria-label="Remove selected text"
-              type="button"
-            >
-              <X className="size-4 text-muted-foreground" />
-            </button>
+      <div 
+        className={cx(
+          'border border-input rounded-3xl p-2',
+          isDragging && 'border-primary bg-muted/50'
+        )}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        {isDragging && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-3xl pointer-events-none">
+            <div className="text-center">
+              <PaperclipIcon className="size-8 mx-auto mb-2" />
+              <p className="text-sm font-medium">Drop files here</p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+        {selectedText && (
+          <div className="flex flex-col w-full rounded-lg border border-muted bg-muted/40 px-4 py-2 mb-3 text-sm text-foreground/90 gap-2 overflow-hidden group">
+            <div className="flex items-center gap-3 min-w-0">
+              <CornerDownRightIcon className="size-4 text-muted-foreground flex-shrink-0" />
+              <span className="truncate font-medium" title={selectedText.text}>{selectedText.text}</span>
+              <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                {selectedText.documentName}
+              </span>
+              <button
+                onClick={clearSelectedText}
+                className="ml-auto hover:bg-muted/80 rounded-full p-1.5 flex items-center justify-center transition-colors flex-shrink-0"
+                aria-label="Remove selected text"
+                type="button"
+              >
+                <X className="size-4 text-muted-foreground" />
+              </button>
+            </div>
+          </div>
+        )}
         {attachments.length > 0 && (
           <div
             data-testid="attachments-preview"

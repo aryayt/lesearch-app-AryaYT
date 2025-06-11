@@ -130,6 +130,9 @@ const MiddlePanel = () => {
 		}, 0);
 	}, [activePageId, setCreation]);
 
+	const handleOpenPdfImport = useCallback(() => {
+		setIsPdfImportOpen(true);
+	}, []);
 	const handleClosePdfImport = useCallback(() => {
 		setIsPdfImportOpen(false);
 	}, []);
@@ -156,7 +159,7 @@ const MiddlePanel = () => {
 								variant="default"
 								size="lg"
 								className="gap-2 w-full justify-center"
-								onClick={handleAddPdf}
+								onClick={handleOpenPdfImport}
 							>
 								<FileText size={16} />
 								Open PDF Document

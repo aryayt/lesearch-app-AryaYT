@@ -181,7 +181,7 @@ export const AnaraViewer = ({
 }) => {
   const [focusedAnnotationId, setFocusedAnnotationId] = useState<string>();
   const [externalLink, setExternalLink] = useState<string | null>(null);
-  const { getPdfAsync, pdfs, loadingPdfs, clearPdf,  clearSelectedText } = usePdfStore();
+  const { getPdfAsync, pdfs, loadingPdfs, clearPdf } = usePdfStore();
   const { resolvedTheme } = useTheme();
   const pdf = pdfs[pdfId];
   const isLoading = loadingPdfs[pdfId];
@@ -218,12 +218,6 @@ export const AnaraViewer = ({
   // Use highlights from store if available, otherwise use props
   const currentHighlights = pdf?.highlights || pdfHighlights;
 
-  // Clear selected text when component unmounts
-  useEffect(() => {
-    return () => {
-      clearSelectedText();
-    };
-  }, [clearSelectedText]);
 
   if (isLoading && !pdf) {
     return (

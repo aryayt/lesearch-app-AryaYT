@@ -28,6 +28,7 @@ import {
   type AnnotationTooltipProps,
 } from "./annotations";
 import { usePdfStore } from '@/store/usePdfStore';
+import { ExternalLinkPopup } from "@/anaralabs/lector/components/layers/external-link-popup";
 
 
 
@@ -46,7 +47,11 @@ const PDFContent = ({
   focusedAnnotationId,
   onAnnotationClick,
   documentId,
-}: PDFContentProps & { documentId: string }) => {
+  onExternalLinkClick,
+}: PDFContentProps & { 
+  documentId: string;
+  onExternalLinkClick: (url: string) => void;
+}) => {
   const { getDimension } = useSelectionDimensions();
   const { jumpToHighlightRects } = usePdfJump();
   const { pdfs, updatePdfHighlightsAsync } = usePdfStore();
@@ -138,7 +143,7 @@ const PDFContent = ({
       <Page>
         <CanvasLayer />
         <TextLayer />
-        <AnnotationLayer />
+        <AnnotationLayer onExternalLinkClick={onExternalLinkClick} />
         <AnnotationHighlightLayer
           className="dark:opacity-40 mix-blend-multiply transition-all duration-200 cursor-pointer pointer-events-none"
           focusedAnnotationId={focusedAnnotationId}
@@ -169,6 +174,7 @@ export const AnaraViewer = ({
   pdfHighlights: Annotation[];
 }) => {
   const [focusedAnnotationId, setFocusedAnnotationId] = useState<string>();
+  const [externalLink, setExternalLink] = useState<string | null>(null);
   const { getPdfAsync, pdfs, loadingPdfs, clearPdf } = usePdfStore();
   const { resolvedTheme } = useTheme();
   const pdf = pdfs[pdfId];
@@ -187,6 +193,21 @@ export const AnaraViewer = ({
   const handleAnnotationClick = useCallback((annotation: Annotation | null) => {
     setFocusedAnnotationId(annotation?.id);
   }, []);
+
+  const handleExternalLinkClick = useCallback((url: string) => {
+    setExternalLink(url);
+  }, []);
+
+  const handleCloseExternalLink = useCallback(() => {
+    setExternalLink(null);
+  }, []);
+
+  const handleNavigateExternalLink = useCallback(() => {
+    if (externalLink) {
+      window.open(externalLink, '_blank');
+      handleCloseExternalLink();
+    }
+  }, [externalLink, handleCloseExternalLink]);
 
   // Use highlights from store if available, otherwise use props
   const currentHighlights = pdf?.highlights || pdfHighlights;
@@ -217,8 +238,16 @@ export const AnaraViewer = ({
           focusedAnnotationId={focusedAnnotationId}
           onAnnotationClick={handleAnnotationClick}
           documentId={pdfId}
+          onExternalLinkClick={handleExternalLinkClick}
         />
       </Root>
+      {externalLink && (
+        <ExternalLinkPopup
+          url={externalLink}
+          onClose={handleCloseExternalLink}
+          onNavigate={handleNavigateExternalLink}
+        />
+      )}
     </div>
   );
 };

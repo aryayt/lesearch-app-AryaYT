@@ -1,12 +1,10 @@
 import clsx from "clsx";
 import type { HTMLProps } from "react";
-import { useState } from "react";
 
 import {
   type AnnotationLayerParams,
   useAnnotationLayer,
 } from "../../hooks/layers/useAnnotationLayer";
-import { ExternalLinkPopup } from "./external-link-popup";
 
 /**
  * AnnotationLayer renders PDF annotations like links, highlights, and form fields.
@@ -15,51 +13,37 @@ import { ExternalLinkPopup } from "./external-link-popup";
  * @param externalLinksEnabled - Whether external links should be clickable. When false, external links won't open.
  * @param jumpOptions - Options for page navigation behavior when clicking internal links. 
  *                      See `usePdfJump` hook for available options.
+ * @param onExternalLinkClick - Callback when an external link is clicked
  */
 export const AnnotationLayer = ({
   renderForms = true,
   externalLinksEnabled = true,
   jumpOptions = { behavior: "smooth", align: "start" },
+  onExternalLinkClick,
   className,
   style,
   ...props
-}: AnnotationLayerParams & HTMLProps<HTMLDivElement>) => {
-  const [externalLink, setExternalLink] = useState<string | null>(null);
+}: AnnotationLayerParams & HTMLProps<HTMLDivElement> & {
+  onExternalLinkClick?: (url: string) => void;
+}) => {
   const { annotationLayerRef } = useAnnotationLayer({
     renderForms,
     externalLinksEnabled,
     jumpOptions,
-    onExternalLinkClick: (url) => setExternalLink(url),
+    onExternalLinkClick,
   });
 
-  const handleClose = () => setExternalLink(null);
-  const handleNavigate = () => {
-    if (externalLink) {
-      window.open(externalLink, '_blank');
-      handleClose();
-    }
-  };
-
   return (
-    <>
-      <div
-        className={clsx("annotationLayer", className)}
-        style={{
-          ...style,
-          position: "absolute",
-          top: 0,
-          left: 0,
-        }}
-        {...props}
-        ref={annotationLayerRef}
-      />
-      {externalLink && (
-        <ExternalLinkPopup
-          url={externalLink}
-          onClose={handleClose}
-          onNavigate={handleNavigate}
-        />
-      )}
-    </>
+    <div
+      className={clsx("annotationLayer", className)}
+      style={{
+        ...style,
+        position: "absolute",
+        top: 0,
+        left: 0,
+      }}
+      {...props}
+      ref={annotationLayerRef}
+    />
   );
 };

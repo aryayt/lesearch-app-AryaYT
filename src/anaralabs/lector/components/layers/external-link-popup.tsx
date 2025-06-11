@@ -1,3 +1,8 @@
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { XIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+
 interface ExternalLinkPopupProps {
   url: string;
   onClose: () => void;
@@ -5,50 +10,168 @@ interface ExternalLinkPopupProps {
 }
 
 export const ExternalLinkPopup = ({ url, onClose, onNavigate }: ExternalLinkPopupProps) => {
+  const popupRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [popupPosition, setPopupPosition] = useState({
+    top: window.innerHeight / 2 - 100,
+    left: window.innerWidth / 2 - 200,
+  });
+
+  // Adjust position to keep popup within window bounds
+  const adjustPosition = () => {
+    if (!popupRef.current) return;
+
+    const rect = popupRef.current.getBoundingClientRect();
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+
+    const newPosition = { ...popupPosition };
+
+    // Adjust horizontally if needed
+    if (popupPosition.left + rect.width > windowWidth) {
+      newPosition.left = Math.max(0, windowWidth - rect.width);
+    }
+
+    // Adjust vertically if needed
+    if (popupPosition.top + rect.height > windowHeight) {
+      newPosition.top = Math.max(0, windowHeight - rect.height);
+    }
+
+    setPopupPosition(newPosition);
+  };
+
+  // Handle initial positioning and window resize
+  useEffect(() => {
+    adjustPosition();
+
+    const handleResize = () => {
+      adjustPosition();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []); // Empty dependency array since we only want this to run on mount
+
+  // Handle drag event handlers
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newPosition = {
+        left: e.clientX - dragOffset.x,
+        top: e.clientY - dragOffset.y,
+      };
+
+      // Keep within window bounds while dragging
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+      const rect = popupRef.current?.getBoundingClientRect();
+
+      if (rect) {
+        if (newPosition.left < 0) newPosition.left = 0;
+        if (newPosition.top < 0) newPosition.top = 0;
+        if (newPosition.left + rect.width > windowWidth) {
+          newPosition.left = windowWidth - rect.width;
+        }
+        if (newPosition.top + rect.height > windowHeight) {
+          newPosition.top = windowHeight - rect.height;
+        }
+      }
+
+      setPopupPosition(newPosition);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging, dragOffset]);
+
+  // Handle drag start
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const isHeader = target.closest("h3") !== null || target.classList.contains("drag-handle");
+
+    if (!isHeader) return;
+
+    const rect = popupRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    e.preventDefault();
+
+    setDragOffset({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+
+    setIsDragging(true);
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-popover rounded-lg border shadow-md p-4 min-w-[300px] max-w-[500px]">
-        <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
-          <h3 className="text-lg font-semibold text-foreground">External Link</h3>
-          <button
-            onClick={onClose}
-            className="flex items-center justify-center h-6 w-6 rounded-full hover:bg-muted/80 transition-colors"
+    <div
+      ref={popupRef}
+      className="fixed bg-card rounded-lg shadow-lg z-50"
+      style={{
+        position: "fixed",
+        top: popupPosition.top,
+        left: popupPosition.left,
+        transform: isDragging ? "scale(1.02)" : "scale(1)",
+        transition: "transform 0.2s",
+        transformOrigin: "center",
+        animation: "0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        userSelect: isDragging ? "none" : "auto",
+        width: "400px",
+      }}
+    >
+      <Card className="border-0 shadow-none">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
+          <div
+            className={`flex items-center justify-between w-full border-b border-border ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+            onMouseDown={handleMouseDown}
           >
-            <svg
-              className="h-4 w-4 text-foreground/70"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            <h3 className="drag-handle flex-1 px-4 py-2 text-lg font-semibold">
+              External Link
+            </h3>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="h-8 w-8 rounded-full hover:bg-muted/80"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <div className="mb-4 max-h-64 overflow-y-auto p-3 border rounded-md bg-muted/50 dark:bg-muted/20 text-foreground break-all">
-          {url}
-        </div>
-
-        <div className="flex justify-end gap-2.5">
-          <button
+              <XIcon className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="p-3 rounded-md bg-muted/50 dark:bg-muted/20 text-foreground break-all text-sm">
+            {url}
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-end gap-2 p-4 pt-0">
+          <Button
+            variant="outline"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium border rounded-md hover:bg-muted/80 transition-colors"
+            className="h-9"
           >
-            Close
-          </button>
-          <button
+            Cancel
+          </Button>
+          <Button
             onClick={onNavigate}
-            className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="h-9"
           >
             Go to Link
-          </button>
-        </div>
-      </div>
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 };

@@ -1,124 +1,141 @@
 import React from 'react'
-import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from '../ui/scroll-area';
+import { useChatStore } from '@/store/useChatStore';
 import { cn } from '@/lib/utils';
+import useSWRInfinite from 'swr/infinite';
+import { useUserStore } from '@/store/userStore';
+import { usePanelStore } from '@/store/usePanelStore';
+import { motion } from 'framer-motion';
+import { getChatHistoryPaginationKey, type ChatHistory } from '@/app/(chat)/chatActions';
 
-interface Message {
-  id: number;
-  sender: "user" | "bot";
-  text: string;
-  timestamp: string;
-}
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
-interface ChatHistory {
-  id: string;
-  title: string;
-  messages: Message[];
-  lastUpdated: string;
-}
+const fetcher = (url: string) => fetch(url).then((res) => {
+  if (!res.ok) {
+    throw new Error('Failed to fetch chat history');
+  }
+  return res.json();
+});
 
-// Dummy chat history data
-const dummyChatHistory: ChatHistory[] = [
+const RenderChatHistory = () => {
+  const setActiveChatId = useChatStore((state) => state.setActiveChatId);
+  const activeChatId = useChatStore((state) => state.getActiveChatId());
+  const user = useUserStore((state) => state.user);
+  const { activePageId } = usePanelStore();
+
+ const {
+    data: paginatedChatHistories,
+    setSize,
+    isValidating,
+    isLoading,
+    // mutate,
+    error,
+  } = useSWRInfinite<ChatHistory>(
+    (pageIndex, previousPageData) => 
+      getChatHistoryPaginationKey(pageIndex, previousPageData, user?.id || '', activePageId || ''),
+    fetcher,
     {
-      id: "1",
-      title: "Discussion about Machine Learning Paper",
-      messages: [
-        {
-          id: 1,
-          sender: "user",
-          text: "What are the key findings?",
-          timestamp: "2024-03-15T10:00:00Z",
-        },
-        {
-          id: 2,
-          sender: "bot",
-          text: "The paper presents three main findings...",
-          timestamp: "2024-03-15T10:00:05Z",
-        },
-        {
-          id: 3,
-          sender: "user",
-          text: "Can you explain the methodology?",
-          timestamp: "2024-03-15T10:01:00Z",
-        },
-        {
-          id: 4,
-          sender: "bot",
-          text: "The researchers used a novel approach combining...",
-          timestamp: "2024-03-15T10:01:10Z",
-        },
-      ],
-      lastUpdated: "2024-03-15T10:01:10Z",
-    },
-    {
-      id: "2",
-      title: "Analysis of Neural Networks",
-      messages: [
-        {
-          id: 1,
-          sender: "user",
-          text: "How does this compare to previous work?",
-          timestamp: "2024-03-14T15:30:00Z",
-        },
-        {
-          id: 2,
-          sender: "bot",
-          text: "This work improves upon previous approaches by...",
-          timestamp: "2024-03-14T15:30:08Z",
-        },
-      ],
-      lastUpdated: "2024-03-14T15:30:08Z",
-    },
-  ];
+      fallbackData: [],
+      revalidateOnFocus: false,
+    }
+  );
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const hasReachedEnd = paginatedChatHistories
+    ? paginatedChatHistories.some((page) => !page.hasMore)
+    : false;
 
-  
-  const RenderChatHistory = () => {
+  const hasEmptyChatHistory = paginatedChatHistories
+    ? paginatedChatHistories.every((page) => page.chats.length === 0)
+    : false;
+
+  if (isLoading) {
     return (
-      <ScrollArea className="h-full">
+      <div className="min-h-[200px] h-full flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+        <div className="flex items-center justify-center h-full text-muted-foreground">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+            </div>          
+            <span className="text-sm text-muted-foreground">Loading history...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-[200px] h-full flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2 text-center px-4">
+          <span className="text-muted-foreground text-sm">Failed to load chat history</span>
+          <span className="text-xs text-muted-foreground/70">Please try again later</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasEmptyChatHistory) {
+    return (
+      <div className="min-h-[200px] h-full flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2 text-center px-4">
+          <span className="text-muted-foreground text-sm">No chat history found</span>
+          <span className="text-xs text-muted-foreground/70">Start a new chat to see it here</span>
+        </div>
+      </div>
+    );
+  }
+
+  const allChats = paginatedChatHistories?.flatMap((page) => page.chats) ?? [];
+
+  return (
+    <ScrollArea className="h-full min-h-[200px] max-h-[400px]">
       <div className="divide-y divide-border">
-        {dummyChatHistory.map((chat) => (
-          <Card
+        {allChats.map((chat) => (
+          <div
             key={chat.id}
-            className="border-0 rounded-none hover:bg-accent/50 cursor-pointer transition-colors"
+            className={cn(
+              "px-3 py-2 hover:bg-accent/50 cursor-pointer transition-colors",
+              activeChatId === chat.id && "bg-accent/50"
+            )}
+            onClick={() => setActiveChatId(chat.id)}
           >
-            <CardContent>
-              <h3 className="font-medium text-foreground mb-1">{chat.title}</h3>
-              <div className="space-y-2 mb-2">
-                {chat.messages.slice(-2).map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={cn(
-                      "text-sm",
-                      msg.sender === "user"
-                        ? "text-muted-foreground"
-                        : "text-primary"
-                    )}
-                  >
-                    <span className="font-medium">
-                      {msg.sender === "user" ? "You: " : "AI: "}
-                    </span>
-                    {msg.text}
-                  </div>
-                ))}
-              </div>
+            <div className="flex flex-col gap-0.5">
+              <h3 className="font-medium text-foreground line-clamp-1">{chat.title}</h3>
               <span className="text-xs text-muted-foreground">
-                {formatDate(chat.lastUpdated)}
+                {formatDate(chat.updated_at)}
               </span>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
+
+      <motion.div
+        onViewportEnter={() => {
+          if (!isValidating && !hasReachedEnd) {
+            setSize((size) => size + 1);
+          }
+        }}
+      />
+
+      {hasReachedEnd ? (
+        <div className="px-2 py-4 text-center text-xs text-muted-foreground">
+          You have reached the end of your chat history.
+        </div>
+      ) : (
+        <div className="px-2 py-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+            </div>
+          <span>Loading more chats...</span>
+        </div>
+      )}
     </ScrollArea>
-    )
-  }
-  
-  export default RenderChatHistory
+  )
+}
+
+export default RenderChatHistory

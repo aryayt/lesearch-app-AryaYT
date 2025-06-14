@@ -19,7 +19,6 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
     "What does this term mean?",
   ];
 
-  console.log(chatId);
 
   return (
     <div

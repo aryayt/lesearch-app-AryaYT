@@ -4,7 +4,7 @@ import type { UIMessage } from 'ai';
 import cx from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useState } from 'react';
-import type { Vote } from '@/lib/types/chat';
+import type { Vote } from '@/types/chat';
 import { PencilIcon, SparklesIcon } from 'lucide-react';
 import { Markdown } from './markdown';
 import equal from 'fast-deep-equal';
@@ -31,7 +31,6 @@ const PurePreviewMessage = ({
   isReadonly: boolean;
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
-  console.log(chatId,vote, isLoading, reload);
   return (
     <AnimatePresence>
       <motion.div

@@ -106,6 +106,18 @@ function PureMultimodalInput({
   );
 
   useEffect(() => {
+    if (!chatId) {
+      setInput('');
+      setAttachments([]);
+      setLocalStorageInput('');
+      if (textareaRef.current) {
+        textareaRef.current.value = '';
+        resetHeight();
+      }
+    }
+  }, [chatId, setInput, setLocalStorageInput]);
+
+  useEffect(() => {
     if (textareaRef.current) {
       const domValue = textareaRef.current.value;
       // Prefer DOM value over localStorage to handle hydration
@@ -208,6 +220,8 @@ function PureMultimodalInput({
   };
 
   const submitForm = useCallback(() => {
+    // Set active chat ID immediately when submitting
+    // setActiveChatId(chatId);
 
     handleSubmit(undefined, {
       experimental_attachments: attachments.map((attachment) => ({
@@ -259,6 +273,7 @@ function PureMultimodalInput({
 
     await processFiles(files);
   };
+
 
   return (
     <div className="w-full flex flex-col gap-4">
@@ -439,6 +454,8 @@ export const MultimodalInput = memo(
   (prevProps, nextProps) => {
     if (prevProps.input !== nextProps.input) return false;
     if (prevProps.status !== nextProps.status) return false;
+    if (prevProps.messages.length !== nextProps.messages.length) return false;
+    if (prevProps.chatId !== nextProps.chatId) return false;
     return true;
   },
 );

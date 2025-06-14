@@ -1,12 +1,14 @@
-import { generateUUID } from '@/lib/utils';
+import { generateUUID, getChatHistoryPaginationKey } from '@/app/(chat)/chatActions';
 import { useChat } from '@ai-sdk/react';
 import type {  UIMessage } from 'ai';
 import { toast } from 'sonner';
 import { Messages } from './messages';
 import { MultimodalInput } from './multimodal-input';
-
-export type VisibilityType = 'private' | 'public';
-
+import { usePanelStore } from '@/store/usePanelStore';
+import { useSWRConfig } from 'swr';
+import { unstable_serialize } from 'swr/infinite';
+import { useUserStore } from '@/store/userStore';
+import { useEffect } from 'react';
 
 export function Chat({
   id,
@@ -19,6 +21,9 @@ export function Chat({
   selectedChatModel: string;
   isReadonly: boolean;
 }) {
+  const { mutate } = useSWRConfig();
+  const user = useUserStore((state) => state.user);
+  const {activePageId} = usePanelStore();
 
   const {
     messages,
@@ -32,19 +37,27 @@ export function Chat({
     reload,
   } = useChat({
     id,
-    body: { id, selectedChatModel: selectedChatModel },
+    body: { id, selectedChatModel: selectedChatModel, documentId: activePageId },
     initialMessages,
     experimental_throttle: 100,
     sendExtraMessageFields: true,
     generateId: generateUUID,
-    onFinish: () => {
-      toast.success('Message generated')
+    onFinish: async () => {
+      mutate(`/api/chat/${id}`);
+      mutate(unstable_serialize(() => getChatHistoryPaginationKey(0, null, user?.id || '', activePageId || '')));
     },
     onError: () => {
       toast.error('An error occurred, please try again!');
     },
   });
 
+
+  // Ensure messages are in sync with initialMessages when they change
+  useEffect(() => {
+    if (id && initialMessages.length > 0) {
+      setMessages(initialMessages);
+    }
+  }, [id, initialMessages, setMessages]);
 
   return (
     <>

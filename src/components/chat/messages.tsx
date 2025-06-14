@@ -3,7 +3,7 @@ import type { UIMessage } from 'ai';
 import { useScrollToBottom } from './use-scroll-to-bottom';
 import { Greeting } from './greeting';
 import { memo } from 'react';
-import type { Vote } from '@/lib/types/chat';
+import type { Vote } from '@/types/chat';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { PreviewMessage, ThinkingMessage } from './message';

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { XIcon, Minimize2Icon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useLayoutStore } from "@/store/layoutStore";
+import { useEffectOnce } from "react-use";
 
 interface ExternalLinkPopupProps {
   url: string;
@@ -44,7 +45,7 @@ export const ExternalLinkPopup = ({ url, onClose, onNavigate }: ExternalLinkPopu
   };
 
   // Handle initial positioning and window resize
-  useEffect(() => {
+  useEffectOnce(() => {
     adjustPosition();
 
     const handleResize = () => {
@@ -53,7 +54,7 @@ export const ExternalLinkPopup = ({ url, onClose, onNavigate }: ExternalLinkPopu
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []); // Empty dependency array since we only want this to run on mount
+  }); // Empty dependency array since we only want this to run on mount
 
   // Handle drag event handlers
   useEffect(() => {

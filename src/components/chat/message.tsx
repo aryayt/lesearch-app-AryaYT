@@ -5,12 +5,10 @@ import cx from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useState } from 'react';
 import type { Vote } from '@/types/chat';
-import { PencilIcon, SparklesIcon } from 'lucide-react';
+import { SparklesIcon } from 'lucide-react';
 import { Markdown } from './markdown';
 import equal from 'fast-deep-equal';
 import { cn } from '@/lib/utils';
-import { Button } from '../ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { UseChatHelpers } from '@ai-sdk/react';
 
 const PurePreviewMessage = ({
@@ -66,24 +64,6 @@ const PurePreviewMessage = ({
                 if (mode === 'view') {
                   return (
                     <div key={key} className="flex flex-row gap-2 items-start">
-                      {message.role === 'user' && !isReadonly && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              data-testid="message-edit-button"
-                              variant="ghost"
-                              className="px-2 h-fit rounded-full text-muted-foreground opacity-0 group-hover/message:opacity-100"
-                              onClick={() => {
-                                setMode('edit');
-                              }}
-                            >
-                              <PencilIcon />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Edit message</TooltipContent>
-                        </Tooltip>
-                      )}
-
                       <div
                         data-testid="message-content"
                         className={cn('flex flex-col gap-4', {

@@ -4,7 +4,7 @@ import { useChatStore } from '@/store/useChatStore';
 import useSWR from 'swr';
 import { usePanelStore } from '@/store/usePanelStore';
 
-export const DEFAULT_CHAT_MODEL: string = 'chat-model';
+export const DEFAULT_CHAT_MODEL: string = 'gemini-2.0-flash';
 
 const fetcher = (url: string) => fetch(url).then((res) => {
   if (!res.ok) {

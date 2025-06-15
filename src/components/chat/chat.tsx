@@ -42,6 +42,7 @@ export function Chat({
     experimental_throttle: 100,
     sendExtraMessageFields: true,
     generateId: generateUUID,
+    api: '/api/chat',
     onFinish: async () => {
       mutate(`/api/chat/${id}`);
       mutate(unstable_serialize(() => getChatHistoryPaginationKey(0, null, user?.id || '', activePageId || '')));

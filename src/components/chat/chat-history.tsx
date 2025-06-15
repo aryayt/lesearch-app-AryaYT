@@ -26,9 +26,10 @@ const fetcher = (url: string) => fetch(url).then((res) => {
 
 const RenderChatHistory = () => {
   const setActiveChatId = useChatStore((state) => state.setActiveChatId);
-  const activeChatId = useChatStore((state) => state.getActiveChatId());
+  const activeChatIds = useChatStore((state) => state.activeChatIds);
   const user = useUserStore((state) => state.user);
   const { activePageId } = usePanelStore();
+  const activeChatId = activePageId ? activeChatIds[activePageId] || '' : '';
 
  const {
     data: paginatedChatHistories,
@@ -38,7 +39,7 @@ const RenderChatHistory = () => {
     // mutate,
     error,
   } = useSWRInfinite<ChatHistory>(
-    (pageIndex, previousPageData) => 
+    (pageIndex, previousPageData) =>
       getChatHistoryPaginationKey(pageIndex, previousPageData, user?.id || '', activePageId || ''),
     fetcher,
     {

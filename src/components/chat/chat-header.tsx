@@ -37,8 +37,6 @@ export const ChatHeader = memo(({
                 key={chatTitle}
                 words={[chatTitle]}
                 loop={1}
-                cursor
-                cursorStyle=""
                 typeSpeed={20}
                 deleteSpeed={0}
                 delaySpeed={1000}

@@ -11,95 +11,94 @@ import { usePanelStore } from '@/store/usePanelStore';
 import { generateUUID } from '@/app/(chat)/chatActions';
 import { ChatHeader } from '../chat/chat-header';
 
-
 const RightPanel = () => {
+  // Panel state
   const [showHistory, setShowHistory] = useState(false);
-  const setActiveChatId = useChatStore((state) => state.setActiveChatId);
-  const activeChatId = useChatStore((state) => state.getActiveChatId());
-  const activePageId = usePanelStore((state) => state.activePageId);
   const historyCardRef = useRef<HTMLDivElement>(null);
+  
+  // Chat state
+  const { setActiveChatId, activeChatIds } = useChatStore();
+  const { activePageId } = usePanelStore();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isPageTransitioning, setIsPageTransitioning] = useState(false);
-  const [newChatId, setNewChatId] = useState<string>('');
-  const [currentChatTitle, setCurrentChatTitle] = useState<string | undefined>(undefined);
+  
+  // Current chat state
+  const activeChatId = activePageId ? activeChatIds[activePageId] : '';
+  const [chatState, setChatState] = useState<{
+    id: string;
+    title: string | undefined;
+    isNew: boolean;
+  }>({
+    id: '',
+    title: undefined,
+    isNew: true
+  });
 
-  // Handle page changes
-  useEffect(() => {
-    if (!activePageId) return;
-
-    const handlePageChange = async () => {
-      setIsPageTransitioning(true);
-      try {
-        // Reset chat state
-        setActiveChatId('');
-        setShowHistory(false);
-        setShowDeleteDialog(false);
-        setIsDeleting(false);
-        setNewChatId(generateUUID());
-        setCurrentChatTitle(undefined);
-      } finally {
-        // Small delay to ensure state updates are processed
-        setTimeout(() => {
-          setIsPageTransitioning(false);
-        }, 100);
-      }
-    };
-
-    handlePageChange();
-  }, [activePageId, setActiveChatId]);
-
-  // Generate new chat ID when activeChatId is empty
-  useEffect(() => {
-    if (activeChatId === '' && activePageId && !isPageTransitioning) {
-      setNewChatId(generateUUID());
-    }
-  }, [activeChatId, activePageId, isPageTransitioning]);
-
-  const { data: chatDetails, mutate: mutateChatDetails } = useSWR(
-    activeChatId && activePageId && !isPageTransitioning ? `/api/chat/${activeChatId}` : null,
+  // Fetch chat details only for existing chats
+  const { data: chatDetails } = useSWR(
+    activeChatId && !chatState.isNew ? `/api/chat/${activeChatId}` : null,
     async () => {
-      if (!activeChatId || !activePageId || isPageTransitioning) return null;
-      const data = await getChatById(activeChatId);
-      return data;
+      if (!activeChatId) return null;
+      return await getChatById(activeChatId);
     },
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       dedupingInterval: 0,
       refreshInterval: 0,
-      key: `${activePageId}-${activeChatId}-${isPageTransitioning}`,
+      key: `${activePageId}-${activeChatId}`,
+      revalidateIfStale: false
     }
   );
 
-  // Update currentChatTitle when chatDetails changes
+  // Initialize chat when page changes
   useEffect(() => {
-    if (chatDetails?.title !== undefined) {
-      setCurrentChatTitle(chatDetails.title);
+    if (!activePageId) return;
+    
+    if (activeChatId) {
+      setChatState({
+        id: activeChatId,
+        title: undefined,
+        isNew: false
+      });
+    } else {
+      const newId = generateUUID();
+      setChatState({
+        id: newId,
+        title: undefined,
+        isNew: true
+      });
+      setActiveChatId(newId);
     }
-  }, [chatDetails?.title]);
+  }, [activePageId, activeChatId, setActiveChatId]);
 
-  // Revalidate chat details when activeChatId changes
+  // Update chat state when details are loaded
   useEffect(() => {
-    if (activeChatId && activePageId && !isPageTransitioning) {
-      mutateChatDetails(undefined, { revalidate: true });
+    if (chatDetails?.title && !chatState.isNew) {
+      setChatState(prev => ({
+        ...prev,
+        title: chatDetails.title
+      }));
     }
-  }, [activeChatId, activePageId, isPageTransitioning, mutateChatDetails]);
+  }, [chatDetails?.title, chatState.isNew]);
 
+  // Handle new chat creation
   const handleNewChat = useCallback(() => {
-    if (!activePageId || isPageTransitioning) return;
-    setActiveChatId('');
+    if (!activePageId) return;
+    
+    const newId = generateUUID();
+    setChatState({
+      id: newId,
+      title: undefined,
+      isNew: true
+    });
+    setActiveChatId(newId);
     setShowHistory(false);
-    setCurrentChatTitle(undefined);
-  }, [activePageId, isPageTransitioning, setActiveChatId]);
+  }, [activePageId, setActiveChatId]);
 
-  const handleHistoryClick = useCallback(() => {
-    if (isPageTransitioning) return;
-    setShowHistory(prev => !prev);
-  }, [isPageTransitioning]);
-
+  // Handle chat deletion
   const handleDeleteChat = useCallback(async () => {
-    if (!activeChatId || !activePageId || isPageTransitioning) return;
+    if (!activeChatId || !activePageId) return;
     setIsDeleting(true);
 
     try {
@@ -111,10 +110,15 @@ const RightPanel = () => {
         throw new Error('Failed to delete chat');
       }
 
-      setActiveChatId('');
+      const newId = generateUUID();
+      setChatState({
+        id: newId,
+        title: undefined,
+        isNew: true
+      });
+      setActiveChatId(newId);
       setShowDeleteDialog(false);
-      setCurrentChatTitle(undefined);
-      setNewChatId(generateUUID());
+      
       toast.success('Chat deleted successfully', {
         duration: 2000,
         position: 'bottom-right',
@@ -125,14 +129,11 @@ const RightPanel = () => {
     } finally {
       setIsDeleting(false);
     }
-  }, [activeChatId, activePageId, isPageTransitioning, setActiveChatId]);
+  }, [activeChatId, activePageId, setActiveChatId]);
 
-  // Handle click outside for history panel
+  // Handle history panel click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (isPageTransitioning) return;
-      
-      // Don't close if clicking the history button
       if ((event.target as Element).closest('button[aria-label="Chat History"]')) {
         return;
       }
@@ -146,26 +147,27 @@ const RightPanel = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isPageTransitioning]);
+  }, []);
 
   return (
     <Card className="flex flex-col h-full w-full gap-1 relative">
       <ChatHeader 
-        onHistoryClick={handleHistoryClick} 
+        key={chatState.id}
+        onHistoryClick={() => setShowHistory(prev => !prev)} 
         showHistory={showHistory} 
         onNewChatClick={handleNewChat}
         onDeleteClick={() => setShowDeleteDialog(true)}
-        chatTitle={currentChatTitle}
+        chatTitle={chatState.isNew ? undefined : chatState.title}
         isDeleting={isDeleting}
       />
       
       {/* Main Chat Area */}
       <div className="flex flex-col h-full">
-        <RenderChat newChatId={newChatId} />
+        <RenderChat newChatId={chatState.id} />
       </div>
 
       {/* History Card */}
-      {showHistory && !isPageTransitioning && (
+      {showHistory && (
         <Card ref={historyCardRef} className="absolute right-0 top-8 w-80 shadow-lg border rounded-md">
           <div className="h-full flex flex-col">
             <div className="flex-1 overflow-hidden">
@@ -174,6 +176,7 @@ const RightPanel = () => {
           </div>
         </Card>
       )}
+
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>

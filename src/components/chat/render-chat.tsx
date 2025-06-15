@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Chat } from './chat';
 import { useChatStore } from '@/store/useChatStore';
 import useSWR from 'swr';
@@ -19,41 +19,42 @@ interface RenderChatProps {
 
 export default function RenderChat({ newChatId }: RenderChatProps) {
   const setActiveChatId = useChatStore((state) => state.setActiveChatId);
-  const activeChatId = useChatStore((state) => state.getActiveChatId());
+  const getActiveChatId = useChatStore((state) => state.getActiveChatId);
+  const activeChatIds = useChatStore((state) => state.activeChatIds);
   const activePageId = usePanelStore((state) => state.activePageId);
+  const [currentChatId, setCurrentChatId] = useState<string>('');
 
-  // Reset chat when page changes
+  // Initialize chat ID
   useEffect(() => {
-    if (activePageId) {
-      setActiveChatId('');
+    const initializeChat = async () => {
+      if (!activePageId) return;
+      
+      const chatId = await getActiveChatId();
+      setCurrentChatId(chatId);
+    };
+
+    initializeChat();
+  }, [activePageId, getActiveChatId]);
+
+  // Update currentChatId when activeChatIds changes
+  useEffect(() => {
+    if (activePageId && activeChatIds[activePageId]) {
+      setCurrentChatId(activeChatIds[activePageId]);
     }
-  }, [activePageId, setActiveChatId]);
+  }, [activePageId, activeChatIds]);
 
   const { data: messages, error, isLoading } = useSWR(
-    activeChatId && activeChatId !== '' && activePageId ? `/api/messages?chatId=${activeChatId}` : null,
+    currentChatId && currentChatId !== '' && activePageId ? `/api/messages?chatId=${currentChatId}` : null,
     fetcher
   );
-
-  console.log('activeChatId', activeChatId, 'activePageId', activePageId);
-
-  // Fetch latest chat when there's no active chat
-  const { data: latestChat } = useSWR(
-    !activeChatId && activeChatId !== '' && activePageId ? `/api/history?limit=1&documentId=${activePageId}` : null,
-    fetcher
-  );
-
-  useEffect(() => {
-    if (!activeChatId && activeChatId !== '' && latestChat?.chats?.[0]?.id && activePageId) {
-      setActiveChatId(latestChat.chats[0].id);
-    }
-  }, [activeChatId, latestChat, setActiveChatId, activePageId]);
 
   // Set new chat ID when it's provided
   useEffect(() => {
-    if (activeChatId === '' && newChatId && activePageId) {
+    if (currentChatId === '' && newChatId && activePageId) {
       setActiveChatId(newChatId);
+      setCurrentChatId(newChatId);
     }
-  }, [activeChatId, newChatId, setActiveChatId, activePageId]);
+  }, [currentChatId, newChatId, setActiveChatId, activePageId]);
 
   // If no activePageId, show empty state
   if (!activePageId) {
@@ -64,8 +65,8 @@ export default function RenderChat({ newChatId }: RenderChatProps) {
     );
   }
 
-  // If activeChatId is empty string, show new chat
-  if (activeChatId === '') {
+  // If currentChatId is empty string, show new chat
+  if (currentChatId === '') {
     return (
       <Chat
         key={newChatId}
@@ -77,8 +78,8 @@ export default function RenderChat({ newChatId }: RenderChatProps) {
     );
   }
 
-  // If no activeChatId, show loading state
-  if (!activeChatId) {
+  // If no currentChatId, show loading state
+  if (!currentChatId) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
@@ -104,8 +105,8 @@ export default function RenderChat({ newChatId }: RenderChatProps) {
 
   return (
     <Chat
-      key={activeChatId}
-      id={activeChatId}
+      key={currentChatId}
+      id={currentChatId}
       initialMessages={messages || []}
       selectedChatModel={DEFAULT_CHAT_MODEL}
       isReadonly={false}

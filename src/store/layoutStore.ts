@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 type MinimizeTriggered = "settings" | "documents" | "externalLink";
+export type SettingsSection = "account" | "models" | "appearance" | "notifications" | "privacy" | "billing";
+
 type LayoutState = {
   minimize: boolean;
   minSidebarWidth: number;
@@ -11,6 +13,9 @@ type LayoutState = {
   isDragging: boolean;
   prevSidebarWidth: number;
   showExternalLink: boolean;
+  // Settings state
+  settingsOpen: boolean;
+  activeSettingsSection: SettingsSection;
 };
 
 type LayoutAction = {
@@ -20,6 +25,9 @@ type LayoutAction = {
   setIsDragging: (isDragging: boolean) => void;
   resetSidebarWidth: () => void;
   setShowExternalLink: (show: boolean) => void;
+  // Settings actions
+  setSettingsOpen: (open: boolean) => void;
+  setActiveSettingsSection: (section: SettingsSection) => void;
 };
 
 const DEFAULT_WIDTH = 240;
@@ -36,6 +44,9 @@ export const useLayoutStore = create<LayoutState & LayoutAction>()(
       sidebarWidth: DEFAULT_WIDTH,
       isDragging: false,
       showExternalLink: true,
+      // Settings state
+      settingsOpen: false,
+      activeSettingsSection: "account",
 
       setMinimize: (v) => set({ minimize: v }),
       
@@ -62,12 +73,18 @@ export const useLayoutStore = create<LayoutState & LayoutAction>()(
       }),
 
       setShowExternalLink: (show) => set({ showExternalLink: show }),
+
+      // Settings actions
+      setSettingsOpen: (open) => set({ settingsOpen: open }),
+      setActiveSettingsSection: (section) => set({ activeSettingsSection: section }),
     }),
     {
       name: "layout-storage",
       partialize: (state) => ({
         minimize: state.minimize,
         showExternalLink: state.showExternalLink,
+        settingsOpen: state.settingsOpen,
+        activeSettingsSection: state.activeSettingsSection,
       }),
       storage: createJSONStorage(() => localStorage),
     }

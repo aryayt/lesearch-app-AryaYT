@@ -3,6 +3,7 @@ import { Chat } from './chat';
 import { useChatStore } from '@/store/useChatStore';
 import useSWR from 'swr';
 import { usePanelStore } from '@/store/usePanelStore';
+import { useAPIKeyStore } from '@/store/apiKeyStore';
 
 export const DEFAULT_CHAT_MODEL: string = 'gemini-2.0-flash';
 
@@ -23,6 +24,7 @@ export default function RenderChat({ newChatId }: RenderChatProps) {
   const activeChatIds = useChatStore((state) => state.activeChatIds);
   const activePageId = usePanelStore((state) => state.activePageId);
   const [currentChatId, setCurrentChatId] = useState<string>('');
+  const {  selectedModel, apiKeys } = useAPIKeyStore();
 
   // Initialize chat ID
   useEffect(() => {
@@ -72,7 +74,8 @@ export default function RenderChat({ newChatId }: RenderChatProps) {
         key={newChatId}
         id={newChatId}
         initialMessages={[]}
-        selectedChatModel={DEFAULT_CHAT_MODEL}
+        selectedChatModel={selectedModel}
+        provider={Object.entries(apiKeys).find(([, key]) => key.active_models?.includes(selectedModel))?.[0] || ''}
         isReadonly={false}
       />
     );
@@ -108,7 +111,8 @@ export default function RenderChat({ newChatId }: RenderChatProps) {
       key={currentChatId}
       id={currentChatId}
       initialMessages={messages || []}
-      selectedChatModel={DEFAULT_CHAT_MODEL}
+      selectedChatModel={selectedModel}
+      provider={Object.entries(apiKeys).find(([, key]) => key.active_models?.includes(selectedModel))?.[0] || ''}
       isReadonly={false}
     />
   );

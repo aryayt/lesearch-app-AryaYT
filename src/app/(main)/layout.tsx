@@ -8,6 +8,8 @@ import { useUserStore } from "@/store/userStore";
 import { useEffectOnce } from "react-use"; // You'll need to install react-use package
 import { useStore } from "@/store/useCollectionStore";
 import { usePanelStore } from "@/store/usePanelStore";
+import { SettingsDialog } from "@/components/dialog/settings-dialog"
+import { APIKeyProvider } from "@/components/providers/api-key-provider";
 
 // Memoize the LayoutWrapper to prevent unnecessary re-renders
 const MemoizedLayoutWrapper = memo(LayoutWrapper);
@@ -49,9 +51,12 @@ export default function MainLayout({ children }: PropsWithChildren) {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
+      <APIKeyProvider>
       <MemoizedLayoutWrapper>
         {children}
       </MemoizedLayoutWrapper>
+      </APIKeyProvider>
+      <SettingsDialog />
     </div>
   );
 }

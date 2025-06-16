@@ -19,6 +19,10 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
     "What does this term mean?",
   ];
 
+  if(!chatId){
+    return null;
+  }
+
 
   return (
     <div

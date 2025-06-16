@@ -14,11 +14,13 @@ export function Chat({
   id,
   initialMessages,
   selectedChatModel,
+  provider,
   isReadonly,
 }: {
   id: string;
   initialMessages: Array<UIMessage>;
   selectedChatModel: string;
+  provider: string;
   isReadonly: boolean;
 }) {
   const { mutate } = useSWRConfig();
@@ -37,7 +39,7 @@ export function Chat({
     reload,
   } = useChat({
     id,
-    body: { id, selectedChatModel: selectedChatModel, documentId: activePageId },
+    body: { id, selectedChatModel: selectedChatModel, documentId: activePageId, provider },
     initialMessages,
     experimental_throttle: 100,
     sendExtraMessageFields: true,

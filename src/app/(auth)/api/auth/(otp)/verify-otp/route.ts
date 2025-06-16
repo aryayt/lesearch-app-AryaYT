@@ -21,7 +21,6 @@ export async function POST(req: Request) {
       .gte("expires_at", new Date().toISOString()) // Ensure OTP is not expired
       .single();
 
-    console.log(storedOtp)
 
     if (otpError) {
       console.error("OTP verification error:", otpError.message);

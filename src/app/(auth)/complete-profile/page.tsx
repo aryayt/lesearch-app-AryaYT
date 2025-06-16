@@ -133,13 +133,13 @@ const CompleteProfile = () => {
   const validateCurrentStep = useCallback(async () => {
     if (activeStep === 0) {
       return await form.trigger(['password', 'confirmPassword']);
-    } 
+    }
     if (activeStep === 1) {
       return await form.trigger(['firstName', 'lastName', 'age']);
-    } 
+    }
     if (activeStep === 2) {
       return await form.trigger(['location', 'language']);
-    } 
+    }
     if (activeStep === 3) {
       return await form.trigger(['interests']);
     }

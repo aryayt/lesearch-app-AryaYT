@@ -28,34 +28,36 @@ import {
 } from "@/components/ui/sidebar"
 import { useUserStore } from "@/store/userStore"
 import { Button } from "@/components/ui/button"
-import { useTheme } from "next-themes";
-import { SettingsDialog } from "../dialog/settings-dialog"
+import { useTheme } from "next-themes"
 import SignOutDialog from "../dialog/signout-dialog"
 import { Skeleton } from "../ui/skeleton"
+import { useLayoutStore } from "@/store/layoutStore"
+
 export default function SidebarUser() {
   const { isMobile } = useSidebar()
-  const {user, fullname, image, email } = useUserStore();
-    const { resolvedTheme: theme, setTheme } = useTheme();
+  const { user, fullname, image, email } = useUserStore()
+  const { resolvedTheme: theme, setTheme } = useTheme()
+  const { setSettingsOpen } = useLayoutStore()
 
-    if(!user || !fullname || !image || !email) {
-      return (
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <Skeleton className="h-8 w-8 rounded-lg" />
-              <div className="grid flex-1 gap-1 text-left">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-32" />
-              </div>
-              <Skeleton className="ml-auto h-4 w-4" />
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      );
-    }
+  if(!user || !fullname || !image || !email) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            size="lg"
+            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+          >
+            <Skeleton className="h-8 w-8 rounded-lg" />
+            <div className="grid flex-1 gap-1 text-left">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+            <Skeleton className="ml-auto h-4 w-4" />
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
 
   return (
     <SidebarMenu>
@@ -99,16 +101,15 @@ export default function SidebarUser() {
             <div className="w-72">
           <section className="border-b p-2"> 
             <div className="grid grid-cols-2 gap-2">
-              <SettingsDialog>
               <Button
                 variant="outline"
                 size="sm"
                 className="h-8 justify-start px-2 text-xs font-normal"
+                onClick={() => setSettingsOpen(true)}
               >
                 <Settings2Icon className="mr-2 h-4 w-4" />
                 Settings
               </Button>
-              </SettingsDialog>
               <Button
                 variant="outline"
                 size="sm"

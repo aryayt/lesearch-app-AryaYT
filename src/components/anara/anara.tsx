@@ -29,6 +29,8 @@ import {
 } from "./annotations";
 import { usePdfStore } from '@/store/usePdfStore';
 import { ExternalLinkPopup } from "@/anaralabs/lector/components/layers/external-link-popup";
+import { usePanelStore } from "@/store/usePanelStore";
+import { useParams } from "next/navigation";
 
 
 
@@ -53,6 +55,10 @@ const PDFContent = ({
   onExternalLinkClick: (url: string) => void;
 }) => {
   const { getDimension } = useSelectionDimensions();
+  const { activePageId, setPanelVisibility, getPanelVisibility } = usePanelStore();
+  const params = useParams(); 
+  const pageId = activePageId || (params?.pageId as string);
+  const pagePanelVisibility = getPanelVisibility(pageId);
   const { jumpToHighlightRects } = usePdfJump();
   const { pdfs, updatePdfHighlightsAsync, setSelectedText } = usePdfStore();
   const currentAnnotations = useMemo(() => pdfs[documentId]?.highlights || [], [pdfs, documentId]);
@@ -134,12 +140,16 @@ const PDFContent = ({
   const handleAskAI = useCallback(() => {
     const selection = getDimension();
     if (!selection || !selection.text) return;
+    setPanelVisibility(pageId, {
+      showMiddlePanel: pagePanelVisibility.showMiddlePanel,
+      showRightPanel: true,
+    });
 
     // Get the document name from the current PDF
     const currentPdf = pdfs[documentId];
     const documentName = currentPdf?.name || 'Unknown Document';
     setSelectedText(selection.text, documentId, documentName);
-  }, [getDimension, documentId, setSelectedText, pdfs]);
+  }, [getDimension, documentId, setSelectedText, pdfs, pageId, setPanelVisibility, pagePanelVisibility]);
 
   return (
     <Pages

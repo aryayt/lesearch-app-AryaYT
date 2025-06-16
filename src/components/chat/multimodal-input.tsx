@@ -11,6 +11,7 @@ import {
   type ChangeEvent,
   memo,
   type DragEvent,
+  useMemo,
 } from 'react';
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
@@ -23,11 +24,20 @@ import type { UseChatHelpers } from '@ai-sdk/react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import Image from 'next/image';
 import { usePdfStore } from '@/store/usePdfStore';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { googleModels } from "@/lib/ai/models"
+import { useAPIKeyStore } from "@/store/apiKeyStore"
 
 type Attachment = {
   file: File;
   preview?: string;
 };
+
+interface Model {
+  id: string;
+  name: string;
+  description: string;
+}
 
 function PureMultimodalInput({
   chatId,
@@ -52,6 +62,7 @@ function PureMultimodalInput({
   handleSubmit: UseChatHelpers['handleSubmit'];
   className?: string;
 }) {
+  const { activeModels, selectedModel, setSelectedModel } = useAPIKeyStore();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { width } = useWindowSize();
@@ -59,8 +70,13 @@ function PureMultimodalInput({
   const [isDragging, setIsDragging] = useState(false);
   const { selectedText, clearSelectedText } = usePdfStore();
 
+  // Get all active models from all providers
+  const allActiveModels = useMemo(() => {
+    return Object.values(activeModels).flat();
+  }, [activeModels]);
+
   const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-  const ALLOWED_FILE_TYPES = [
+  const ALLOWED_FILE_TYPES = useMemo(() => [
     'image/*',
     'application/pdf',
     'text/plain',
@@ -75,9 +91,9 @@ function PureMultimodalInput({
     'application/rtf',
     'text/csv',
     'application/json',
-  ];
+  ], []);
 
-  const ALLOWED_EXTENSIONS = [
+  const ALLOWED_EXTENSIONS = useMemo(() => [
     '.md',
     '.markdown',
     '.txt',
@@ -98,7 +114,7 @@ function PureMultimodalInput({
     '.bmp',
     '.webp',
     '.svg'
-  ];
+  ], []);
 
   const [localStorageInput, setLocalStorageInput] = useLocalStorage(
     'input',
@@ -155,7 +171,7 @@ function PureMultimodalInput({
     adjustHeight();
   };
 
-  const validateFile = (file: File) => {
+  const validateFile = useCallback((file: File) => {
     if (file.size > MAX_FILE_SIZE) {
       toast.error(`File ${file.name} is too large. Maximum file size is 50MB.`);
       return false;
@@ -182,9 +198,9 @@ function PureMultimodalInput({
     }
 
     return true;
-  };
+  }, [ALLOWED_EXTENSIONS, ALLOWED_FILE_TYPES, MAX_FILE_SIZE]);
 
-  const processFiles = async (files: File[]) => {
+  const processFiles = useCallback(async (files: File[]) => {
     const validFiles = files.filter(validateFile);
     
     const newAttachments = await Promise.all(
@@ -198,14 +214,14 @@ function PureMultimodalInput({
     );
 
     setAttachments((current) => [...current, ...newAttachments]);
-  };
+  }, [validateFile, setAttachments]);
 
   const handleFileChange = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(event.target.files || []);
       await processFiles(files);
     },
-    [],
+    [processFiles],
   );
 
   const handleRemoveFile = (index: number) => {
@@ -362,55 +378,80 @@ function PureMultimodalInput({
             ))}
           </div>
         )}
-        <Textarea
-          data-testid="multimodal-input"
-          ref={textareaRef}
-          placeholder="Ask me anything..."
-          value={input}
-          onChange={handleInput}
-          className={cx(
-            'min-h-[44px] max-h-[240px] text-primary resize-none rounded-3xl !text-base bg-background border-none p-2 pr-20 shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
-            className,
-          )}
-          rows={1}
-          autoFocus
-          onKeyDown={(event) => {
-            if (
-              event.key === 'Enter' &&
-              !event.shiftKey &&
-              !event.nativeEvent.isComposing
-            ) {
-              event.preventDefault();
+        <div className="flex gap-2 items-center">
+          <Textarea
+            data-testid="multimodal-input"
+            ref={textareaRef}
+            placeholder="Ask me anything..."
+            value={input}
+            onChange={handleInput}
+            className={cx(
+              'min-h-[44px] max-h-[240px] text-primary resize-none rounded-3xl !text-base bg-background border-none p-2 pr-20 shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
+              className,
+            )}
+            rows={1}
+            autoFocus
+            onKeyDown={(event) => {
+              if (
+                event.key === 'Enter' &&
+                !event.shiftKey &&
+                !event.nativeEvent.isComposing
+              ) {
+                event.preventDefault();
 
-              if (status !== 'ready') {
-                toast.error('Please wait for the model to finish its response!');
-              } else {
-                submitForm();
+                if (status !== 'ready') {
+                  toast.error('Please wait for the model to finish its response!');
+                } else {
+                  submitForm();
+                }
               }
-            }
-          }}
-        />
+            }}
+          />
+        </div>
         <div className='flex items-center gap-2 justify-between'>
-          <Tooltip>
-            <TooltipTrigger asChild disabled={false}>
-              <label
-                htmlFor="file-upload"
-                className="hover:bg-secondary-foreground/10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-2xl"
-              >
-                <input
-                  type="file"
-                  multiple
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="file-upload"
-                />
-                <Paperclip className="text-primary size-5" />
-              </label>
-            </TooltipTrigger>
-            <TooltipContent side="top" className='text-xs'>
-              Attach files
-            </TooltipContent>
-          </Tooltip>
+          <div className="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild disabled={false}>
+                <label
+                  htmlFor="file-upload"
+                  className="hover:bg-secondary-foreground/10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-2xl"
+                >
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleFileChange}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <Paperclip className="text-primary size-5" />
+                </label>
+              </TooltipTrigger>
+              <TooltipContent side="top" className='text-xs'>
+                Attach files
+              </TooltipContent>
+            </Tooltip>
+            <Select value={selectedModel} onValueChange={setSelectedModel}>
+              <SelectTrigger className="w-fit h-8 text-sm">
+                <SelectValue placeholder="Select model" />
+              </SelectTrigger>
+              <SelectContent>
+                {allActiveModels.length === 0 ? (
+                  <SelectItem value="no-models" disabled>
+                    No models available
+                  </SelectItem>
+                ) : (
+                  allActiveModels.map((modelId) => {
+                    const model = googleModels.find((m: Model) => m.id === modelId);
+                    return model ? (
+                      <SelectItem className='text-sm' key={model.id} value={model.id}>
+                        {model.name}
+                      </SelectItem>
+                    ) : null;
+                  })
+                )}
+              </SelectContent>
+            </Select>
+          </div>
           <Tooltip>
             <TooltipTrigger asChild disabled={false}>
               {status === 'submitted' ? (
@@ -433,7 +474,7 @@ function PureMultimodalInput({
                     event.preventDefault();
                     submitForm();
                   }}
-                  disabled={input.length === 0 && attachments.length === 0}
+                  disabled={input.length === 0 && attachments.length === 0 || !selectedModel}
                 >
                   <ArrowUpIcon size={16} />
                 </Button>

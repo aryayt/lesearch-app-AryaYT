@@ -8,7 +8,7 @@ import {
 import {  generateUUID, getMostRecentUserMessage, getTrailingMessageId } from '@/app/(chat)/chatActions';
 import { createClient } from '@/lib/supabase/server';
 import { createChat, getChatById, saveMessages } from '@/lib/db/queries';
-import { googleProvider } from '@/lib/ai/providers';
+import { initializeProvider } from '@/lib/ai/providers';
 import { generateTitleFromUserMessage } from '@/lib/ai/queries';
 
 export const maxDuration = 60;
@@ -20,17 +20,24 @@ export async function POST(request: Request) {
       messages,
       selectedChatModel,
       documentId,
+      provider,
     }: {
       id: string;
       messages: Array<UIMessage>;
       selectedChatModel: string;
       documentId: string;
+      provider: string;
     } = await request.json();
 
     if(!id){
       return new Response('Chat ID is required', { status: 400 });
     }
-
+    if(!selectedChatModel){
+      return new Response('Selected chat model is required', { status: 400 });
+    }
+    if(!provider){
+      return new Response('Provider is required', { status: 400 });
+    }
     // Get user session using Supabase server client
     const supabase = await createClient();
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -62,12 +69,17 @@ export async function POST(request: Request) {
       ],
     });
 
+    const providerInstance = await initializeProvider(provider);
+    const model = providerInstance.languageModel(selectedChatModel);
 
+    if(!model){
+      return new Response('Model not found', { status: 400 });
+    }
 
     return createDataStreamResponse({
       execute: async (dataStream) => {
         const streamResult = await streamText({
-          model: googleProvider.languageModel(selectedChatModel),
+          model: model,
           system: 'You are a helpful assistant.',
           messages,
           maxSteps: 5,

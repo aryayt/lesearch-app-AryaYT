@@ -3,19 +3,23 @@ import {
 } from 'ai';
 
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { getAPIKey } from './queries';
+import { openai } from '@ai-sdk/openai';
 
-// Validate API key
-const apiKey = process.env.GOOGLE_API_KEY;
-if (!apiKey) {
-  console.error('GOOGLE_API_KEY is not set in environment variables');
-  throw new Error('Google API key is required. Please set GOOGLE_API_KEY in your environment variables.');
-}
+export async function initializeProvider(provider: string) {
+  // Validate API key
+  const apiKey: string = await getAPIKey(provider);
+  if (!apiKey) {
+    console.error(`${provider.toUpperCase()}_API_KEY is not set`);
+    throw new Error(`${provider} API key is required. Please set your API key in the settings.`);
+  }
 
-const google = createGoogleGenerativeAI({
-  apiKey,
-});
+  if (provider === 'google') {
+    const google = createGoogleGenerativeAI({
+      apiKey,
+    });
 
-export const googleProvider = customProvider({
+    return customProvider({
       languageModels: {
         'gemini-2.5-pro-preview-05-06': google('gemini-2.5-pro-preview-05-06'),
         'gemini-2.5-flash-preview-04-17': google('gemini-2.5-flash-preview-04-17'),
@@ -30,8 +34,25 @@ export const googleProvider = customProvider({
       },
       textEmbeddingModels:{
         'gemini-embedding':google.textEmbeddingModel('text-embedding-004', {
-          outputDimensionality: 512, // optional, number of dimensions for the embedding
-          taskType: 'SEMANTIC_SIMILARITY', // optional, specifies the task type for generating embeddings
+          outputDimensionality: 512,
+          taskType: 'SEMANTIC_SIMILARITY',
         }),
       }
     });
+  } else if (provider === 'openai') {
+    return customProvider({
+      languageModels: {
+        'gpt-4o-mini': openai('gpt-4o-mini'),
+        'gpt-4o': openai('gpt-4o'),
+        'gpt-4': openai('gpt-4'),
+        'gpt-3.5-turbo': openai('gpt-3.5-turbo'),
+      },
+      textEmbeddingModels:{
+        'text-embedding-3-small': openai.textEmbeddingModel('text-embedding-3-small'),
+        'text-embedding-3-large': openai.textEmbeddingModel('text-embedding-3-large'),
+      }
+    });
+  }
+
+  throw new Error(`Unsupported provider: ${provider}`);
+}

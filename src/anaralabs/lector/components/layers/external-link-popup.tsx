@@ -20,6 +20,7 @@ export const ExternalLinkPopup = ({ url, onClose, onNavigate }: ExternalLinkPopu
     left: window.innerWidth / 2 - 200,
   });
   const { showExternalLink, setShowExternalLink } = useLayoutStore();
+  const animationFrameRef = useRef<number>(0);
 
   // Adjust position to keep popup within window bounds
   const adjustPosition = () => {
@@ -54,39 +55,48 @@ export const ExternalLinkPopup = ({ url, onClose, onNavigate }: ExternalLinkPopu
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }); // Empty dependency array since we only want this to run on mount
+  });
 
   // Handle drag event handlers
   useEffect(() => {
     if (!isDragging) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const newPosition = {
-        left: e.clientX - dragOffset.x,
-        top: e.clientY - dragOffset.y,
-      };
-
-      // Keep within window bounds while dragging
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
-      const rect = popupRef.current?.getBoundingClientRect();
-
-      if (rect) {
-        if (newPosition.left < 0) newPosition.left = 0;
-        if (newPosition.top < 0) newPosition.top = 0;
-        if (newPosition.left + rect.width > windowWidth) {
-          newPosition.left = windowWidth - rect.width;
-        }
-        if (newPosition.top + rect.height > windowHeight) {
-          newPosition.top = windowHeight - rect.height;
-        }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
 
-      setPopupPosition(newPosition);
+      animationFrameRef.current = requestAnimationFrame(() => {
+        const newPosition = {
+          left: e.clientX - dragOffset.x,
+          top: e.clientY - dragOffset.y,
+        };
+
+        // Keep within window bounds while dragging
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const rect = popupRef.current?.getBoundingClientRect();
+
+        if (rect) {
+          if (newPosition.left < 0) newPosition.left = 0;
+          if (newPosition.top < 0) newPosition.top = 0;
+          if (newPosition.left + rect.width > windowWidth) {
+            newPosition.left = windowWidth - rect.width;
+          }
+          if (newPosition.top + rect.height > windowHeight) {
+            newPosition.top = windowHeight - rect.height;
+          }
+        }
+
+        setPopupPosition(newPosition);
+      });
     };
 
     const handleMouseUp = () => {
       setIsDragging(false);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
 
     document.addEventListener("mousemove", handleMouseMove);
@@ -95,6 +105,9 @@ export const ExternalLinkPopup = ({ url, onClose, onNavigate }: ExternalLinkPopu
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
   }, [isDragging, dragOffset]);
 
@@ -132,10 +145,8 @@ export const ExternalLinkPopup = ({ url, onClose, onNavigate }: ExternalLinkPopu
         position: "fixed",
         top: popupPosition.top,
         left: popupPosition.left,
-        transform: isDragging ? "scale(1.02)" : "scale(1)",
-        transition: "all 0.2s ease-in-out",
-        transformOrigin: "center",
-        animation: "0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        transition: isDragging ? "none" : "all 0.2s ease-in-out",
+        willChange: "transform, top, left",
         userSelect: isDragging ? "none" : "auto",
         width: "400px",
       }}

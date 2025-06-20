@@ -9,7 +9,7 @@ import {  generateUUID, getMostRecentUserMessage, getTrailingMessageId } from '@
 import { createClient } from '@/lib/supabase/server';
 import { createChat, getChatById, saveMessages } from '@/lib/db/queries';
 import { initializeProvider } from '@/lib/ai/providers';
-import { generateTitleFromUserMessage } from '@/lib/ai/queries';
+import { generateTitleFromUserMessage, getAPIKey } from '@/lib/ai/queries';
 
 export const maxDuration = 60;
 
@@ -45,6 +45,12 @@ export async function POST(request: Request) {
       return new Response('User not authenticated', { status: 401 });
     }
     
+    // Fetch API key once at the start
+    const apiKey = await getAPIKey(provider);
+    if (!apiKey) {
+      return new Response(`${provider} API key is required. Please set your API key in the settings.`, { status: 400 });
+    }
+
     const userMessage = getMostRecentUserMessage(messages);
     if (!userMessage) {
       return new Response('No user message found', { status: 400 });
@@ -69,7 +75,7 @@ export async function POST(request: Request) {
       ],
     });
 
-    const providerInstance = await initializeProvider(provider);
+    const providerInstance = await initializeProvider(provider, apiKey);
     const model = providerInstance.languageModel(selectedChatModel);
 
     if(!model){

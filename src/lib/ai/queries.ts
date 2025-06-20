@@ -7,7 +7,8 @@ export async function generateTitleFromUserMessage({
   }: {
     message: Message;
   }) {
-    const provider = await initializeProvider('google');
+    const apiKey = await getAPIKey('google');
+    const provider = await initializeProvider('google', apiKey);
     const { text: title } = await generateText({
       model: provider.languageModel('gemini-2.0-flash'),
       system: `\n

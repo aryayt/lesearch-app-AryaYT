@@ -181,16 +181,42 @@ export function ModelsSection() {
               isExpanded[provider] ? "block" : "hidden"
             )}>
               {info.models.map((model) => (
-                <div key={model.id} className="flex items-center justify-between py-2 px-3 bg-muted/50 rounded-lg">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">{model.name}</p>
-                    <p className="text-xs text-muted-foreground">{model.description}</p>
+                <div key={model.id} className="flex items-start justify-between py-2 px-3 bg-muted/50 rounded-lg">
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium truncate">{model.name}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{model.description}</p>
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <div className="flex flex-wrap gap-1">
+                        <span className="text-muted-foreground font-medium">Input:</span>
+                        {model.inputFormats.map((format) => (
+                          <span 
+                            key={format} 
+                            className="px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium"
+                          >
+                            {format}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        <span className="text-muted-foreground font-medium">Output:</span>
+                        {model.outputFormats.map((format) => (
+                          <span 
+                            key={format} 
+                            className="px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium"
+                          >
+                            {format}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                   <Switch
                     checked={activeModels[provider]?.includes(model.id)}
                     onCheckedChange={() => toggleModel(model.id, provider)}
                     disabled={!isVerified}
-                    className="cursor-pointer"
+                    className="cursor-pointer ml-3 shrink-0"
                   />
                 </div>
               ))}

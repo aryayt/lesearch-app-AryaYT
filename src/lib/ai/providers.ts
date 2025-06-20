@@ -3,14 +3,10 @@ import {
 } from 'ai';
 
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { getAPIKey } from './queries';
 import { openai } from '@ai-sdk/openai';
 
-export async function initializeProvider(provider: string) {
-  // Validate API key
-  const apiKey: string = await getAPIKey(provider);
+export async function initializeProvider(provider: string, apiKey: string) {
   if (!apiKey) {
-    console.error(`${provider.toUpperCase()}_API_KEY is not set`);
     throw new Error(`${provider} API key is required. Please set your API key in the settings.`);
   }
 

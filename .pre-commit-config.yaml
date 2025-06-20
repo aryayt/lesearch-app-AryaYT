@@ -1,0 +1,25 @@
+repos:
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v9.29.0  # Use the version matching your eslint
+    hooks:
+      - id: eslint
+        files: \.(js|jsx|ts|tsx)$
+        exclude: ^(node_modules/|\.next/)
+
+  - repo: local
+    hooks:
+      - id: type-check
+        name: TypeScript type check
+        entry: npx tsc --noEmit --skipLibCheck
+        language: system
+        types: [file]
+        files: \.(ts|tsx)$
+        exclude: ^(node_modules/|\.next/)
+        pass_filenames: false
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        name: Detect secrets
+        exclude: ^(node_modules/|\.next/)

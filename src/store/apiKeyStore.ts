@@ -145,7 +145,7 @@ export const useAPIKeyStore = create<APIKeyState>()(
             ...state.apiKeys,
             [provider]: {
               ...state.apiKeys[provider],
-              api_key_ff: key
+              api_key: key
             }
           }
         }));

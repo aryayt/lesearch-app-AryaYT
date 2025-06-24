@@ -56,7 +56,7 @@ export default function MainLayout({ children }: PropsWithChildren) {
         {children}
       </MemoizedLayoutWrapper>
       </APIKeyProvider>
-      <SettingsDialog />
+      <SettingsDialog/>
     </div>
   );
 }

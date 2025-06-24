@@ -139,6 +139,7 @@ export const useAPIKeyStore = create<APIKeyState>()(
       },
 
       updateInputKey: (provider: string, key: string) => {
+        console.log("updateInputKey", provider, key);
         set(state => ({
           apiKeys: {
             ...state.apiKeys,

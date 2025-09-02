@@ -223,7 +223,6 @@ export const Pages = ({
                 >
                   {cloneElement(children, {
                     key: virtualItem.key,
-                    //@ts-expect-error pageNumber is not a valid react key
                     pageNumber: virtualItem.index + 1,
                   })}
                 </div>

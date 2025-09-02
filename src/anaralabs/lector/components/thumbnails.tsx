@@ -59,7 +59,6 @@ export const Thumbnails = ({
       {Array.from({
         length: pageCount,
       }).map((_, index) => {
-        //@ts-expect-error pageNumber is not a valid react key
         return cloneElement(children, { key: index, pageNumber: index + 1 });
       })}
     </Primitive.div>

@@ -33,7 +33,7 @@ function PureMessages({
 
   return (
     <div
-      ref={messagesContainerRef}
+      ref={messagesContainerRef as React.LegacyRef<HTMLDivElement>}
       className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
     >
       {messages.length === 0 && <Greeting />}
@@ -62,7 +62,7 @@ function PureMessages({
         }
 
       <div
-        ref={messagesEndRef}
+        ref={messagesEndRef as React.LegacyRef<HTMLDivElement>}
         className="shrink-0 min-w-[24px] min-h-[24px]"
       />
     </div>

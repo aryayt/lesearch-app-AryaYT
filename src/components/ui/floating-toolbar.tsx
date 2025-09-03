@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import type * as React from 'react';
 
 import { useComposedRef } from '@udecode/cn';
 import {
@@ -65,7 +65,7 @@ export function FloatingToolbar({
     ref: floatingRef,
   } = useFloatingToolbar(floatingToolbarState);
 
-  const ref = useComposedRef<HTMLDivElement>(props.ref, floatingRef);
+  const ref = useComposedRef<HTMLDivElement>(props.ref as React.Ref<HTMLDivElement>, floatingRef);
 
   if (hidden) return null;
 

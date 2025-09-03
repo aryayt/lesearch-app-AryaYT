@@ -88,10 +88,11 @@ export const DraggableAboveNodes: RenderNodeWrapper = (props) => {
 
   if (!enabled) return;
 
-  const DraggableWrapper = (props: PlateElementProps) => <Draggable {...props} />;
-  DraggableWrapper.displayName = 'DraggableWrapper';
   return DraggableWrapper;
 };
+
+const DraggableWrapper = (props: PlateElementProps) => <Draggable {...props} />;
+DraggableWrapper.displayName = 'DraggableWrapper';
 
 export function Draggable(props: PlateElementProps) {
   const { children, editor, element, path } = props;
@@ -154,7 +155,7 @@ export function Draggable(props: PlateElementProps) {
         </Gutter>
       )}
 
-      <div ref={previewRef} className="slate-blockWrapper">
+      <div ref={previewRef as React.LegacyRef<HTMLDivElement>} className="slate-blockWrapper">
         <MemoizedChildren>{children}</MemoizedChildren>
         <DropLine />
       </div>
@@ -226,24 +227,17 @@ const DragHandle = React.memo(function DragHandle() {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div
-          className="flex size-full items-center justify-center"
+        <button
+          type="button"
+          className="flex size-full items-center justify-center border-0 bg-transparent p-0"
           onClick={() => {
             editor
               .getApi(BlockSelectionPlugin)
               .blockSelection.set(element.id as string);
           }}
-          // role="button"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              editor
-                .getApi(BlockSelectionPlugin)
-                .blockSelection.set(element.id as string);
-            }
-          }}
         >
           <GripVertical className="text-muted-foreground" />
-        </div>
+        </button>
       </TooltipTrigger>
       <TooltipContent>Drag to move</TooltipContent>
     </Tooltip>

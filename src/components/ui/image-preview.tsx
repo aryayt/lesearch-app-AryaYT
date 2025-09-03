@@ -53,6 +53,8 @@ export const ImagePreview = () => {
         !isOpen && 'hidden'
       )}
       onContextMenu={(e) => e.stopPropagation()}
+      role="dialog"
+      aria-label="Image preview"
       {...maskLayerProps}
     >
       <div className="absolute inset-0 size-full bg-black opacity-30"></div>
@@ -67,6 +69,13 @@ export const ImagePreview = () => {
           <div
             className="absolute bottom-0 left-1/2 z-40 flex w-fit -translate-x-1/2 justify-center gap-4 p-2 text-center text-white"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.stopPropagation();
+              }
+            }}
+            role="toolbar"
+            aria-label="Image controls"
           >
             <div className="flex gap-1">
               <button
@@ -148,5 +157,5 @@ export const ImagePreview = () => {
 export function ScaleInput(props: React.ComponentProps<'input'>) {
   const { props: scaleInputProps, ref } = useScaleInput();
 
-  return <input {...scaleInputProps} {...props} ref={ref} />;
+  return <input {...scaleInputProps} {...props} ref={ref as React.LegacyRef<HTMLInputElement>} />;
 }

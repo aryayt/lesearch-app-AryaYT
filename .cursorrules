@@ -104,58 +104,51 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - Biome linter should exclude third-party code (src/anaralabs/) and non-source files (CSS, JSON, MD) via experimentalScannerIgnores
 - VS Code CSS validator warnings for Tailwind v4 directives (@plugin, @theme, @custom-variant, @apply) are false positives - suppress with "css.lint.unknownAtRules": "ignore" in .vscode/settings.json
 - Use Biome v2.2.5+ schema and correct property names (experimentalScannerIgnores not ignore, noConsole not noConsoleLog)
+- Supabase functions should always include `SET search_path = ''` to prevent search_path hijacking attacks; fully qualify all table references with schema names (e.g., public.table_name, auth.users)
 
 # Scratchpad
 
-## Current Task: Comprehensive Application Review & Pre-Deployment Preparation
+## Current Task: Fix Supabase Security Warnings
 
-**Task Overview**: Conduct a complete UI/UX review and technical audit of LeSearch.ai application before deployment. This includes package updates, code quality improvements, fixing build errors, and screen-by-screen browser testing to ensure the application is production-ready.
+**Task Overview**: Address 6 security warnings from Supabase database linter before deployment.
 
-**Goals**:
-1. Review entire application screen-by-screen using browser tools
-2. Update packages to latest versions
-3. Run and fix all lint/type checks
-4. Refactor code as necessary
-5. Validate ai_docs/ for current relevance
-6. Prepare for Notion-like redesign (Priority 2)
-7. Ensure application is deployment-ready
+**Security Warnings to Fix**:
+1. **Function Search Path Mutable** (3 functions) - CRITICAL
+   - `delete_expired_otps` - needs SET search_path = ''
+   - `delete_items_when_folder_deleted` - needs SET search_path = ''
+   - `get_user_id_by_email` - needs SET search_path = ''
+   
+2. **Auth OTP Long Expiry** - Warning (requires dashboard config)
+   - OTP expiry set to >1 hour, should be <1 hour
+   
+3. **Leaked Password Protection Disabled** - Warning (requires dashboard config)
+   - HaveIBeenPwned check is disabled
+   
+4. **Vulnerable Postgres Version** - Warning
+   - Current: supabase-postgres-15.8.1.126
+   - Action: Upgrade via Supabase dashboard
 
-**Current Progress**:
-[X] Phase 1: Technical Audit - COMPLETE ✅
-  [X] Check and update package versions - IDENTIFIED 70+ outdated packages
-  [X] Run type checks and fix errors - FIXED 2 TypeScript errors
-  [X] Run lint checks and fix issues - ALL LINTERS PASSING (0 errors)
-  [X] Setup and configure Biome linter - COMPLETE
-  [X] Fix all linting issues - COMPLETE (470 → 0 issues)
-  [X] Create comprehensive audit document - COMPLETE
+**Progress**:
+[X] Fix function search_path issues (via migrations) - COMPLETE ✅
+  [X] Created migration: fix_function_search_path_security
+  [X] Fixed delete_expired_otps
+  [X] Fixed delete_items_when_folder_deleted
+  [X] Fixed get_user_id_by_email
+  [X] Verified warnings cleared via advisors
   
-[X] Phase 2: UI/UX Browser Testing - PARTIAL ✅
-  [X] Test landing page - Clean, well-designed
-  [X] Test main dashboard - Good UI but many non-functional elements
-  [X] Test document management - ✅ Add Files works, uploads to PDF viewer
-  [X] Initial feature testing - Identified working vs non-working features
-  [ ] Test PDF viewer and annotations - Reported working by user
-  [ ] Test AI chat features - Reported working by user
-  [ ] Test authentication flows - Partial (OAuth working)
+[X] Document auth configuration changes needed - COMPLETE ✅
+  [X] Auth OTP expiry configuration - documented in SUPABASE_SECURITY_FIXES.md
+  [X] Leaked password protection configuration - documented
   
-[ ] Phase 3: Package Updates & Fixes (NEXT)
-  [X] Update critical packages (Next.js, React, Radix UI, TypeScript) - COMPLETE
-  [ ] Fix non-functional home page elements
-  [ ] Connect library items to real data
-  [ ] Add click handlers to action cards
-  [ ] Implement "Create new document" functionality
-  [ ] Implement search functionality
-  
-[ ] Phase 4: Final Validation
-  [X] Build passes without errors - PASSING ✅
-  [ ] All UI elements functional
-  [ ] Performance optimization
-  [ ] Documentation updates
-  [ ] Ready for deployment
+[X] Document Postgres upgrade requirement - COMPLETE ✅
 
-**Key Findings**:
-- ✅ CORE FEATURES WORK: PDF upload → Viewer → Notes → AI Chat
-- 🔴 CRITICAL: Home page has attractive UI but most elements non-functional
-- 🔴 CRITICAL: 70+ packages outdated (including AI SDK v1→v2 major update)
-- ✅ Design already Notion-like (main redesign goal achieved)
-- ⚠️ Bundle size: 1.55MB for document editor route (needs optimization)
+**Results**:
+- ✅ 3 CRITICAL security issues FIXED (function search_path)
+- ⚠️ 3 warnings require manual dashboard configuration
+- 📄 Created comprehensive documentation: SUPABASE_SECURITY_FIXES.md
+- 🗄️ Migration applied: 20251009093402_fix_function_search_path_security
+
+**Previous Task**: Comprehensive Application Review - ON HOLD
+- Phase 1: Technical Audit - COMPLETE ✅
+- Phase 2: UI/UX Browser Testing - PARTIAL ✅
+- Remaining: Homepage functionality, package updates, final validation

@@ -1,0 +1,35 @@
+{
+  // Disable CSS validation for Tailwind v4 directives
+  "css.lint.unknownAtRules": "ignore",
+  
+  // Additional Tailwind-friendly settings
+  "css.validate": true,
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  
+  // Editor settings for consistency
+  "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  
+  // Tailwind CSS IntelliSense
+  "tailwindCSS.experimental.classRegex": [
+    ["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
+  ],
+  
+  // File exclusions (already in .gitignore but helpful for editor)
+  "files.exclude": {
+    "**/.next": true,
+    "**/node_modules": true
+  },
+  
+  // Search exclusions for better performance
+  "search.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/package-lock.json": true
+  }
+}
+

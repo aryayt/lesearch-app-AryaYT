@@ -26,24 +26,31 @@ npm warn peer react-dom@"^17.0.2 || ^18.2.0" from @excalidraw/excalidraw@0.16.4
 
 ## Solution
 
-### **Added npm override to force Excalidraw v0.18.0**
+### **Added npm overrides to force React 19 compatible versions**
 
 Updated `package.json` to include:
 
 ```json
 "overrides": {
-  "@excalidraw/excalidraw": "0.18.0"
+  "@excalidraw/excalidraw": "0.18.0",
+  "@radix-ui/react-tabs": "$@radix-ui/react-tabs"
 }
 ```
 
 **Why this works:**
-- `@excalidraw/excalidraw@0.18.0` supports React 19:
-  ```json
-  {
-    "react": "^17.0.2 || ^18.2.0 || ^19.0.0",
-    "react-dom": "^17.0.2 || ^18.2.0 || ^19.0.0"
-  }
-  ```
+
+1. **Excalidraw v0.18.0** supports React 19:
+   ```json
+   {
+     "react": "^17.0.2 || ^18.2.0 || ^19.0.0",
+     "react-dom": "^17.0.2 || ^18.2.0 || ^19.0.0"
+   }
+   ```
+
+2. **Radix UI override** forces all nested dependencies to use the same version (1.1.13) that supports React 19:
+   - Prevents Excalidraw from pulling in old Radix UI versions
+   - `$@radix-ui/react-tabs` syntax means "use the version from root package.json"
+   - Results in all packages being "deduped" (using same version)
 
 ---
 
@@ -110,9 +117,34 @@ No additional flags or workarounds needed. The override is automatically applied
 
 ## Notes
 
-- The `npm warn ERESOLVE overriding peer dependency` warnings you may see during install are **expected and normal**
-- These warnings indicate npm is successfully applying the override (not an error)
-- The warning will disappear once `@udecode/plate-excalidraw` officially updates to Excalidraw 0.18.0+
+### ✅ **npm Warnings During Install (SAFE TO IGNORE)**
+
+You may see these warnings during `npm install` - they are **informational only** and **NOT errors**:
+
+1. **`npm warn ERESOLVE overriding peer dependency`**
+   - Expected and normal
+   - Indicates npm is successfully applying overrides
+   - Will disappear once packages officially update to React 19
+
+2. **`npm warn Could not resolve dependency`**
+   - Appears even when dependencies ARE satisfied
+   - Check the peer dependency range - if it includes `^19.0`, it's compatible
+   - These are just npm being extra cautious during resolution
+
+3. **`npm warn peerOptional @types/react`**
+   - These are optional peer dependencies
+   - Not required for the app to work
+   - Safe to ignore
+
+### ✅ **How to Verify Everything is OK**
+
+```bash
+# Build should pass without errors
+npm run build
+
+# Check for "✓ Compiled successfully"
+# If build passes, peer dependencies are resolved correctly
+```
 
 ---
 

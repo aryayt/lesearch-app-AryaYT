@@ -54,9 +54,9 @@ git clone https://github.com/LeSearch/frontend-v1.git
 cd frontend-v1
 
 # Install dependencies
-npm install --legacy-peer-deps
+npm install
 # or
-yarn install --legacy-peer-deps
+yarn install
 ```
 
 ### Running the Development Server

@@ -162,6 +162,7 @@
 		"typescript": "^5"
 	},
 	"overrides": {
-		"@excalidraw/excalidraw": "0.18.0"
+		"@excalidraw/excalidraw": "0.18.0",
+		"@radix-ui/react-tabs": "$@radix-ui/react-tabs"
 	}
 }

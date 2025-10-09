@@ -1,7 +1,6 @@
-import * as React from 'react';
-
-import { type SlateElementProps, SlateElement } from '@udecode/plate';
+import { SlateElement, type SlateElementProps } from "@udecode/plate";
+import * as React from "react";
 
 export function CodeLineElementStatic(props: SlateElementProps) {
-  return <SlateElement {...props} />;
+	return <SlateElement {...props} />;
 }

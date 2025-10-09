@@ -1,119 +1,134 @@
-import React, { useEffect, useState } from 'react'
-import { Chat } from './chat';
-import { useChatStore } from '@/store/useChatStore';
-import useSWR from 'swr';
-import { usePanelStore } from '@/store/usePanelStore';
-import { useAPIKeyStore } from '@/store/apiKeyStore';
+import React, { useEffect, useState } from "react";
+import useSWR from "swr";
+import { useAPIKeyStore } from "@/store/apiKeyStore";
+import { useChatStore } from "@/store/useChatStore";
+import { usePanelStore } from "@/store/usePanelStore";
+import { Chat } from "./chat";
 
-export const DEFAULT_CHAT_MODEL: string = 'gemini-2.0-flash';
+export const DEFAULT_CHAT_MODEL: string = "gemini-2.0-flash";
 
-const fetcher = (url: string) => fetch(url).then((res) => {
-  if (!res.ok) {
-    throw new Error('Failed to fetch messages');
-  }
-  return res.json();
-});
+const fetcher = (url: string) =>
+	fetch(url).then((res) => {
+		if (!res.ok) {
+			throw new Error("Failed to fetch messages");
+		}
+		return res.json();
+	});
 
 interface RenderChatProps {
-  newChatId: string;
+	newChatId: string;
 }
 
 export default function RenderChat({ newChatId }: RenderChatProps) {
-  const setActiveChatId = useChatStore((state) => state.setActiveChatId);
-  const getActiveChatId = useChatStore((state) => state.getActiveChatId);
-  const activeChatIds = useChatStore((state) => state.activeChatIds);
-  const activePageId = usePanelStore((state) => state.activePageId);
-  const [currentChatId, setCurrentChatId] = useState<string>('');
-  const {  selectedModel, apiKeys } = useAPIKeyStore();
+	const setActiveChatId = useChatStore((state) => state.setActiveChatId);
+	const getActiveChatId = useChatStore((state) => state.getActiveChatId);
+	const activeChatIds = useChatStore((state) => state.activeChatIds);
+	const activePageId = usePanelStore((state) => state.activePageId);
+	const [currentChatId, setCurrentChatId] = useState<string>("");
+	const { selectedModel, apiKeys } = useAPIKeyStore();
 
-  // Initialize chat ID
-  useEffect(() => {
-    const initializeChat = async () => {
-      if (!activePageId) return;
-      
-      const chatId = await getActiveChatId();
-      setCurrentChatId(chatId);
-    };
+	// Initialize chat ID
+	useEffect(() => {
+		const initializeChat = async () => {
+			if (!activePageId) return;
 
-    initializeChat();
-  }, [activePageId, getActiveChatId]);
+			const chatId = await getActiveChatId();
+			setCurrentChatId(chatId);
+		};
 
-  // Update currentChatId when activeChatIds changes
-  useEffect(() => {
-    if (activePageId && activeChatIds[activePageId]) {
-      setCurrentChatId(activeChatIds[activePageId]);
-    }
-  }, [activePageId, activeChatIds]);
+		initializeChat();
+	}, [activePageId, getActiveChatId]);
 
-  const { data: messages, error, isLoading } = useSWR(
-    currentChatId && currentChatId !== '' && activePageId ? `/api/messages?chatId=${currentChatId}` : null,
-    fetcher
-  );
+	// Update currentChatId when activeChatIds changes
+	useEffect(() => {
+		if (activePageId && activeChatIds[activePageId]) {
+			setCurrentChatId(activeChatIds[activePageId]);
+		}
+	}, [activePageId, activeChatIds]);
 
-  // Set new chat ID when it's provided
-  useEffect(() => {
-    if (currentChatId === '' && newChatId && activePageId) {
-      setActiveChatId(newChatId);
-      setCurrentChatId(newChatId);
-    }
-  }, [currentChatId, newChatId, setActiveChatId, activePageId]);
+	const {
+		data: messages,
+		error,
+		isLoading,
+	} = useSWR(
+		currentChatId && currentChatId !== "" && activePageId
+			? `/api/messages?chatId=${currentChatId}`
+			: null,
+		fetcher,
+	);
 
-  // If no activePageId, show empty state
-  if (!activePageId) {
-    return (
-      <div className="flex items-center justify-center h-full text-muted-foreground">
-        Select a document to start chatting
-      </div>
-    );
-  }
+	// Set new chat ID when it's provided
+	useEffect(() => {
+		if (currentChatId === "" && newChatId && activePageId) {
+			setActiveChatId(newChatId);
+			setCurrentChatId(newChatId);
+		}
+	}, [currentChatId, newChatId, setActiveChatId, activePageId]);
 
-  // If currentChatId is empty string, show new chat
-  if (currentChatId === '') {
-    return (
-      <Chat
-        key={newChatId}
-        id={newChatId}
-        initialMessages={[]}
-        selectedChatModel={selectedModel}
-        provider={Object.entries(apiKeys).find(([, key]) => key.active_models?.includes(selectedModel))?.[0] || ''}
-        isReadonly={false}
-      />
-    );
-  }
+	// If no activePageId, show empty state
+	if (!activePageId) {
+		return (
+			<div className="flex items-center justify-center h-full text-muted-foreground">
+				Select a document to start chatting
+			</div>
+		);
+	}
 
-  // If no currentChatId, show loading state
-  if (!currentChatId) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-      </div>
-    );
-  }
+	// If currentChatId is empty string, show new chat
+	if (currentChatId === "") {
+		return (
+			<Chat
+				key={newChatId}
+				id={newChatId}
+				initialMessages={[]}
+				selectedChatModel={selectedModel}
+				provider={
+					Object.entries(apiKeys).find(([, key]) =>
+						key.active_models?.includes(selectedModel),
+					)?.[0] || ""
+				}
+				isReadonly={false}
+			/>
+		);
+	}
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-      </div>
-    );
-  }
+	// If no currentChatId, show loading state
+	if (!currentChatId) {
+		return (
+			<div className="flex items-center justify-center h-full">
+				<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+			</div>
+		);
+	}
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-full text-muted-foreground">
-        Failed to load messages
-      </div>
-    );
-  }
+	if (isLoading) {
+		return (
+			<div className="flex items-center justify-center h-full">
+				<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+			</div>
+		);
+	}
 
-  return (
-    <Chat
-      key={currentChatId}
-      id={currentChatId}
-      initialMessages={messages || []}
-      selectedChatModel={selectedModel}
-      provider={Object.entries(apiKeys).find(([, key]) => key.active_models?.includes(selectedModel))?.[0] || ''}
-      isReadonly={false}
-    />
-  );
+	if (error) {
+		return (
+			<div className="flex items-center justify-center h-full text-muted-foreground">
+				Failed to load messages
+			</div>
+		);
+	}
+
+	return (
+		<Chat
+			key={currentChatId}
+			id={currentChatId}
+			initialMessages={messages || []}
+			selectedChatModel={selectedModel}
+			provider={
+				Object.entries(apiKeys).find(([, key]) =>
+					key.active_models?.includes(selectedModel),
+				)?.[0] || ""
+			}
+			isReadonly={false}
+		/>
+	);
 }

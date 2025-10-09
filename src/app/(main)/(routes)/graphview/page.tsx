@@ -1,9 +1,7 @@
-import React from 'react'
+import React from "react";
 
 const GraphView = () => {
-  return (
-    <div>GraphView</div>
-  )
-}
+	return <div>GraphView</div>;
+};
 
-export default GraphView
+export default GraphView;

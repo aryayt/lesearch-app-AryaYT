@@ -5,31 +5,31 @@ import { usePdf } from "../../internal";
 import { usePDFPageNumber } from "../usePdfPageNumber";
 
 export const useTextLayer = () => {
-  const textContainerRef = useRef<HTMLDivElement>(null);
+	const textContainerRef = useRef<HTMLDivElement>(null);
 
-  const pageNumber = usePDFPageNumber();
-  const pdfPageProxy = usePdf((state) => state.getPdfPageProxy(pageNumber));
+	const pageNumber = usePDFPageNumber();
+	const pdfPageProxy = usePdf((state) => state.getPdfPageProxy(pageNumber));
 
-  useEffect(() => {
-    if (!textContainerRef.current) {
-      return;
-    }
+	useEffect(() => {
+		if (!textContainerRef.current) {
+			return;
+		}
 
-    const textLayer = new TextLayer({
-      textContentSource: pdfPageProxy.streamTextContent(),
-      container: textContainerRef.current,
-      viewport: pdfPageProxy.getViewport({ scale: 1 }),
-    });
+		const textLayer = new TextLayer({
+			textContentSource: pdfPageProxy.streamTextContent(),
+			container: textContainerRef.current,
+			viewport: pdfPageProxy.getViewport({ scale: 1 }),
+		});
 
-    void textLayer.render();
+		void textLayer.render();
 
-    return () => {
-      textLayer.cancel();
-    };
-  }, [pdfPageProxy]);
+		return () => {
+			textLayer.cancel();
+		};
+	}, [pdfPageProxy]);
 
-  return {
-    textContainerRef,
-    pageNumber: pdfPageProxy.pageNumber,
-  };
+	return {
+		textContainerRef,
+		pageNumber: pdfPageProxy.pageNumber,
+	};
 };

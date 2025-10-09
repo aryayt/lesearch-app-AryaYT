@@ -1,270 +1,286 @@
 "use client";
 
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import {
-  CanvasLayer,
-  Page,
-  Pages,
-  Root,
-  TextLayer,
-  AnnotationHighlightLayer,
-  type Annotation,
-  SelectionTooltip,
-  useSelectionDimensions,
-  usePdfJump,
-  AnnotationLayer,
+	type Annotation,
+	AnnotationHighlightLayer,
+	AnnotationLayer,
+	CanvasLayer,
+	Page,
+	Pages,
+	Root,
+	SelectionTooltip,
+	TextLayer,
+	usePdfJump,
+	useSelectionDimensions,
 } from "@/anaralabs/lector";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
 import "pdfjs-dist/web/pdf_viewer.css";
+import { useParams } from "next/navigation";
 import { useTheme } from "next-themes";
-import GridLoader from "../loader/grid-loader";
 import { GlobalWorkerOptions } from "pdfjs-dist";
-import ZoomMenu from "./zoom-menu";
-import DocumentMenu from "./document-menu";
-import { PageNavigation } from "./page-navigation";
-import {
-  SelectionTooltipContent,
-  AnnotationTooltip,
-  type AnnotationTooltipProps,
-} from "./annotations";
-import { usePdfStore } from '@/store/usePdfStore';
 import { ExternalLinkPopup } from "@/anaralabs/lector/components/layers/external-link-popup";
 import { usePanelStore } from "@/store/usePanelStore";
-import { useParams } from "next/navigation";
-
-
+import { usePdfStore } from "@/store/usePdfStore";
+import GridLoader from "../loader/grid-loader";
+import {
+	AnnotationTooltip,
+	type AnnotationTooltipProps,
+	SelectionTooltipContent,
+} from "./annotations";
+import DocumentMenu from "./document-menu";
+import { PageNavigation } from "./page-navigation";
+import ZoomMenu from "./zoom-menu";
 
 GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.mjs",
-  import.meta.url
+	"pdfjs-dist/build/pdf.worker.mjs",
+	import.meta.url,
 ).toString();
 
 interface PDFContentProps {
-  initialAnnotations?: Annotation[];
-  focusedAnnotationId?: string;
-  onAnnotationClick: (annotation: Annotation | null) => void;
+	initialAnnotations?: Annotation[];
+	focusedAnnotationId?: string;
+	onAnnotationClick: (annotation: Annotation | null) => void;
 }
 
 const PDFContent = ({
-  focusedAnnotationId,
-  onAnnotationClick,
-  documentId,
-  onExternalLinkClick,
-}: PDFContentProps & { 
-  documentId: string;
-  onExternalLinkClick: (url: string) => void;
+	focusedAnnotationId,
+	onAnnotationClick,
+	documentId,
+	onExternalLinkClick,
+}: PDFContentProps & {
+	documentId: string;
+	onExternalLinkClick: (url: string) => void;
 }) => {
-  const { getDimension } = useSelectionDimensions();
-  const { activePageId, setPanelVisibility, getPanelVisibility } = usePanelStore();
-  const params = useParams(); 
-  const pageId = activePageId || (params?.pageId as string);
-  const pagePanelVisibility = getPanelVisibility(pageId);
-  const { jumpToHighlightRects } = usePdfJump();
-  const { pdfs, updatePdfHighlightsAsync, setSelectedText } = usePdfStore();
-  const currentAnnotations = useMemo(() => pdfs[documentId]?.highlights || [], [pdfs, documentId]);
+	const { getDimension } = useSelectionDimensions();
+	const { activePageId, setPanelVisibility, getPanelVisibility } =
+		usePanelStore();
+	const params = useParams();
+	const pageId = activePageId || (params?.pageId as string);
+	const pagePanelVisibility = getPanelVisibility(pageId);
+	const { jumpToHighlightRects } = usePdfJump();
+	const { pdfs, updatePdfHighlightsAsync, setSelectedText } = usePdfStore();
+	const currentAnnotations = useMemo(
+		() => pdfs[documentId]?.highlights || [],
+		[pdfs, documentId],
+	);
 
-  const handleCreateAnnotation = useCallback((color: string) => {
-    const selection = getDimension();
-    if (!selection || !selection.highlights.length) return;
+	const handleCreateAnnotation = useCallback(
+		(color: string) => {
+			const selection = getDimension();
+			if (!selection || !selection.highlights.length) return;
 
-    const newAnnotation = {
-      pageNumber: selection.highlights[0].pageNumber,
-      highlights: selection.highlights,
-      color: color,
-      borderColor: "rgba(255, 255, 0, 0.1)",
-      text: selection.text,
-      id: uuidv4(),
-      documentId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+			const newAnnotation = {
+				pageNumber: selection.highlights[0].pageNumber,
+				highlights: selection.highlights,
+				color: color,
+				borderColor: "rgba(255, 255, 0, 0.1)",
+				text: selection.text,
+				id: uuidv4(),
+				documentId,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			};
 
-    // Update UI immediately
-    const updatedAnnotations = [...currentAnnotations, newAnnotation];
-    updatePdfHighlightsAsync(documentId, updatedAnnotations); // Add optimistic flag
+			// Update UI immediately
+			const updatedAnnotations = [...currentAnnotations, newAnnotation];
+			updatePdfHighlightsAsync(documentId, updatedAnnotations); // Add optimistic flag
 
-    // Clear selection
-    window.getSelection()?.removeAllRanges();
-  }, [getDimension, documentId, currentAnnotations, updatePdfHighlightsAsync]);
+			// Clear selection
+			window.getSelection()?.removeAllRanges();
+		},
+		[getDimension, documentId, currentAnnotations, updatePdfHighlightsAsync],
+	);
 
+	useEffect(() => {
+		if (!focusedAnnotationId) return;
 
-  useEffect(() => {
-    if (!focusedAnnotationId) return;
+		const annotation = currentAnnotations.find(
+			(a) => a.id === focusedAnnotationId,
+		);
+		if (!annotation || !annotation.highlights.length) return;
 
-    const annotation = currentAnnotations.find((a) => a.id === focusedAnnotationId);
-    if (!annotation || !annotation.highlights.length) return;
+		jumpToHighlightRects(annotation.highlights, "pixels", "start", -20);
+	}, [focusedAnnotationId, currentAnnotations, jumpToHighlightRects]);
 
-    jumpToHighlightRects(annotation.highlights, "pixels", "start", -20);
-  }, [focusedAnnotationId, currentAnnotations, jumpToHighlightRects]);
+	const handlePagesClick = useCallback(
+		(e: React.MouseEvent) => {
+			const target = e.target as HTMLElement;
 
-  const handlePagesClick = useCallback(
-    (e: React.MouseEvent) => {
-      const target = e.target as HTMLElement;
+			if (target.closest('[role="tooltip"]')) {
+				return;
+			}
 
-      if (target.closest('[role="tooltip"]')) {
-        return;
-      }
+			const clickedHighlight = target.closest("[data-highlight-id]");
 
-      const clickedHighlight = target.closest("[data-highlight-id]");
+			// If we clicked on a highlight, let the AnnotationHighlightLayer handle it
+			if (clickedHighlight) {
+				return;
+			}
 
-      // If we clicked on a highlight, let the AnnotationHighlightLayer handle it
-      if (clickedHighlight) {
-        return;
-      }
+			if (focusedAnnotationId) {
+				onAnnotationClick(null);
+			}
+		},
+		[focusedAnnotationId, onAnnotationClick],
+	);
 
-      if (focusedAnnotationId) {
-        onAnnotationClick(null);
-      }
-    },
-    [focusedAnnotationId, onAnnotationClick]
-  );
+	const renderTooltipContent = useCallback(
+		({ annotation, onClose }: AnnotationTooltipProps) => {
+			return <AnnotationTooltip annotation={annotation} onClose={onClose} />;
+		},
+		[],
+	);
 
-  const renderTooltipContent = useCallback(
-    ({ annotation, onClose }: AnnotationTooltipProps) => {
-      return <AnnotationTooltip annotation={annotation} onClose={onClose} />;
-    },
-    []
-  );
+	const renderHoverTooltipContent = useCallback(
+		({ annotation }: AnnotationTooltipProps) => {
+			return (
+				<div className="bg-background p-2 shadow-lg text-sm border border-gray-300 rounded-md">
+					{annotation.comment || "No comment"}
+				</div>
+			);
+		},
+		[],
+	);
 
-  const renderHoverTooltipContent = useCallback(
-    ({ annotation }: AnnotationTooltipProps) => {
-      return (
-        <div className="bg-background p-2 shadow-lg text-sm border border-gray-300 rounded-md">
-          {annotation.comment || 'No comment'}
-        </div>
-      );
-    },
-    []
-  );
+	const handleAskAI = useCallback(() => {
+		const selection = getDimension();
+		if (!selection || !selection.text) return;
+		setPanelVisibility(pageId, {
+			showMiddlePanel: pagePanelVisibility.showMiddlePanel,
+			showRightPanel: true,
+		});
 
-  const handleAskAI = useCallback(() => {
-    const selection = getDimension();
-    if (!selection || !selection.text) return;
-    setPanelVisibility(pageId, {
-      showMiddlePanel: pagePanelVisibility.showMiddlePanel,
-      showRightPanel: true,
-    });
+		// Get the document name from the current PDF
+		const currentPdf = pdfs[documentId];
+		const documentName = currentPdf?.name || "Unknown Document";
+		setSelectedText(selection.text, documentId, documentName);
+	}, [
+		getDimension,
+		documentId,
+		setSelectedText,
+		pdfs,
+		pageId,
+		setPanelVisibility,
+		pagePanelVisibility,
+	]);
 
-    // Get the document name from the current PDF
-    const currentPdf = pdfs[documentId];
-    const documentName = currentPdf?.name || 'Unknown Document';
-    setSelectedText(selection.text, documentId, documentName);
-  }, [getDimension, documentId, setSelectedText, pdfs, pageId, setPanelVisibility, pagePanelVisibility]);
-
-  return (
-    <Pages
-      className="dark:invert-[94%] dark:hue-rotate-180 dark:brightness-[80%] dark:contrast-[228%] dark:bg-gray-100"
-      onClick={handlePagesClick}
-    >
-      <Page>
-        <CanvasLayer />
-        <TextLayer />
-        <AnnotationLayer onExternalLinkClick={onExternalLinkClick} />
-        <AnnotationHighlightLayer
-          className="dark:opacity-40 mix-blend-multiply transition-all duration-200 cursor-pointer pointer-events-none"
-          focusedAnnotationId={focusedAnnotationId}
-          tooltipClassName="bg-background shadow-lg rounded-lg p-2 min-w-[200px] border border-gray-300 rounded-md"
-          onAnnotationClick={onAnnotationClick}
-          renderTooltipContent={renderTooltipContent}
-          renderHoverTooltipContent={renderHoverTooltipContent}
-          documentId={documentId}
-        />
-        <SelectionTooltip>
-          <SelectionTooltipContent 
-            onHighlight={handleCreateAnnotation} 
-            onAskAI={handleAskAI}
-          />
-        </SelectionTooltip>
-      </Page>
-    </Pages>
-  );
+	return (
+		<Pages
+			className="dark:invert-[94%] dark:hue-rotate-180 dark:brightness-[80%] dark:contrast-[228%] dark:bg-gray-100"
+			onClick={handlePagesClick}
+		>
+			<Page>
+				<CanvasLayer />
+				<TextLayer />
+				<AnnotationLayer onExternalLinkClick={onExternalLinkClick} />
+				<AnnotationHighlightLayer
+					className="dark:opacity-40 mix-blend-multiply transition-all duration-200 cursor-pointer pointer-events-none"
+					focusedAnnotationId={focusedAnnotationId}
+					tooltipClassName="bg-background shadow-lg rounded-lg p-2 min-w-[200px] border border-gray-300 rounded-md"
+					onAnnotationClick={onAnnotationClick}
+					renderTooltipContent={renderTooltipContent}
+					renderHoverTooltipContent={renderHoverTooltipContent}
+					documentId={documentId}
+				/>
+				<SelectionTooltip>
+					<SelectionTooltipContent
+						onHighlight={handleCreateAnnotation}
+						onAskAI={handleAskAI}
+					/>
+				</SelectionTooltip>
+			</Page>
+		</Pages>
+	);
 };
 
 export const AnaraViewer = ({
-  pdfId,
-  pdfUrl,
-  pdfHighlights,
+	pdfId,
+	pdfUrl,
+	pdfHighlights,
 }: {
-  pdfId: string;
-  pdfUrl: string;
-  pdfHighlights: Annotation[];
+	pdfId: string;
+	pdfUrl: string;
+	pdfHighlights: Annotation[];
 }) => {
-  const [focusedAnnotationId, setFocusedAnnotationId] = useState<string>();
-  const [externalLink, setExternalLink] = useState<string | null>(null);
-  const { getPdfAsync, pdfs, loadingPdfs, clearPdf } = usePdfStore();
-  const { resolvedTheme } = useTheme();
-  const pdf = pdfs[pdfId];
-  const isLoading = loadingPdfs[pdfId];
+	const [focusedAnnotationId, setFocusedAnnotationId] = useState<string>();
+	const [externalLink, setExternalLink] = useState<string | null>(null);
+	const { getPdfAsync, pdfs, loadingPdfs, clearPdf } = usePdfStore();
+	const { resolvedTheme } = useTheme();
+	const pdf = pdfs[pdfId];
+	const isLoading = loadingPdfs[pdfId];
 
-  // Load PDF data on mount
-  React.useEffect(() => {
-    getPdfAsync(pdfId);
-    
-    // Cleanup when component unmounts or pdfId changes
-    return () => {
-      clearPdf(pdfId);
-    };
-  }, [pdfId, getPdfAsync, clearPdf]);
+	// Load PDF data on mount
+	React.useEffect(() => {
+		getPdfAsync(pdfId);
 
-  const handleAnnotationClick = useCallback((annotation: Annotation | null) => {
-    setFocusedAnnotationId(annotation?.id);
-  }, []);
+		// Cleanup when component unmounts or pdfId changes
+		return () => {
+			clearPdf(pdfId);
+		};
+	}, [pdfId, getPdfAsync, clearPdf]);
 
-  const handleExternalLinkClick = useCallback((url: string) => {
-    setExternalLink(url);
-  }, []);
+	const handleAnnotationClick = useCallback((annotation: Annotation | null) => {
+		setFocusedAnnotationId(annotation?.id);
+	}, []);
 
-  const handleCloseExternalLink = useCallback(() => {
-    setExternalLink(null);
-  }, []);
+	const handleExternalLinkClick = useCallback((url: string) => {
+		setExternalLink(url);
+	}, []);
 
-  const handleNavigateExternalLink = useCallback(() => {
-    if (externalLink) {
-      window.open(externalLink, '_blank');
-      handleCloseExternalLink();
-    }
-  }, [externalLink, handleCloseExternalLink]);
+	const handleCloseExternalLink = useCallback(() => {
+		setExternalLink(null);
+	}, []);
 
-  // Use highlights from store if available, otherwise use props
-  const currentHighlights = pdf?.highlights || pdfHighlights;
+	const handleNavigateExternalLink = useCallback(() => {
+		if (externalLink) {
+			window.open(externalLink, "_blank");
+			handleCloseExternalLink();
+		}
+	}, [externalLink, handleCloseExternalLink]);
 
+	// Use highlights from store if available, otherwise use props
+	const currentHighlights = pdf?.highlights || pdfHighlights;
 
-  if (isLoading && !pdf) {
-    return (
-      <div className="h-full w-full flex justify-center items-center">
-        <GridLoader size="80" color={`${resolvedTheme==="light"?'#000000':'#ffffff'}`} />
-      </div>
-    );
-  }
+	if (isLoading && !pdf) {
+		return (
+			<div className="h-full w-full flex justify-center items-center">
+				<GridLoader
+					size="80"
+					color={`${resolvedTheme === "light" ? "#000000" : "#ffffff"}`}
+				/>
+			</div>
+		);
+	}
 
-  return (
-    <div className="flex flex-col gap-2 h-full">
-      <Root
-        className="border overflow-hidden flex flex-col w-full h-full rounded-lg"
-        source={pdfUrl}
-        isZoomFitWidth={true}
-        loader={<div className="w-full" />}
-      >
-        <div className="p-1 relative flex justify-between border-b">
-          <ZoomMenu />
-          <PageNavigation />
-          <DocumentMenu documentUrl={pdfUrl} />
-        </div>
-        <PDFContent
-          initialAnnotations={currentHighlights}
-          focusedAnnotationId={focusedAnnotationId}
-          onAnnotationClick={handleAnnotationClick}
-          documentId={pdfId}
-          onExternalLinkClick={handleExternalLinkClick}
-        />
-      </Root>
-      {externalLink && (
-        <ExternalLinkPopup
-          url={externalLink}
-          onClose={handleCloseExternalLink}
-          onNavigate={handleNavigateExternalLink}
-        />
-      )}
-    </div>
-  );
+	return (
+		<div className="flex flex-col gap-2 h-full">
+			<Root
+				className="border overflow-hidden flex flex-col w-full h-full rounded-lg"
+				source={pdfUrl}
+				isZoomFitWidth={true}
+				loader={<div className="w-full" />}
+			>
+				<div className="p-1 relative flex justify-between border-b">
+					<ZoomMenu />
+					<PageNavigation />
+					<DocumentMenu documentUrl={pdfUrl} />
+				</div>
+				<PDFContent
+					initialAnnotations={currentHighlights}
+					focusedAnnotationId={focusedAnnotationId}
+					onAnnotationClick={handleAnnotationClick}
+					documentId={pdfId}
+					onExternalLinkClick={handleExternalLinkClick}
+				/>
+			</Root>
+			{externalLink && (
+				<ExternalLinkPopup
+					url={externalLink}
+					onClose={handleCloseExternalLink}
+					onNavigate={handleNavigateExternalLink}
+				/>
+			)}
+		</div>
+	);
 };

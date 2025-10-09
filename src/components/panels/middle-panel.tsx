@@ -1,26 +1,26 @@
-import React, { useEffect, useState, useCallback, memo } from "react";
-import { type Tab, usePanelStore } from "@/store/usePanelStore";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { FilePen, FileText, Plus, X } from "lucide-react";
-import { Button } from "../ui/button";
+import { useTheme } from "next-themes";
+import React, { memo, useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import type { Annotation } from "@/anaralabs/lector";
+import { useStore } from "@/store/useCollectionStore";
+import { useDocStore } from "@/store/useDocStore";
+import { type Tab, usePanelStore } from "@/store/usePanelStore";
+import { usePdfStore } from "@/store/usePdfStore";
+import { useUserStore } from "@/store/userStore";
 import { AnaraViewer } from "../anara/anara";
+import GridLoader from "../loader/grid-loader";
+import EditorLayout from "../platejs/EditorLayout";
+import { PDFImport } from "../sidebar/pdf-import";
+import { SaveStatus } from "../sidebar/save-status";
+import { Button } from "../ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { useStore } from "@/store/useCollectionStore";
-import { PDFImport } from "../sidebar/pdf-import";
-import { usePdfStore } from "@/store/usePdfStore";
-import EditorLayout from "../platejs/EditorLayout";
-import { SaveStatus } from "../sidebar/save-status";
-import { useDocStore } from "@/store/useDocStore";
-import type { Annotation } from "@/anaralabs/lector";
-import { toast } from "sonner";
-import { useUserStore } from "@/store/userStore";
-import GridLoader from "../loader/grid-loader";
-import { useTheme } from "next-themes";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 interface TabContentProps {
 	tab: Tab;
@@ -40,7 +40,7 @@ const TabContent = memo(({ tab, pdfs }: TabContentProps) => {
 	}
 	return <EditorLayout docid={tab.id} />;
 });
-TabContent.displayName = 'TabContent';
+TabContent.displayName = "TabContent";
 
 interface TabTriggerProps {
 	tab: Tab;
@@ -57,11 +57,7 @@ const TabTrigger = memo(({ tab, onRemove }: TabTriggerProps) => (
 			value={tab.id}
 			className="flex items-center gap-1 px-3 h-full text-xs font-medium leading-none truncate max-w-[180px] rounded-none shadow-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-muted-foreground data-[state=active]:text-foreground hover:bg-gray-100 dark:hover:bg-gray-800 border-b-2 border-transparent data-[state=active]:border-b-primary -mb-[2px] pr-6"
 		>
-			{tab.type === "pdf" ? (
-				<FileText size={15} />
-			) : (
-				<FilePen size={15} />
-			)}
+			{tab.type === "pdf" ? <FileText size={15} /> : <FilePen size={15} />}
 			<span className="truncate">{tab.name}</span>
 		</TabsTrigger>
 		<button
@@ -78,7 +74,7 @@ const TabTrigger = memo(({ tab, onRemove }: TabTriggerProps) => (
 		</button>
 	</div>
 ));
-TabTrigger.displayName = 'TabTrigger';
+TabTrigger.displayName = "TabTrigger";
 
 const MiddlePanel = () => {
 	const {
@@ -123,7 +119,7 @@ const MiddlePanel = () => {
 			setCreation({
 				parentId: activePageId,
 				type: "note",
-				panel: "middle"
+				panel: "middle",
 			});
 		}, 0);
 	}, [activePageId, setCreation]);
@@ -134,7 +130,7 @@ const MiddlePanel = () => {
 			setCreation({
 				parentId: activePageId,
 				type: "pdf",
-				panel: "middle"
+				panel: "middle",
 			});
 		}, 0);
 	}, [activePageId, setCreation]);
@@ -146,9 +142,12 @@ const MiddlePanel = () => {
 		setIsPdfImportOpen(false);
 	}, []);
 
-	const handleRemoveTab = useCallback((tabId: string) => {
-		removeTab(tabId, "middle");
-	}, [removeTab]);
+	const handleRemoveTab = useCallback(
+		(tabId: string) => {
+			removeTab(tabId, "middle");
+		},
+		[removeTab],
+	);
 
 	const handleDragOver = useCallback((e: React.DragEvent) => {
 		e.preventDefault();
@@ -162,76 +161,81 @@ const MiddlePanel = () => {
 		setIsDragging(false);
 	}, []);
 
-	const handleDrop = useCallback(async (e: React.DragEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
-		setIsDragging(false);
-		setIsLoading(true);
+	const handleDrop = useCallback(
+		async (e: React.DragEvent) => {
+			e.preventDefault();
+			e.stopPropagation();
+			setIsDragging(false);
+			setIsLoading(true);
 
-		const file = e.dataTransfer.files?.[0];
-		if (!file || !file.type.includes('pdf')) {
-			toast.error("Please drop a PDF file");
-			return;
-		}
-
-		if (!user) {
-			toast.error("User not found");
-			return;
-		}
-
-		try {
-			const fileName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
-			const formData = new FormData();
-			formData.append("file", file);
-			formData.append("userId", user.id);
-
-			const id = await createItem(fileName, activePageId, "pdf");
-
-			if (!id) {
-				toast.error("Failed to create PDF");
+			const file = e.dataTransfer.files?.[0];
+			if (!file || !file.type.includes("pdf")) {
+				toast.error("Please drop a PDF file");
 				return;
 			}
 
-			formData.append("id", id);
-
-			const response = await fetch("/api/documents/upload", {
-				method: "POST",
-				body: formData,
-			});
-
-			if (!response.ok) {
-				deleteItem(id, "pdf");
-				const errorData = await response.json();
-				throw new Error(errorData.error || "Failed to upload document");
+			if (!user) {
+				toast.error("User not found");
+				return;
 			}
 
-			// Add the PDF as a tab in the middle panel
-			await addTab(id, "pdf", "middle");
-			toast.success("PDF added successfully");
+			try {
+				const fileName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+				const formData = new FormData();
+				formData.append("file", file);
+				formData.append("userId", user.id);
 
-		} catch (error) {
-			console.error("Error importing PDF:", error);
-			toast.error("Failed to import PDF");
-		}
-		finally {
-			setIsLoading(false);
-		}
-	}, [user, createItem, deleteItem, addTab, activePageId]);
+				const id = await createItem(fileName, activePageId, "pdf");
 
-	if(isLoading) {
+				if (!id) {
+					toast.error("Failed to create PDF");
+					return;
+				}
+
+				formData.append("id", id);
+
+				const response = await fetch("/api/documents/upload", {
+					method: "POST",
+					body: formData,
+				});
+
+				if (!response.ok) {
+					deleteItem(id, "pdf");
+					const errorData = await response.json();
+					throw new Error(errorData.error || "Failed to upload document");
+				}
+
+				// Add the PDF as a tab in the middle panel
+				await addTab(id, "pdf", "middle");
+				toast.success("PDF added successfully");
+			} catch (error) {
+				console.error("Error importing PDF:", error);
+				toast.error("Failed to import PDF");
+			} finally {
+				setIsLoading(false);
+			}
+		},
+		[user, createItem, deleteItem, addTab, activePageId],
+	);
+
+	if (isLoading) {
 		return (
-		<div className="flex flex-col w-full h-full items-center justify-center">
-			<GridLoader size="80" color={`${resolvedTheme==="light"?'#000000':'#ffffff'}`} />
-		</div>
-	)}
+			<div className="flex flex-col w-full h-full items-center justify-center">
+				<GridLoader
+					size="80"
+					color={`${resolvedTheme === "light" ? "#000000" : "#ffffff"}`}
+				/>
+			</div>
+		);
+	}
 
 	// Enhanced empty state with drag and drop
 	if (tabs.length === 0)
 		return (
 			<>
-				<div 
+				<div
 					className={`flex flex-col w-full h-full items-center justify-center bg-card/50 transition-colors ${
-						isDragging ? 'bg-primary/5' : ''
+						isDragging ? "bg-primary/5" : ""
 					}`}
 					onDragOver={handleDragOver}
 					onDragLeave={handleDragLeave}
@@ -336,5 +340,5 @@ const MiddlePanel = () => {
 	);
 };
 
-MiddlePanel.displayName = 'MiddlePanel';
+MiddlePanel.displayName = "MiddlePanel";
 export default memo(MiddlePanel);

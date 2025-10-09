@@ -1,5 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
 	const formData = await request.formData();
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
 				id: id,
 				name: file.name,
 				pdf_url: publicUrl,
-        		file_path: filePath,
+				file_path: filePath,
 				file_type: file.type,
 				user_id: userId,
 				size: file.size,

@@ -105,48 +105,42 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - VS Code CSS validator warnings for Tailwind v4 directives (@plugin, @theme, @custom-variant, @apply) are false positives - suppress with "css.lint.unknownAtRules": "ignore" in .vscode/settings.json
 - Use Biome v2.2.5+ schema and correct property names (experimentalScannerIgnores not ignore, noConsole not noConsoleLog)
 - Supabase functions should always include `SET search_path = ''` to prevent search_path hijacking attacks; fully qualify all table references with schema names (e.g., public.table_name, auth.users)
+- RLS policies should wrap `auth.uid()` and similar functions in subqueries: `(select auth.uid())` to prevent re-evaluation for each row, significantly improving query performance at scale
+- Leaked Password Protection in Supabase Auth requires Pro plan and can only be enabled via Dashboard (not programmable via API/migrations)
 
 # Scratchpad
 
-## Current Task: Fix Supabase Security Warnings
+## Current Task: Fix Supabase Security & Performance Warnings - COMPLETE ✅
 
-**Task Overview**: Address 6 security warnings from Supabase database linter before deployment.
+**Task Overview**: Address security and performance warnings from Supabase database linter.
 
-**Security Warnings to Fix**:
-1. **Function Search Path Mutable** (3 functions) - CRITICAL
-   - `delete_expired_otps` - needs SET search_path = ''
-   - `delete_items_when_folder_deleted` - needs SET search_path = ''
-   - `get_user_id_by_email` - needs SET search_path = ''
-   
-2. **Auth OTP Long Expiry** - Warning (requires dashboard config)
-   - OTP expiry set to >1 hour, should be <1 hour
-   
-3. **Leaked Password Protection Disabled** - Warning (requires dashboard config)
-   - HaveIBeenPwned check is disabled
-   
-4. **Vulnerable Postgres Version** - Warning
-   - Current: supabase-postgres-15.8.1.126
-   - Action: Upgrade via Supabase dashboard
-
-**Progress**:
-[X] Fix function search_path issues (via migrations) - COMPLETE ✅
-  [X] Created migration: fix_function_search_path_security
-  [X] Fixed delete_expired_otps
-  [X] Fixed delete_items_when_folder_deleted
-  [X] Fixed get_user_id_by_email
-  [X] Verified warnings cleared via advisors
-  
-[X] Document auth configuration changes needed - COMPLETE ✅
-  [X] Auth OTP expiry configuration - documented in SUPABASE_SECURITY_FIXES.md
-  [X] Leaked password protection configuration - documented
-  
-[X] Document Postgres upgrade requirement - COMPLETE ✅
+**Warnings Fixed**:
+1. ✅ **Function Search Path Mutable** (3 functions) - FIXED
+2. ✅ **Auth RLS Performance** (36 policies) - FIXED
+3. ✅ **Duplicate RLS Policies** (6 policies) - FIXED
+4. ✅ **Duplicate Indexes** (2 indexes) - FIXED
+5. ⚠️ **Auth OTP Long Expiry** - Requires manual dashboard config
+6. ⚠️ **Leaked Password Protection** - Requires manual dashboard config (Pro plan only)
+7. ⚠️ **Postgres Version** - Requires manual upgrade
 
 **Results**:
-- ✅ 3 CRITICAL security issues FIXED (function search_path)
+- ✅ 47 issues FIXED automatically (3 security + 44 performance)
 - ⚠️ 3 warnings require manual dashboard configuration
-- 📄 Created comprehensive documentation: SUPABASE_SECURITY_FIXES.md
-- 🗄️ Migration applied: 20251009093402_fix_function_search_path_security
+- 📄 Comprehensive documentation created
+- 🗄️ Migrations applied:
+  - `20251009093402_fix_function_search_path_security`
+  - `20251009093547_optimize_rls_policies_and_indexes_v2`
+
+**Performance Improvements**:
+- All RLS policies now use `(select auth.uid())` for optimal performance
+- Eliminated duplicate policies on `final_cta` and `waitlist` tables
+- Removed duplicate index constraints on `notes` and `pdfs` tables
+- Database queries will be significantly faster at scale
+
+**Manual Actions Required** (Dashboard only):
+1. Configure Auth OTP expiry to ≤ 1 hour
+2. Enable Leaked Password Protection (requires Pro plan)
+3. Upgrade Postgres to latest version
 
 **Previous Task**: Comprehensive Application Review - ON HOLD
 - Phase 1: Technical Audit - COMPLETE ✅

@@ -160,7 +160,43 @@ USING (email = auth.jwt() ->> 'email');
 
 ---
 
-*Last Updated*: [Current Date]  
-*Migration Applied*: `fix_function_search_path_security`  
-*Status*: 3/6 issues resolved automatically, 3 require dashboard configuration
+## 🚀 UPDATE: Performance Optimization Complete
+
+### ✅ Additional Fixes Applied
+
+**Migration**: `optimize_rls_policies_and_indexes_v2`
+
+**Performance Improvements**:
+- ✅ Fixed 36 RLS policy performance issues
+  - Wrapped all `auth.uid()` calls in subqueries: `(select auth.uid())`
+  - Prevents re-evaluation of auth functions for each row
+  - Significantly improves query performance at scale
+  
+- ✅ Removed 6 duplicate RLS policies
+  - Consolidated `final_cta` table policies (4 → 2)
+  - Consolidated `waitlist` table policies (3 → 1)
+  - Reduces policy evaluation overhead
+  
+- ✅ Dropped 2 duplicate indexes
+  - Removed `notes_id_key` constraint (kept primary key)
+  - Removed `documents_id_key` constraint (kept primary key)
+  - Reduces index maintenance overhead
+
+**Affected Tables**: `api_keys`, `chats`, `code_generations`, `documents`, `files`, `messages`, `models`, `notes`, `pdfs`, `user_keys`, `final_cta`, `waitlist`
+
+**Performance Impact**: 
+- Queries with RLS policies will execute significantly faster
+- Reduced database overhead from duplicate policies and indexes
+- Better scalability for large datasets
+
+---
+
+*Last Updated*: 2025-10-09  
+*Migrations Applied*: 
+- `fix_function_search_path_security` (Security fixes)
+- `optimize_rls_policies_and_indexes_v2` (Performance optimization)
+
+*Status*: 
+- Security: 3/6 issues resolved automatically, 3 require dashboard configuration
+- Performance: 44/44 issues resolved automatically ✅
 

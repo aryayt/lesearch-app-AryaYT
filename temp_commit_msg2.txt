@@ -1,0 +1,38 @@
+[Cursor] Optimize RLS policies and remove duplicate indexes
+
+Performance Improvements:
+- Fixed 36 RLS policy performance issues across 12 tables
+- Wrapped all auth.uid() calls in subqueries: (select auth.uid())
+- Prevents auth function re-evaluation for each row
+- Significantly improves query performance at scale
+
+Policy Consolidation:
+- Removed 6 duplicate RLS policies
+- Consolidated final_cta policies (4 → 2)
+- Consolidated waitlist policies (3 → 1)
+- Reduces policy evaluation overhead
+
+Index Optimization:
+- Dropped 2 duplicate index constraints
+- Removed notes_id_key (kept primary key)
+- Removed documents_id_key (kept primary key)
+- Reduces index maintenance overhead
+
+Migration Applied:
+- optimize_rls_policies_and_indexes_v2 (20251009093547)
+
+Tables Optimized:
+- api_keys, chats, code_generations, documents, files
+- messages, models, notes, pdfs, user_keys
+- final_cta, waitlist
+
+Impact:
+✅ 44 performance warnings resolved
+✅ Database queries significantly faster at scale
+✅ Better scalability for large datasets
+
+Documentation:
+- Updated SUPABASE_SECURITY_FIXES.md with performance improvements
+- Updated .cursorrules with RLS optimization best practices
+
+

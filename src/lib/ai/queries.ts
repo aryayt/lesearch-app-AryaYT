@@ -22,7 +22,7 @@ export async function generateTitleFromUserMessage({
 	return title;
 }
 
-export const getAPIKey = async (provider: string) => {
+export const getAPIKey = async (provider: string): Promise<string> => {
 	const supabase = await createClient();
 	const {
 		data: { user },
@@ -31,16 +31,25 @@ export const getAPIKey = async (provider: string) => {
 	if (userError || !user) {
 		throw new Error("User not authenticated");
 	}
-	const { data, error } = await supabase
-		.from("user_keys")
-		.select("api_key")
-		.eq("provider", provider)
-		.eq("user_id", user.id);
+
+	// Use the new decryption function to get the API key
+	// This calls the secure decrypt_user_api_key function in the database
+	// Returns a single TEXT value (the decrypted API key)
+	const { data, error } = await supabase.rpc("get_api_key", {
+		provider_param: provider,
+	});
+
 	if (error) {
 		console.error("Error getting API key:", error);
 		throw error;
 	}
-	return data[0].api_key;
+
+	if (!data) {
+		throw new Error(`No API key found for provider: ${provider}`);
+	}
+
+	// RPC function returns TEXT directly, not an array
+	return data as string;
 };
 
 export async function saveAPIKey(provider: string, key: string) {

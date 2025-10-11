@@ -1,14 +1,94 @@
 "use client";
 
 import { FileText, Import, Mic, Plus, Search, Sparkles, X } from "lucide-react";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PDFImport } from "@/components/sidebar/pdf-import";
+import { useStore } from "@/store/useCollectionStore";
+import { usePanelStore } from "@/store/usePanelStore";
 import { useUserStore } from "@/store/userStore";
+
+// UUID validation schema
+const uuidSchema = z.string().uuid();
 
 const HomePage = () => {
 	const { firstname } = useUserStore();
 	const [searchQuery, setSearchQuery] = useState("");
+	const { allItems, fetchFilesAndFolders, setCreation } = useStore();
+	const { setActivePageId } = usePanelStore();
+	const router = useRouter();
+	const [isLoading, setIsLoading] = useState(true);
+	const [showImportDialog, setShowImportDialog] = useState(false);
+
+	// Fetch files and folders on mount
+	useEffect(() => {
+		const loadData = async () => {
+			setIsLoading(true);
+			await fetchFilesAndFolders();
+			setIsLoading(false);
+		};
+		loadData();
+	}, [fetchFilesAndFolders]);
+
+	// Filter items based on search query
+	const filteredItems = allItems.filter((item) => {
+		if (!searchQuery) return true;
+		return item.name.toLowerCase().includes(searchQuery.toLowerCase());
+	});
+
+	// Get only root-level items (not in folders) and not deleted
+	const rootItems = filteredItems.filter((item) => item.parentId === null);
+
+	// Sort by most recent
+	const sortedItems = rootItems.sort((a, b) => {
+		if (!a.updated_at || !b.updated_at) return 0;
+		return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+	});
+
+	// Format date
+	const formatDate = (dateString?: string) => {
+		if (!dateString) return "Recently";
+		const date = new Date(dateString);
+		const now = new Date();
+		const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+
+		if (diffInHours < 24) return "Today";
+		if (diffInHours < 48) return "Yesterday";
+		if (diffInHours < 168) return `${Math.floor(diffInHours / 24)} days ago`;
+		return date.toLocaleDateString();
+	};
+
+	// Get icon for item type
+	const getItemIcon = (type: string) => {
+		switch (type) {
+			case "pdf":
+				return FileText;
+			case "note":
+				return FileText;
+			case "folder":
+				return FileText;
+			default:
+				return FileText;
+		}
+	};
+
+	// Handle item click with validation
+	const handleItemClick = (itemId: string) => {
+		// Validate UUID format to prevent injection attacks
+		const validation = uuidSchema.safeParse(itemId);
+		if (!validation.success) {
+			toast.error("Invalid document ID");
+			console.error("Invalid UUID attempted:", itemId);
+			return;
+		}
+
+		setActivePageId(itemId);
+		router.push(`/documents/${itemId}`);
+	};
 
 	return (
 		<div className="w-full pt-4 pb-6">
@@ -28,7 +108,10 @@ const HomePage = () => {
 				{/* Action Cards */}
 				<div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
 					{/* Write Card */}
-					<div className="border rounded-lg p-3 flex flex-col items-center hover:bg-accent/50 transition-all duration-300 cursor-pointer group animate-fade-in-up delay-100">
+					<div
+						onClick={() => setCreation({ parentId: null, type: "note" })}
+						className="border rounded-lg p-3 flex flex-col items-center hover:bg-accent/50 transition-all duration-300 cursor-pointer group animate-fade-in-up delay-100"
+					>
 						<div className="bg-primary/10 p-2 rounded-full mb-2 group-hover:bg-primary/20 transition-colors">
 							<FileText size={18} className="text-primary" />
 						</div>
@@ -39,7 +122,10 @@ const HomePage = () => {
 					</div>
 
 					{/* Import Card */}
-					<div className="border rounded-lg p-3 flex flex-col items-center hover:bg-accent/50 transition-all duration-300 cursor-pointer group animate-fade-in-up delay-200">
+					<div
+						onClick={() => setShowImportDialog(true)}
+						className="border rounded-lg p-3 flex flex-col items-center hover:bg-accent/50 transition-all duration-300 cursor-pointer group animate-fade-in-up delay-200"
+					>
 						<div className="bg-primary/10 p-2 rounded-full mb-2 group-hover:bg-primary/20 transition-colors">
 							<Import size={18} className="text-primary" />
 						</div>
@@ -49,10 +135,13 @@ const HomePage = () => {
 						</p>
 					</div>
 
-					{/* Record Card */}
-					<div className="border rounded-lg p-3 flex flex-col items-center hover:bg-accent/50 transition-all duration-300 cursor-pointer group relative animate-fade-in-up delay-300">
+					{/* Explore Papers Card */}
+					<div
+						onClick={() => router.push("/lecoder")}
+						className="border rounded-lg p-3 flex flex-col items-center hover:bg-accent/50 transition-all duration-300 cursor-pointer group relative animate-fade-in-up delay-300"
+					>
 						<div className="absolute top-1 right-1 bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
-							NEW
+							COMING SOON
 						</div>
 						<div className="bg-primary/10 p-2 rounded-full mb-2 group-hover:bg-primary/20 transition-colors">
 							<Mic size={18} className="text-primary" />
@@ -99,13 +188,19 @@ const HomePage = () => {
 							<div className="ml-2 flex-grow h-px bg-border" />
 						</h3>
 						<div className="space-y-1.5">
-							<div className="border rounded-md p-2 flex items-center gap-2 hover:bg-accent/50 transition-colors cursor-pointer group">
+							<div
+								onClick={() => router.push("/askAI")}
+								className="border rounded-md p-2 flex items-center gap-2 hover:bg-accent/50 transition-colors cursor-pointer group"
+							>
 								<div className="bg-primary/10 p-1 rounded-full group-hover:bg-primary/20 transition-colors">
 									<Sparkles size={14} className="text-primary" />
 								</div>
 								<span className="text-sm">Ask AI...</span>
 							</div>
-							<div className="border rounded-md p-2 flex items-center gap-2 hover:bg-accent/50 transition-colors cursor-pointer group">
+							<div
+								onClick={() => setCreation({ parentId: null, type: "note" })}
+								className="border rounded-md p-2 flex items-center gap-2 hover:bg-accent/50 transition-colors cursor-pointer group"
+							>
 								<div className="bg-primary/10 p-1 rounded-full group-hover:bg-primary/20 transition-colors">
 									<Plus size={14} className="text-primary" />
 								</div>
@@ -120,36 +215,75 @@ const HomePage = () => {
 							<span className="uppercase tracking-wider">Library</span>
 							<div className="ml-2 flex-grow h-px bg-border" />
 						</h3>
-						<div className="border rounded-lg overflow-hidden">
-							{[
-								"link 3 - kernal",
-								"AIS paper #2",
-								"link 2",
-								"AI OS link1",
-								"AI OS Link 3",
-								"Untitled",
-								"New Recording",
-							].map((item, index) => (
-								<div
-									key={item}
-									className={`flex items-center gap-2 p-2 hover:bg-accent/50 transition-colors cursor-pointer text-sm ${
-										index !== 6 ? "border-b" : ""
-									}`}
-								>
-									<FileText
-										size={14}
-										className="text-muted-foreground shrink-0"
-									/>
-									<span className="truncate">{item}</span>
-									<span className="ml-auto text-xs text-muted-foreground">
-										Today
-									</span>
+						{isLoading ? (
+							<div className="border rounded-lg p-8 flex items-center justify-center">
+								<div className="text-sm text-muted-foreground">
+									Loading your library...
 								</div>
-							))}
-						</div>
+							</div>
+						) : sortedItems.length === 0 ? (
+							<div className="border rounded-lg p-8 flex flex-col items-center justify-center text-center">
+								<FileText
+									size={32}
+									className="text-muted-foreground mb-2 opacity-50"
+								/>
+								<p className="text-sm text-muted-foreground mb-1">
+									{searchQuery
+										? "No documents found"
+										: "Your library is empty"}
+								</p>
+								<p className="text-xs text-muted-foreground">
+									{searchQuery
+										? "Try a different search term"
+										: "Create a document or import a PDF to get started"}
+								</p>
+							</div>
+						) : (
+							<div className="border rounded-lg overflow-hidden">
+								{sortedItems.slice(0, 10).map((item, index) => {
+									const Icon = getItemIcon(item.type);
+									return (
+										<div
+											key={item.id}
+											onClick={() => handleItemClick(item.id)}
+											className={`flex items-center gap-2 p-2 hover:bg-accent/50 transition-colors cursor-pointer text-sm ${
+												index !== sortedItems.length - 1 && index !== 9
+													? "border-b"
+													: ""
+											}`}
+										>
+											<Icon size={14} className="text-muted-foreground shrink-0" />
+											<span className="truncate flex-1" title={item.name}>
+												{item.name}
+											</span>
+											<span className="text-xs text-muted-foreground">
+												{formatDate(item.updated_at)}
+											</span>
+										</div>
+									);
+								})}
+								{sortedItems.length > 10 && (
+									<div className="p-2 text-center border-t">
+										<button
+											type="button"
+											onClick={() => router.push("/documents")}
+											className="text-xs text-primary hover:underline"
+										>
+											View all {sortedItems.length} items
+										</button>
+									</div>
+								)}
+							</div>
+						)}
 					</div>
 				</div>
 			</div>
+
+			{/* PDF Import Dialog */}
+			<PDFImport
+				isOpen={showImportDialog}
+				onClose={() => setShowImportDialog(false)}
+			/>
 		</div>
 	);
 };

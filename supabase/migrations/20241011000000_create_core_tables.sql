@@ -242,8 +242,9 @@ COMMENT ON COLUMN public.user_keys.active_models IS 'Array of active model IDs f
 -- ============================================================================
 
 -- Create documents storage bucket
+-- Setting public=false to enforce RLS policies and prevent data leaks
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('documents', 'documents', true)
+VALUES ('documents', 'documents', false)
 ON CONFLICT (id) DO NOTHING;
 
 -- Create storage policies for documents bucket
@@ -264,6 +265,10 @@ CREATE POLICY "Users can view their own documents"
 CREATE POLICY "Users can update their own documents"
   ON storage.objects FOR UPDATE
   USING (
+    bucket_id = 'documents'
+    AND auth.uid()::text = (storage.foldername(name))[1]
+  )
+  WITH CHECK (
     bucket_id = 'documents'
     AND auth.uid()::text = (storage.foldername(name))[1]
   );

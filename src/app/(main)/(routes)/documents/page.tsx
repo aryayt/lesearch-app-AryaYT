@@ -28,8 +28,14 @@ const HomePage = () => {
 	useEffect(() => {
 		const loadData = async () => {
 			setIsLoading(true);
-			await fetchFilesAndFolders();
-			setIsLoading(false);
+			try {
+				await fetchFilesAndFolders();
+			} catch (error) {
+				console.error("Failed to load library:", error);
+				toast.error("Failed to load your library. Please refresh the page.");
+			} finally {
+				setIsLoading(false);
+			}
 		};
 		loadData();
 	}, [fetchFilesAndFolders]);
@@ -43,8 +49,8 @@ const HomePage = () => {
 	// Get only root-level items (not in folders) and not deleted
 	const rootItems = filteredItems.filter((item) => item.parentId === null);
 
-	// Sort by most recent
-	const sortedItems = rootItems.sort((a, b) => {
+	// Sort by most recent (create new array to preserve immutability)
+	const sortedItems = [...rootItems].sort((a, b) => {
 		if (!a.updated_at || !b.updated_at) return 0;
 		return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
 	});
@@ -82,7 +88,9 @@ const HomePage = () => {
 		const validation = uuidSchema.safeParse(itemId);
 		if (!validation.success) {
 			toast.error("Invalid document ID");
-			console.error("Invalid UUID attempted:", itemId);
+			if (process.env.NODE_ENV !== "production") {
+				console.error("Invalid UUID attempted:", itemId);
+			}
 			return;
 		}
 

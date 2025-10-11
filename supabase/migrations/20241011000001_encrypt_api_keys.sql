@@ -33,10 +33,12 @@ BEGIN
   IF NEW.api_key IS NOT NULL AND NOT (NEW.api_key ~ '^-----BEGIN PGP MESSAGE-----') THEN
     -- Encrypt using pgp_sym_encrypt (non-deterministic, includes random IV)
     -- This is more secure than basic encrypt() as each encryption is unique
+    -- Armor and cast to text to match column type
     NEW.api_key := pgp_sym_encrypt(
       NEW.api_key,
-      encryption_key
-    );
+      encryption_key,
+      'cipher-algo=aes256, compress-algo=1, armor'
+    )::text;
   END IF;
 
   RETURN NEW;
@@ -87,10 +89,11 @@ BEGIN
     RETURN NULL;
   END IF;
 
-  -- Decrypt using pgp_sym_decrypt (matches pgp_sym_encrypt)
+  -- Decrypt using pgp_sym_decrypt (matches pgp_sym_encrypt with armor)
+  -- The encrypted_key is armored text, so it can be passed directly
   BEGIN
     decrypted_key := pgp_sym_decrypt(
-      encrypted_key::bytea,
+      encrypted_key,
       encryption_key
     );
   EXCEPTION WHEN OTHERS THEN
@@ -160,8 +163,9 @@ BEGIN
     UPDATE public.user_keys
     SET api_key = pgp_sym_encrypt(
       api_key,
-      encryption_key
-    )
+      encryption_key,
+      'cipher-algo=aes256, compress-algo=1, armor'
+    )::text
     WHERE api_key IS NOT NULL
       AND NOT (api_key ~ '^-----BEGIN PGP MESSAGE-----');
 
